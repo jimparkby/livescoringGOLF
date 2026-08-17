@@ -26,6 +26,91 @@ export const db = new Pool({
 async function runMigrations() {
   const migrations = [
     { name: 'pg_trgm', query: `CREATE EXTENSION IF NOT EXISTS pg_trgm` },
+    // Base schema — reconstructed from how every route/service in this codebase
+    // reads and writes these tables (they were never captured as migrations
+    // before; the original DB was created by hand). Safe to run against an
+    // existing DB: CREATE TABLE IF NOT EXISTS is a no-op when the table is
+    // already there, so this only matters for a fresh database.
+    { name: 'create_users', query: `CREATE TABLE IF NOT EXISTS users (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      telegram_id BIGINT UNIQUE,
+      username TEXT,
+      first_name TEXT,
+      last_name TEXT,
+      photo_url TEXT,
+      hcp NUMERIC DEFAULT 36.0,
+      home_club TEXT DEFAULT 'Golf Club Minsk',
+      city TEXT,
+      default_tee TEXT DEFAULT 'yellow',
+      gender TEXT,
+      last_hdid_sync TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )` },
+    { name: 'create_rounds', query: `CREATE TABLE IF NOT EXISTS rounds (
+      id TEXT PRIMARY KEY,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      course_id TEXT,
+      course_name TEXT,
+      tee TEXT,
+      rating NUMERIC,
+      slope INTEGER,
+      completed BOOLEAN NOT NULL DEFAULT false,
+      tournament_id TEXT,
+      format TEXT,
+      holes_mode TEXT,
+      photo_url TEXT,
+      current_hole INTEGER,
+      teams JSONB,
+      share_code TEXT,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )` },
+    { name: 'create_round_players', query: `CREATE TABLE IF NOT EXISTS round_players (
+      id SERIAL PRIMARY KEY,
+      round_id TEXT NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
+      player_id TEXT NOT NULL,
+      name TEXT,
+      initials TEXT,
+      hcp NUMERIC,
+      is_me BOOLEAN NOT NULL DEFAULT false,
+      user_id UUID REFERENCES users(id) ON DELETE SET NULL
+    )` },
+    { name: 'create_hole_scores', query: `CREATE TABLE IF NOT EXISTS hole_scores (
+      id SERIAL PRIMARY KEY,
+      round_id TEXT NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
+      player_id TEXT NOT NULL,
+      hole INTEGER NOT NULL,
+      score INTEGER,
+      putts INTEGER DEFAULT 0,
+      driving BOOLEAN DEFAULT false,
+      gir BOOLEAN DEFAULT false,
+      bunker INTEGER DEFAULT 0,
+      penalties INTEGER DEFAULT 0,
+      tee_shot TEXT,
+      made_by TEXT
+    )` },
+    { name: 'create_tournaments', query: `CREATE TABLE IF NOT EXISTS tournaments (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      date DATE,
+      slug TEXT,
+      flights_photos JSONB DEFAULT '[]'::jsonb
+    )` },
+    { name: 'create_tournament_predictions', query: `CREATE TABLE IF NOT EXISTS tournament_predictions (
+      id SERIAL PRIMARY KEY,
+      tournament_id INTEGER NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+      player_name TEXT NOT NULL,
+      probability NUMERIC,
+      confidence TEXT,
+      analysis TEXT,
+      stats JSONB,
+      hcp_group TEXT,
+      player_hcp NUMERIC,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(tournament_id, player_name)
+    )` },
     { name: 'current_hole', query: `ALTER TABLE rounds ADD COLUMN IF NOT EXISTS current_hole INTEGER` },
     { name: 'photo_url', query: `ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_url TEXT` },
     { name: 'made_by', query: `ALTER TABLE hole_scores ADD COLUMN IF NOT EXISTS made_by TEXT` },
