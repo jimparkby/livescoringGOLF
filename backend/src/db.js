@@ -236,6 +236,10 @@ async function runMigrations() {
     { name: 'tournament_reg_round', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS round_id TEXT REFERENCES rounds(id) ON DELETE SET NULL` },
     { name: 'tournament_reg_flight', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS flight_label TEXT` },
     { name: 'tournament_reg_checked_in', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS checked_in BOOLEAN NOT NULL DEFAULT false` },
+    { name: 'user_email', query: `ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT` },
+    { name: 'user_email_unique', query: `CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique_idx ON users (LOWER(email)) WHERE email IS NOT NULL` },
+    { name: 'user_password_hash', query: `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT` },
+    { name: 'user_telegram_id_nullable', query: `ALTER TABLE users ALTER COLUMN telegram_id DROP NOT NULL` },
   ]
 
   for (const migration of migrations) {

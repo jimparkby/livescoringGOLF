@@ -1,8 +1,12 @@
 import { Router } from 'express'
 import jwt from 'jsonwebtoken'
+import bcrypt from 'bcryptjs'
 import { db } from '../db.js'
 
 const router = Router()
+
+const signToken = (userId) => jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '365d' })
+const normalizeEmail = (email) => (email || '').trim().toLowerCase()
 
 // Normalize name for fuzzy matching (uppercase, trim)
 function normalizeName(name) {
@@ -119,6 +123,67 @@ router.post('/telegram', async (req, res, next) => {
       { expiresIn: '365d' }
     )
     res.json({ jwt: token, hdidHcp: hdidMember.hcp })
+  } catch (err) { next(err) }
+})
+
+// ── POST /api/auth/register ─────────────────────────────────────────────────
+// Email/password signup, still gated by the club's HDID member whitelist —
+// same eligibility rule as the old Telegram flow, just a different identity.
+router.post('/register', async (req, res, next) => {
+  const { email, password, firstName, lastName } = req.body
+
+  if (!email || !password || !firstName || !lastName) {
+    return res.status(400).json({ error: 'Заполните email, пароль, имя и фамилию' })
+  }
+  if (password.length < 8) {
+    return res.status(400).json({ error: 'Пароль должен быть не короче 8 символов' })
+  }
+
+  const normEmail = normalizeEmail(email)
+
+  try {
+    const { rows: existing } = await db.query(
+      'SELECT id FROM users WHERE LOWER(email) = $1', [normEmail]
+    )
+    if (existing.length > 0) {
+      return res.status(409).json({ error: 'Аккаунт с этим email уже существует' })
+    }
+
+    const hdidMember = await findHDIDMember(firstName, lastName)
+    if (!hdidMember) {
+      return res.status(403).json({
+        error: 'Доступ запрещён. Вы не являетесь членом Golf Club Minsk.',
+      })
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10)
+    const { rows: [user] } = await db.query(
+      `INSERT INTO users (email, password_hash, first_name, last_name, hcp)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id`,
+      [normEmail, passwordHash, firstName.trim(), lastName.trim(), hdidMember.hcp ?? 36.0]
+    )
+
+    res.json({ jwt: signToken(user.id) })
+  } catch (err) { next(err) }
+})
+
+// ── POST /api/auth/login ─────────────────────────────────────────────────────
+router.post('/login', async (req, res, next) => {
+  const { email, password } = req.body
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Введите email и пароль' })
+  }
+
+  try {
+    const { rows: [user] } = await db.query(
+      'SELECT id, password_hash FROM users WHERE LOWER(email) = $1', [normalizeEmail(email)]
+    )
+    if (!user?.password_hash || !(await bcrypt.compare(password, user.password_hash))) {
+      return res.status(401).json({ error: 'Неверный email или пароль' })
+    }
+
+    res.json({ jwt: signToken(user.id) })
   } catch (err) { next(err) }
 })
 

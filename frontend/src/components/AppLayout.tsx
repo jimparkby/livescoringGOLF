@@ -1,205 +1,97 @@
-import { useState, useMemo } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { Trophy, CircleUserRound, LineChart, Flag } from "lucide-react";
+import { NavLink, Outlet } from "react-router-dom";
+import { Trophy, CircleUserRound, LineChart, Flag, MapPin, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useTelegram } from "@/hooks/useTelegram";
-import { useGolf, type Round } from "@/store/golfStore";
-import { useOthersRounds } from "@/hooks/useOthersRounds";
-import { HeaderPanel } from "@/components/HeaderPanel";
-import { ScorecardModal } from "@/components/ScorecardModal";
-import { getDifferentials, calcHandicapIndex } from "@/lib/handicap";
-import { COURSES } from "@/lib/courses";
-import type { CurrentUser, ActiveRound } from "@/types";
+import { useAuth } from "@/hooks/useAuth";
+import { useGolf } from "@/store/golfStore";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
-const tabs = [
-  { to: "/", label: "Play", icon: Flag, end: true },
-  { to: "/tournaments", label: "Tournaments", icon: Trophy },
+const navLinks = [
+  { to: "/", label: "Tournaments", icon: Trophy, end: true },
+  { to: "/course", label: "Course", icon: MapPin },
+  { to: "/play", label: "Play", icon: Flag },
   { to: "/stats", label: "Stats", icon: LineChart },
-  { to: "/profile", label: "Profile", icon: CircleUserRound },
 ];
 
 const AppLayout = () => {
-  useTelegram();
+  const { signOut } = useAuth();
+  const { profile } = useGolf();
+  const { isAdmin } = useIsAdmin();
 
-  const location = useLocation();
-  const isPlayTab = location.pathname === "/";
-
-  const { profile, rounds, activeRound } = useGolf();
-  // Backend already restricts /api/rounds/active to people who were added as a
-  // player in that specific round (see rounds.js), and does so the moment the
-  // round starts — no need to also gate on the local `frequent` list, which only
-  // fills in when *we* add a player via round setup and would otherwise hide a
-  // partner's first live round until later.
-  const othersRounds = useOthersRounds();
-  const [modalRound, setModalRound] = useState<ActiveRound | null>(null);
-
-  const currentUser = useMemo((): CurrentUser => {
-    const name = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "Player";
-    const diffs = getDifferentials(rounds, "me", profile.hcp);
-    const calcHcp = calcHandicapIndex(diffs.map((d) => d.differential));
-    const hcp = calcHcp ?? (profile.hcp > 0 ? profile.hcp : null);
-    const handicapIndex = hcp !== null ? hcp.toFixed(1) : "~";
-
-    const allScores = rounds.flatMap((r) => {
-      const me = r.players.find((p) => p.isMe);
-      return me ? r.scores[me.id] ?? [] : [];
-    });
-    const accuracy = allScores.length
-      ? Math.round((allScores.filter((s) => s.gir).length / allScores.length) * 100)
-      : 0;
-
-    return {
-      id: "me",
-      name,
-      avatarUrl: profile.photoUrl ?? "",
-      handicapIndex,
-      accuracy,
-      totalRounds: rounds.filter(r => r.players.some(p => p.isMe)).length,
-    };
-  }, [profile, rounds]);
-
-  const STORY_TTL_MS = 24 * 60 * 60 * 1000;
-
-  const buildStoriesFromRound = (round: Round, ttlAnchor: string): ActiveRound[] => {
-    const course = COURSES.find((c) => c.id === round.courseId);
-    const myName = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "Player";
-
-    return round.players.map((player) => {
-      const scores = round.scores[player.id] ?? [];
-      const played = scores.filter((s) => s.score > 0);
-      const totalScore = played.reduce((a, s) => a + s.score, 0);
-      const scorecard = played.map((s) => {
-        const hole = course?.holes.find((h) => h.number === s.hole);
-        return { hole: s.hole, par: hole?.par ?? 4, score: s.score };
-      }).sort((a, b) => a.hole - b.hole);
-
-      return {
-        id: `${round.id}-${player.id}`,
-        playerId: player.id,
-        playerName: player.isMe ? myName : player.name,
-        avatarUrl: player.isMe ? (profile.photoUrl ?? "") : "",
-        holesPlayed: played.length,
-        score: totalScore,
-        startedAt: ttlAnchor,
-        courseName: round.courseName.split(" · ")[0],
-        scorecard,
-      };
-    });
-  };
-
-  // Строим сторис: свой раунд + раунды других пользователей (24ч)
-  const myActiveRounds = useMemo((): ActiveRound[] => {
-    const result: ActiveRound[] = [];
-
-    // Свой активный раунд
-    if (activeRound) {
-      result.push(...buildStoriesFromRound(activeRound, activeRound.date));
-    } else {
-      // Свой недавно завершённый (24ч после сохранения)
-      const lastCompleted = rounds.find((r) => r.completed && r.players.some((p) => p.isMe));
-      if (lastCompleted) {
-        // updatedAt = when the round was saved/confirmed (bot import gets current time)
-        // falls back to completedAt or date for rounds saved before updatedAt was added
-        const anchor = lastCompleted.updatedAt ?? lastCompleted.completedAt ?? lastCompleted.date;
-        if (Date.now() - new Date(anchor).getTime() < STORY_TTL_MS) {
-          result.push(...buildStoriesFromRound(lastCompleted, anchor));
-        }
-      }
-    }
-
-    // Раунды других пользователей
-    for (const round of othersRounds) {
-      result.push(...buildStoriesFromRound(round, round.date));
-    }
-
-    // Дедупликация по id
-    const seen = new Set<string>();
-    return result.filter((r) => (seen.has(r.id) ? false : (seen.add(r.id), true)));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeRound, rounds, othersRounds, profile]);
+  const name = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "Player";
+  const initials = (profile.firstName?.[0] ?? "") + (profile.lastName?.[0] ?? "");
 
   return (
-    <div className="flex flex-col" style={{ minHeight: "100dvh" }}>
-      {isPlayTab && (
-        <div
-          className="fixed top-0 inset-x-0 z-40 flex items-center"
-          style={{
-            height: "calc(var(--header-h) + var(--tg-safe-top))",
-            background: "#000000",
-            borderBottom: "1px solid rgba(255,255,255,0.07)",
-            paddingTop: "calc(var(--tg-safe-top) + 10px)",
-            paddingBottom: 10,
-            paddingLeft: 16,
-            paddingRight: 16,
-            overflow: "visible",
-          }}
-        >
-          <div className="w-full max-w-3xl mx-auto" style={{ overflow: "visible" }}>
-            <HeaderPanel
-              currentUser={currentUser}
-              activeRounds={myActiveRounds}
-              onRoundPress={setModalRound}
-            />
-          </div>
-        </div>
-      )}
+    <div className="min-h-screen flex flex-col bg-background">
+      <header className="border-b border-border sticky top-0 z-30 bg-background/95 backdrop-blur">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-6">
+          <NavLink to="/" className="font-black tracking-wider text-sm sm:text-base shrink-0">
+            GOLF CLUB MINSK
+          </NavLink>
 
-      <main
-        className="flex-1 mx-auto w-full max-w-3xl px-4"
-        style={{
-          paddingTop: isPlayTab
-            ? "calc(var(--header-h) + var(--tg-safe-top) + 16px)"
-            : "calc(var(--tg-safe-top) + 16px)",
-          paddingBottom: "calc(var(--nav-h) + var(--tg-safe-bottom) + 8px)",
-        }}
-      >
+          <nav className="flex items-center gap-1 flex-1 overflow-x-auto">
+            {navLinks.map(({ to, label, icon: Icon, end }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors",
+                    isActive ? "bg-action/15 text-action" : "text-muted-foreground hover:text-foreground",
+                  )
+                }
+              >
+                <Icon className="h-4 w-4" strokeWidth={2.25} />
+                {label}
+              </NavLink>
+            ))}
+            {isAdmin && (
+              <NavLink
+                to="/admin"
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center h-9 px-3 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors",
+                    isActive ? "bg-action/15 text-action" : "text-muted-foreground hover:text-foreground",
+                  )
+                }
+              >
+                Admin
+              </NavLink>
+            )}
+          </nav>
+
+          <NavLink
+            to="/profile"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-2 h-9 pl-1 pr-3 rounded-full shrink-0 transition-colors",
+                isActive ? "bg-action/15 text-action" : "hover:bg-muted",
+              )
+            }
+          >
+            {profile.photoUrl ? (
+              <img src={profile.photoUrl} alt={name} className="h-7 w-7 rounded-full object-cover" />
+            ) : (
+              <span className="h-7 w-7 rounded-full bg-muted-foreground/20 grid place-items-center text-[11px] font-bold">
+                {initials || <CircleUserRound className="h-4 w-4" />}
+              </span>
+            )}
+            <span className="text-sm font-semibold hidden sm:inline">{name}</span>
+          </NavLink>
+
+          <button
+            onClick={signOut}
+            title="Выйти"
+            className="h-9 w-9 rounded-full grid place-items-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+          >
+            <LogOut className="h-4 w-4" strokeWidth={2.25} />
+          </button>
+        </div>
+      </header>
+
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6">
         <Outlet />
       </main>
-
-      <nav
-        className="fixed bottom-0 inset-x-0 z-30"
-        style={{
-          background: "#000000",
-          borderTop: "1px solid rgba(255,255,255,0.07)",
-          height: "calc(var(--nav-h) + var(--tg-safe-bottom))",
-        }}
-      >
-        <div className="mx-auto max-w-3xl grid grid-cols-4 h-[var(--nav-h)]">
-          {tabs.map(({ to, label, icon: Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                cn(
-                  "relative flex flex-col items-center justify-center gap-1 text-[11px] font-medium transition-base",
-                  isActive ? "text-action" : "text-muted-foreground",
-                )
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <span
-                      className="absolute top-0 left-1/2 -translate-x-1/2 h-[2px] w-8 rounded-full"
-                      style={{ background: "hsl(var(--action))" }}
-                    />
-                  )}
-                  <Icon
-                    className={cn("h-5 w-5", isActive && "drop-shadow-[0_0_8px_rgba(34,197,94,0.7)]")}
-                    strokeWidth={isActive ? 2.5 : 2}
-                  />
-                  <span>{label}</span>
-                </>
-              )}
-            </NavLink>
-          ))}
-        </div>
-      </nav>
-
-      {modalRound && (
-        <ScorecardModal round={modalRound} onClose={() => setModalRound(null)} />
-      )}
     </div>
   );
 };

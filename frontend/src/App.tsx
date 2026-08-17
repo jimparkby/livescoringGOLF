@@ -46,7 +46,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        <Route path="/" element={<PlayPage />} />
+        <Route path="/" element={<TournamentsPage />} />
+        <Route path="/play" element={<PlayPage />} />
         <Route path="/tournaments" element={<TournamentsPage />} />
         <Route path="/tournament-info/:id" element={<TournamentInfoPage />} />
         <Route path="/tournament/:id" element={<TournamentPlayPage />} />
