@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Card } from '@/components/ui/card'
-import { ArrowLeft, Users, Clock, CheckCircle, AlertCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { ArrowLeft, Users, Clock, CheckCircle, AlertCircle, LayoutGrid } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
 import { TOURNAMENTS } from '@/lib/tournaments'
+import { COURSES } from '@/lib/courses'
 import { toast } from 'sonner'
 
 type Registration = {
@@ -18,6 +20,9 @@ type Registration = {
   last_name: string
   hcp: number
   photo_url?: string
+  round_id: string | null
+  flight_label: string | null
+  checked_in: boolean
 }
 
 const STATUS_LABELS = {
@@ -44,6 +49,7 @@ export default function TournamentRegistrationsPage() {
   const [registrations, setRegistrations] = useState<Registration[]>([])
   const [loading, setLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState<number | null>(null)
+  const [buildingGroups, setBuildingGroups] = useState(false)
 
   const tournament = TOURNAMENTS.find(t => t.id === id)
 
@@ -79,6 +85,37 @@ export default function TournamentRegistrationsPage() {
       toast.error('Ошибка при обновлении статуса')
     } finally {
       setUpdatingId(null)
+    }
+  }
+
+  const paidUngrouped = registrations.filter(r => r.status === 'paid' && !r.round_id).length
+
+  const buildGroups = async () => {
+    if (!id || !tournament) return
+    const course = COURSES.find(c => c.id === tournament.courseId) ?? COURSES[0]
+    const tee = course.tees.find(t => t.color === 'yellow') ?? course.tees[0]
+    setBuildingGroups(true)
+    try {
+      const res = await api.post<{ groupsCreated: number; playersGrouped: number }>(
+        `/api/tournaments/${id}/build-groups`,
+        {
+          courseId: course.id,
+          courseName: `${tournament.name} · ${course.name}`,
+          tee: tee.color,
+          rating: tee.rating,
+          slope: tee.slope,
+          format: tournament.format,
+          holesMode: '18',
+          groupSize: 4,
+        }
+      )
+      toast.success(`Сформировано групп: ${res.groupsCreated} (${res.playersGrouped} игроков)`)
+      loadRegistrations()
+    } catch (error) {
+      console.error('[TournamentRegistrations] Error building groups:', error)
+      toast.error('Ошибка при формировании групп')
+    } finally {
+      setBuildingGroups(false)
     }
   }
 
@@ -131,6 +168,18 @@ export default function TournamentRegistrationsPage() {
         </Card>
       </div>
 
+      {/* Build groups */}
+      {paidUngrouped > 0 && (
+        <Button
+          onClick={buildGroups}
+          disabled={buildingGroups}
+          className="w-full h-12 rounded-xl font-bold text-sm bg-action hover:bg-action/90 text-action-foreground"
+        >
+          <LayoutGrid className="h-4 w-4 mr-2" strokeWidth={2.5} />
+          {buildingGroups ? 'Формирование...' : `Сформировать флайты и группы (${paidUngrouped})`}
+        </Button>
+      )}
+
       {/* Registrations List */}
       {loading ? (
         <Card className="p-8 text-center text-muted-foreground">
@@ -169,6 +218,11 @@ export default function TournamentRegistrationsPage() {
                     <div className="text-xs text-muted-foreground">
                       HCP {reg.hcp.toFixed(1)} • {new Date(reg.created_at).toLocaleDateString('ru-RU')}
                     </div>
+                    {reg.round_id && (
+                      <div className="text-xs text-action font-medium mt-0.5">
+                        {reg.flight_label} {reg.checked_in ? '· на поле' : '· ждём старта'}
+                      </div>
+                    )}
 
                     {/* Status Select */}
                     <div className="mt-3 flex items-center gap-2">

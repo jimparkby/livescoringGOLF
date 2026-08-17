@@ -6,6 +6,7 @@ import AppLayout from "@/components/AppLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import DemoPage from "./pages/Demo";
 import LiveScoringPage from "./pages/LiveScoring";
+import PublicLeaderboardPage from "./pages/PublicLeaderboard";
 import AuthPage from "./pages/Auth";
 import PlayPage from "./pages/Play";
 import TournamentsPage from "./pages/Tournaments";
@@ -16,6 +17,7 @@ import StatsPage from "./pages/Stats";
 import StatisticsPage from "./pages/Statistics";
 import ProfilePage from "./pages/Profile";
 import LeaderboardPage from "./pages/Leaderboard";
+import CoursePage from "./pages/Course";
 import AdminPage from "./pages/Admin";
 import BookingPage from "./pages/Booking";
 import TournamentRegistrationsPage from "./pages/TournamentRegistrations";
@@ -53,6 +55,7 @@ function AppRoutes() {
         <Route path="/statistics" element={<StatisticsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
+        <Route path="/course" element={<CoursePage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/tournament-registrations/:id" element={<TournamentRegistrationsPage />} />
@@ -70,6 +73,7 @@ const App = () => (
           <Routes>
             <Route path="/demo" element={<DemoPage />} />
             <Route path="/live/:code" element={<LiveScoringPage />} />
+            <Route path="/watch/:id" element={<PublicLeaderboardPage />} />
             <Route
               path="/*"
               element={

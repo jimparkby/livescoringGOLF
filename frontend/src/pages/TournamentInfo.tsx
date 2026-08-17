@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Calendar, MapPin, Award, Image as ImageIcon, Trophy, Users, Brain, UserPlus, CheckCircle, Clock, CreditCard, X as XIcon, Flag } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Award, Image as ImageIcon, Trophy, Users, Brain, UserPlus, CheckCircle, Clock, CreditCard, X as XIcon, Flag, ExternalLink } from "lucide-react";
 import { TOURNAMENTS, isTournamentUpcoming, tournamentStartDate } from "@/lib/tournaments";
 import { getTournamentData } from "@/lib/tournament-data";
 import { Card } from "@/components/ui/card";
@@ -488,6 +488,13 @@ const TournamentInfoPage = () => {
             className="w-full h-12 rounded-xl font-bold text-sm bg-action hover:bg-action/90 text-action-foreground"
           >
             <Flag className="h-4 w-4 mr-2" strokeWidth={2.5} /> Начать live-scoring
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => window.open(`/watch/${tournament.id}`, "_blank")}
+            className="w-full h-12 rounded-xl font-bold text-sm"
+          >
+            <ExternalLink className="h-4 w-4 mr-2" strokeWidth={2.5} /> Публичное табло (без входа)
           </Button>
           <TournamentLiveLeaderboard tournamentId={tournament.id} format={tournament.format} />
         </div>

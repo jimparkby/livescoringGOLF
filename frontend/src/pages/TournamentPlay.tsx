@@ -13,6 +13,9 @@ import { ChevronLeft, ChevronRight, Plus, X, Flag, Trophy, Camera } from "lucide
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { TournamentLeaderboard } from "@/components/TournamentLeaderboard";
+import { TournamentGroupScoring } from "@/components/TournamentGroupScoring";
+import { api } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 
 const tierColor: Record<Tier, string> = {
   gold: "bg-tier-gold",
@@ -36,10 +39,27 @@ type AnyTournament = {
 
 type Step = "info" | "join" | "playing";
 
+type MyGroup = {
+  registered: boolean;
+  status?: "pending_review" | "awaiting_payment" | "paid";
+  checkedIn?: boolean;
+  flightLabel?: string | null;
+  roundId?: string | null;
+  group?: { players: { id: string; name: string; hcp: number }[] } | null;
+  marker?: { id: string; name: string; hcp: number } | null;
+};
+
+const REG_STATUS_LABEL: Record<string, string> = {
+  pending_review: "Заявка на рассмотрении",
+  awaiting_payment: "Ожидает оплаты",
+  paid: "Оплачено — ожидайте групп",
+};
+
 const TournamentPlayPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { profile, activeRound, cancelActiveRound, customTournaments, startRound } = useGolf();
+  const { userId: myUserId } = useAuth();
 
   const staticT = TOURNAMENTS.find((t) => t.id === id);
   const customT = customTournaments.find((t) => t.id === id);
@@ -54,6 +74,19 @@ const TournamentPlayPage = () => {
   const [joinPlayers, setJoinPlayers] = useState<Player[]>([]);
   const [showPicker, setShowPicker] = useState(false);
 
+  // Official registration-based group, if the admin has already flighted
+  // this tournament (see TournamentRegistrations "Сформировать группы").
+  // When present, it takes over live-scoring entirely — own score + the
+  // marker's score, written via /api/tournaments/:id/scores — instead of
+  // the ad-hoc "pick your own partners" flow below.
+  const [myGroup, setMyGroup] = useState<MyGroup | null>(null);
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    api.get<MyGroup>(`/api/tournaments/${id}/my-group`).then((g) => { if (!cancelled) setMyGroup(g); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [id]);
+
   if (!tournament) {
     return (
       <div className="space-y-4 animate-in fade-in duration-300">
@@ -62,6 +95,22 @@ const TournamentPlayPage = () => {
         </button>
         <Card className="p-8 text-center text-muted-foreground">Tournament not found</Card>
       </div>
+    );
+  }
+
+  if (myGroup?.roundId && myGroup.group) {
+    return (
+      <TournamentGroupScoring
+        tournamentId={tournament.id}
+        format={tournament.format}
+        courseId={tournament.courseId ?? "championship"}
+        holesMode="18"
+        roundId={myGroup.roundId}
+        myId={myUserId ?? ""}
+        players={myGroup.group.players}
+        marker={myGroup.marker ?? null}
+        onExit={() => navigate("/tournaments")}
+      />
     );
   }
 
@@ -197,6 +246,15 @@ const TournamentPlayPage = () => {
             <div className="text-xs text-action mt-1 font-medium">💡 {fmt.tip}</div>
           </div>
         </div>
+        {myGroup?.registered && (
+          <div className="px-5 pb-4">
+            <div className="p-3 rounded-xl bg-action/10 border border-action/20 text-xs font-semibold text-action">
+              {myGroup.roundId
+                ? `Группа сформирована${myGroup.flightLabel ? ` · ${myGroup.flightLabel}` : ""} — можно начинать`
+                : REG_STATUS_LABEL[myGroup.status ?? "pending_review"]}
+            </div>
+          </div>
+        )}
         <div className="px-5 pb-5">
           <Button
             onClick={() => setStep("join")}

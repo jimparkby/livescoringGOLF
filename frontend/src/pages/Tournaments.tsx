@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { TOURNAMENTS } from "@/lib/tournaments";
 import { getTournamentData } from "@/lib/tournament-data";
 import { Card } from "@/components/ui/card";
-import { Plus, Image, Trophy, QrCode } from "lucide-react";
+import { Plus, Image, Trophy, QrCode, MapPin } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const TournamentsPage = () => {
@@ -63,6 +63,23 @@ const TournamentsPage = () => {
           <div className="flex-1">
             <div className="font-bold text-lg">Leaderboards</div>
             <div className="text-sm text-muted-foreground">Рейтинг игроков и номинации 2026</div>
+          </div>
+          <div className="text-action text-2xl">›</div>
+        </div>
+      </Card>
+
+      {/* Course map */}
+      <Card
+        onClick={() => navigate('/course')}
+        className="p-5 shadow-soft cursor-pointer hover:bg-accent/30 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-full bg-action/20 grid place-items-center shrink-0">
+            <MapPin className="h-6 w-6 text-action" />
+          </div>
+          <div className="flex-1">
+            <div className="font-bold text-lg">Карта полей</div>
+            <div className="text-sm text-muted-foreground">Схема поля и скоркарты Golf Club Minsk</div>
           </div>
           <div className="text-action text-2xl">›</div>
         </div>
