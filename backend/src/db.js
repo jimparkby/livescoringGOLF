@@ -233,7 +233,7 @@ async function runMigrations() {
     // is paid, the admin groups paid registrants into flights/groups, each group
     // backed by one shared `rounds` row (round_id) that group members enter
     // scores into (own + marker's, see /api/tournaments/:id/scores).
-    { name: 'tournament_reg_round', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS round_id UUID REFERENCES rounds(id) ON DELETE SET NULL` },
+    { name: 'tournament_reg_round', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS round_id TEXT REFERENCES rounds(id) ON DELETE SET NULL` },
     { name: 'tournament_reg_flight', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS flight_label TEXT` },
     { name: 'tournament_reg_checked_in', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS checked_in BOOLEAN NOT NULL DEFAULT false` },
   ]
