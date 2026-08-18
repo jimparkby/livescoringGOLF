@@ -12,10 +12,13 @@ import { ChevronLeft, ChevronRight, Plus, X, PlayCircle, Flag, Camera, Check, Se
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useIsMobile } from "@/hooks/use-mobile";
-import heroImg from "@/assets/golfminsk/hero.jpg";
+import { HoleGridNav } from "@/components/HoleGridNav";
+import { LiveScoringLogo } from "@/components/LiveScoringLogo";
 import photo1 from "@/assets/golfminsk/photo1.jpg";
 import photo2 from "@/assets/golfminsk/photo2.jpg";
+
+const CUPRUM = "Cuprum, Arial, Helvetica, sans-serif";
+const INK = "#222430";
 
 type Step = "home" | "setup" | "playing";
 
@@ -919,16 +922,16 @@ const scoreLabel = (score: number, par: number) => {
 
 const scoreLabelColor = (score: number, par: number) => {
   const d = score - par;
-  if (d <= -2) return "text-yellow-400";
-  if (d === -1) return "text-action";
-  if (d === 0) return "text-primary-foreground";
-  if (d === 1) return "text-orange-400";
-  return "text-red-400";
+  if (d <= -2) return "#ca8a04";
+  if (d === -1) return "#21835b";
+  if (d === 0) return INK;
+  if (d === 1) return "#ea580c";
+  return "#d80027";
 };
 
 const RoundPlayer = ({ onExit, onCancel }: { onExit: () => void; onCancel: () => void }) => {
   const { t } = useTranslation();
-  const { activeRound, enterScore, finishRound, setRoundPhoto, syncRound, setCurrentHole, refreshActiveRound, profile } = useGolf();
+  const { activeRound, enterScore, finishRound, setRoundPhoto, syncRound, setCurrentHole, refreshActiveRound } = useGolf();
 
   // Poll partner scores every 15s when there are other registered players
   useEffect(() => {
@@ -993,8 +996,6 @@ const RoundPlayer = ({ onExit, onCancel }: { onExit: () => void; onCancel: () =>
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const photoRef = useRef<HTMLInputElement>(null);
-  const [isGeneratingStory, setIsGeneratingStory] = useState(false);
-  const isMobile = useIsMobile();
 
   // Экран подтверждения после 18 лунки
   if (showConfirmation && activeRound) {
@@ -1006,21 +1007,18 @@ const RoundPlayer = ({ onExit, onCancel }: { onExit: () => void; onCancel: () =>
     };
 
     return (
-      <div
-        className="fixed inset-0 z-50 flex flex-col"
-        style={{ background: "hsl(var(--background))" }}
-      >
-        <div className="shrink-0 flex items-center justify-center" style={{ paddingTop: "calc(var(--tg-safe-top) + 10px)", paddingBottom: 10, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-          <span className="text-white font-bold tracking-[0.18em] text-base">GOLF</span>
+      <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#f7f7f7", fontFamily: CUPRUM }}>
+        <div className="flex items-center justify-center" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 14px)", paddingBottom: 10 }}>
+          <LiveScoringLogo />
         </div>
-        <div className="flex-1 overflow-y-auto px-5 py-6">
-          <div className="text-center mb-6">
-            <div className="text-white/60 text-sm uppercase tracking-wider mb-2">{t.confirmation}</div>
-            <div className="text-white font-black text-3xl">{t.completedRound}</div>
+        <div className="flex-1 overflow-y-auto px-5 py-4">
+          <div className="text-center mb-5">
+            <div className="text-xs uppercase tracking-wider mb-1" style={{ color: "#8a8a8a" }}>{t.confirmation}</div>
+            <div className="font-bold text-2xl" style={{ color: INK }}>{t.completedRound}</div>
           </div>
 
           {/* Players scorecard summary */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             {activeRound.players.map((p) => {
               const scores = activeRound.scores[p.id] ?? [];
               const total = scores.reduce((a, s) => a + s.score, 0);
@@ -1032,24 +1030,22 @@ const RoundPlayer = ({ onExit, onCancel }: { onExit: () => void; onCancel: () =>
               const ch = getCh(p);
               const netVsParVal = vsPar - ch;
               const netVsParText = netVsParVal === 0 ? "E" : netVsParVal > 0 ? `+${netVsParVal}` : `${netVsParVal}`;
+              const vsParColor = vsPar < 0 ? "#21835b" : vsPar === 0 ? "#8a8a8a" : "#d80027";
+              const netColor = netVsParVal < 0 ? "#21835b" : netVsParVal === 0 ? "#8a8a8a" : "#ea580c";
               return (
-                <div key={p.id} className="rounded-2xl overflow-hidden" style={{ background: "hsl(var(--card))" }}>
-                  <div className="flex items-center justify-between px-5 py-4">
+                <div key={p.id} className="rounded-xl overflow-hidden border" style={{ background: "#ffffff", borderColor: "#e5e5e5" }}>
+                  <div className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-3">
                       <Avatar name={p.name} tone={p.isMe ? "orange" : "muted"} photoUrl={p.photoUrl} />
                       <div>
-                        <div className="text-white font-bold">{p.name}</div>
-                        <div className="text-white/50 text-sm">HCP {p.hcp} · CH {ch}</div>
+                        <div className="font-bold" style={{ color: INK }}>{p.name}</div>
+                        <div className="text-sm" style={{ color: "#8a8a8a" }}>HCP {p.hcp} · CH {ch}</div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-black text-white tabular-nums">{total}</div>
-                      <div className="text-sm font-bold" style={{ color: vsPar < 0 ? "#22c55e" : vsPar === 0 ? "rgba(255,255,255,0.6)" : "#f87171" }}>
-                        {vsParText}
-                      </div>
-                      <div className="text-xs font-semibold" style={{ color: netVsParVal < 0 ? "#22c55e" : netVsParVal === 0 ? "rgba(255,255,255,0.4)" : "#fbbf24" }}>
-                        Net {netVsParText}
-                      </div>
+                      <div className="text-2xl font-black tabular-nums" style={{ color: INK }}>{total}</div>
+                      <div className="text-sm font-bold" style={{ color: vsParColor }}>{vsParText}</div>
+                      <div className="text-xs font-semibold" style={{ color: netColor }}>Net {netVsParText}</div>
                     </div>
                   </div>
 
@@ -1060,11 +1056,11 @@ const RoundPlayer = ({ onExit, onCancel }: { onExit: () => void; onCancel: () =>
                       return (
                         <div
                           key={s.hole}
-                          className="aspect-square rounded-lg flex flex-col items-center justify-center text-center"
-                          style={{ background: "rgba(255,255,255,0.05)" }}
+                          className="aspect-square rounded-md flex flex-col items-center justify-center text-center"
+                          style={{ background: "#f7f7f7" }}
                         >
-                          <div className="text-white/40 text-[10px] leading-none">Hole {s.hole}</div>
-                          <div className={cn("text-xl font-black leading-none mt-1", scoreLabelColor(s.score, h?.par ?? 4))}>
+                          <div className="text-[10px] leading-none" style={{ color: "#8a8a8a" }}>{s.hole}</div>
+                          <div className="text-lg font-black leading-none mt-1" style={{ color: scoreLabelColor(s.score, h?.par ?? 4) }}>
                             {s.score}
                           </div>
                         </div>
@@ -1077,19 +1073,19 @@ const RoundPlayer = ({ onExit, onCancel }: { onExit: () => void; onCancel: () =>
           </div>
         </div>
 
-        <div className="px-5 pt-4 space-y-3">
+        <div className="px-5 pt-3 space-y-2" style={{ background: "#ffffff", borderTop: "1px solid #e5e5e5", paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}>
           <button
             onClick={confirmFinish}
-            className="w-full h-14 rounded-2xl font-black text-base uppercase tracking-wider active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
-            style={{ background: "#22c55e", color: "#000" }}
+            className="w-full h-14 rounded-xl font-bold text-base active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+            style={{ background: "#21835b", color: "#f7f7f7" }}
           >
             <Check className="h-5 w-5" strokeWidth={3} />
             {t.finishRound}
           </button>
           <button
             onClick={() => setShowConfirmation(false)}
-            className="w-full h-12 rounded-2xl font-semibold text-sm"
-            style={{ background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)" }}
+            className="w-full h-12 rounded-xl font-semibold text-sm"
+            style={{ background: "#f0f0f0", color: "#8a8a8a" }}
           >
             {t.editScore}
           </button>
@@ -1108,7 +1104,7 @@ const RoundPlayer = ({ onExit, onCancel }: { onExit: () => void; onCancel: () =>
       return a + (s.score - (h?.par ?? 4));
     }, 0);
     const vpText = cVsPar === 0 ? "E" : cVsPar > 0 ? `+${cVsPar}` : `${cVsPar}`;
-    const vpColor = cVsPar < 0 ? "#22c55e" : cVsPar === 0 ? "rgba(255,255,255,0.8)" : "#f87171";
+    const vpColor = cVsPar < 0 ? "#21835b" : cVsPar === 0 ? "#8a8a8a" : "#d80027";
 
     const handlePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -1120,48 +1116,27 @@ const RoundPlayer = ({ onExit, onCancel }: { onExit: () => void; onCancel: () =>
       e.target.value = "";
     };
 
-    const handleShareInstagram = async () => {
-      setIsGeneratingStory(true);
-      toast.info(t.sharingRound);
-      try {
-        console.log('[Instagram] Starting generation...', { round: completedRound.id });
-        const blob = await generateStoryImage(completedRound, profile);
-        console.log('[Instagram] Generated blob:', blob.size, 'bytes');
-        await shareToInstagram(blob);
-        toast.success(t.shareSuccess);
-      } catch (err) {
-        console.error('[Instagram] Error:', err);
-        const errorMsg = err instanceof Error ? err.message : 'Unknown error';
-        toast.error(`${t.shareFailed}: ${errorMsg}`);
-      } finally {
-        setIsGeneratingStory(false);
-      }
-    };
-
     return (
-      <div
-        className="fixed inset-0 z-50 flex flex-col"
-        style={{ background: "hsl(var(--background))" }}
-      >
-        <div className="shrink-0 flex items-center justify-center" style={{ paddingTop: "calc(var(--tg-safe-top) + 10px)", paddingBottom: 10, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-          <span className="text-white font-bold tracking-[0.18em] text-base">GOLF</span>
+      <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#f7f7f7", fontFamily: CUPRUM }}>
+        <div className="flex items-center justify-center" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 14px)", paddingBottom: 10 }}>
+          <LiveScoringLogo />
         </div>
         <div className="flex-1 flex flex-col items-center justify-center px-5 gap-6 overflow-y-auto">
           <div className="text-center">
             <div
               className="h-16 w-16 rounded-full mx-auto mb-4 grid place-items-center"
-              style={{ background: "rgba(34,197,94,0.15)", border: "2px solid #22c55e" }}
+              style={{ background: "#e8f3ee", border: "2px solid #21835b" }}
             >
               <svg width="28" height="22" viewBox="0 0 28 22" fill="none">
-                <path d="M2 11L10 19L26 3" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M2 11L10 19L26 3" stroke="#21835b" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <div className="text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: "rgba(255,255,255,0.4)" }}>
+            <div className="text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: "#8a8a8a" }}>
               {t.completedRound}
             </div>
-            <div className="text-white font-black text-5xl tabular-nums leading-none mt-2">{cTotal}</div>
+            <div className="font-black text-5xl tabular-nums leading-none mt-2" style={{ color: INK }}>{cTotal}</div>
             <div className="text-xl font-bold mt-1" style={{ color: vpColor }}>{vpText}</div>
-            <div className="text-sm mt-2" style={{ color: "rgba(255,255,255,0.4)" }}>
+            <div className="text-sm mt-2" style={{ color: "#8a8a8a" }}>
               {completedRound.courseName.split(" · ")[0]}
             </div>
           </div>
@@ -1174,7 +1149,7 @@ const RoundPlayer = ({ onExit, onCancel }: { onExit: () => void; onCancel: () =>
               <button
                 onClick={() => photoRef.current?.click()}
                 className="flex items-center justify-center gap-2 w-full mt-2 py-2 text-sm font-semibold"
-                style={{ color: "#22c55e" }}
+                style={{ color: "#21835b" }}
               >
                 <Camera className="h-4 w-4" /> {t.replacePhoto}
               </button>
@@ -1182,11 +1157,11 @@ const RoundPlayer = ({ onExit, onCancel }: { onExit: () => void; onCancel: () =>
           ) : (
             <button
               onClick={() => photoRef.current?.click()}
-              className="w-full rounded-2xl flex flex-col items-center justify-center gap-3 py-10"
-              style={{ background: "rgba(255,255,255,0.04)", border: "2px dashed rgba(255,255,255,0.12)" }}
+              className="w-full rounded-2xl flex flex-col items-center justify-center gap-3 py-10 border-2 border-dashed"
+              style={{ background: "#ffffff", borderColor: "#e5e5e5" }}
             >
-              <Camera className="h-8 w-8" style={{ color: "#22c55e" }} />
-              <div className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.6)" }}>
+              <Camera className="h-8 w-8" style={{ color: "#21835b" }} />
+              <div className="text-sm font-semibold" style={{ color: "#8a8a8a" }}>
                 {t.addRoundPhoto}
               </div>
             </button>
@@ -1194,11 +1169,11 @@ const RoundPlayer = ({ onExit, onCancel }: { onExit: () => void; onCancel: () =>
           <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
         </div>
 
-        <div className="px-5 pt-4 space-y-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}>
+        <div className="px-5 pt-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}>
           <button
             onClick={onExit}
-            className="w-full h-14 rounded-2xl font-black text-base uppercase tracking-wider active:scale-[0.98] transition-transform"
-            style={{ background: "#22c55e", color: "#000" }}
+            className="w-full h-14 rounded-xl font-bold text-base active:scale-[0.98] transition-transform"
+            style={{ background: "#21835b", color: "#f7f7f7" }}
           >
             {t.done}
           </button>
@@ -1232,13 +1207,6 @@ const RoundPlayer = ({ onExit, onCancel }: { onExit: () => void; onCancel: () =>
       penalties: existing?.penalties ?? 0,
     });
     setSheetPlayer(p);
-  };
-
-  const openNextPlayer = () => {
-    const next = activeRound.players.find(
-      (p) => !activeRound.scores[p.id]?.find((x) => x.hole === currentHole.number)
-    ) ?? activeRound.players[0];
-    openSheet(next);
   };
 
   const submit = () => {
@@ -1295,108 +1263,52 @@ const RoundPlayer = ({ onExit, onCancel }: { onExit: () => void; onCancel: () =>
     }, 0);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "hsl(var(--background))" }}>
+  const playedHoles = new Set(
+    playHoles.filter((h) => activeRound.players.some((p) => activeRound.scores[p.id]?.some((s) => s.hole === h.number))).map((h) => h.number),
+  );
 
-      {/* ── Header + hole navigation in one row ── */}
-      <div
-        className="shrink-0 flex items-center justify-between px-5"
-        style={{
-          paddingTop: "calc(var(--tg-safe-top) + 10px)",
-          paddingBottom: 10,
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
-        }}
-      >
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#f7f7f7", fontFamily: CUPRUM }}>
+
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between px-5" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 14px)", paddingBottom: 10 }}>
         <button
           onClick={() => setShowExitConfirm(true)}
-          className="h-9 w-9 rounded-full grid place-items-center"
-          style={{ background: "rgba(255,255,255,0.1)" }}
+          className="h-9 w-9 rounded-full grid place-items-center border"
+          style={{ borderColor: "#d9d9d9" }}
         >
-          <X className="h-4 w-4 text-white" strokeWidth={2.5} />
+          <X className="h-4 w-4" style={{ color: INK }} strokeWidth={2.5} />
         </button>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setHoleIdx(Math.max(0, holeIdx - 1))}
-            disabled={holeIdx === 0}
-            className="h-9 w-9 grid place-items-center disabled:opacity-20"
-          >
-            <ChevronLeft className="h-6 w-6 text-white" strokeWidth={2.5} />
-          </button>
-          <span className="text-white font-bold text-base tracking-wider min-w-[90px] text-center">
-            Лунка {currentHole.number}
-          </span>
-          <button
-            onClick={() => setHoleIdx(Math.min(totalHoles - 1, holeIdx + 1))}
-            disabled={holeIdx === totalHoles - 1}
-            className="h-9 w-9 grid place-items-center disabled:opacity-20"
-          >
-            <ChevronRight className="h-6 w-6 text-white" strokeWidth={2.5} />
-          </button>
-        </div>
-
+        <LiveScoringLogo />
         <button
           onClick={handleFinish}
-          className="h-9 px-4 rounded-full font-bold text-xs tracking-wider"
-          style={{ background: "rgba(255,255,255,0.1)", color: "#4ade80" }}
+          className="h-9 px-3 rounded-full font-bold text-xs tracking-wider border"
+          style={{ borderColor: "#21835b", color: "#21835b" }}
         >
           ФИНИШ
         </button>
       </div>
 
-      {/* ── Main card (widget style) ── */}
-      <div className="flex-1 flex flex-col justify-center px-5 pb-4 gap-4 overflow-y-auto">
-
-        {/* Widget card */}
-        <div className="rounded-3xl overflow-hidden" style={{ background: "hsl(var(--card))" }}>
-
-          {/* Card header */}
-          <div className="flex items-center gap-2 px-5 pt-5 pb-3">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L4 6v6c0 5.5 3.5 10.7 8 12 4.5-1.3 8-6.5 8-12V6L12 2z"
-                stroke="white" strokeWidth="1.8" fill="none" strokeLinejoin="round"/>
-            </svg>
-            <span className="text-white/70 font-semibold text-sm tracking-[0.15em]">GOLF</span>
-          </div>
-
-          {/* Par + HCP */}
-          <div className="flex items-baseline gap-6 px-5 pb-4">
-            <div>
-              <span className="text-white font-black text-4xl tracking-tight">PAR {currentHole.par}</span>
-            </div>
-            <div>
-              <span className="text-white/50 font-bold text-2xl tracking-tight">HCP {currentHole.hcp}</span>
-            </div>
-          </div>
-
-          {/* ВВЕСТИ СЧЁТ button */}
-          <div className="px-5 pb-4">
-            <button
-              onClick={openNextPlayer}
-              className="w-full h-12 rounded-full font-black text-sm tracking-[0.15em] active:scale-[0.97] transition-transform"
-              style={{ background: "#22c55e", color: "#000" }}
-            >
-              ВВЕСТИ СЧЁТ
-            </button>
-          </div>
-
-          {/* Card footer: course + hole number */}
-          <div
-            className="flex items-center justify-between px-5 py-3"
-            style={{ background: "rgba(255,255,255,0.05)", borderTop: "1px solid rgba(255,255,255,0.07)" }}
-          >
-            <div>
-              <div className="text-white/80 text-sm font-semibold">{course.club}</div>
-              <div className="text-white/40 text-xs">{course.name} · {currentHole.meters[mePlayer?.tee ?? "yellow"]} m</div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Flag className="h-5 w-5" style={{ color: "#22c55e" }} />
-              <span className="text-white font-black text-2xl tabular-nums">{currentHole.number}</span>
-            </div>
-          </div>
+      {/* ── Course / hole banner ── */}
+      <div className="px-5 py-3 text-center" style={{ background: "#e2e2e2" }}>
+        <div className="font-bold text-lg tracking-wide truncate" style={{ color: INK }}>{course.club}</div>
+        <div className="text-xs uppercase tracking-wide mt-0.5" style={{ color: "#8a8a8a" }}>
+          {course.name} · Par {currentHole.par} · HCP {currentHole.hcp} · {currentHole.meters[mePlayer?.tee ?? "yellow"]} м
         </div>
+      </div>
 
-        {/* Player score cards */}
+      {/* ── Hole grid nav ── */}
+      <div className="px-5 pt-3 pb-1">
+        <HoleGridNav
+          holes={playHoles.map((h) => h.number)}
+          currentHole={currentHole.number}
+          playedHoles={playedHoles}
+          onSelect={(h) => setHoleIdx(playHoles.findIndex((x) => x.number === h))}
+        />
+      </div>
+
+      {/* ── Player score cards ── */}
+      <div className="flex-1 flex flex-col px-5 py-3 gap-2.5 overflow-y-auto">
         {activeRound.players.map((p) => {
           const tp = totalVsPar(p);
           const sign = tp === 0 ? "E" : tp > 0 ? `+${tp}` : `${tp}`;
@@ -1408,72 +1320,47 @@ const RoundPlayer = ({ onExit, onCancel }: { onExit: () => void; onCancel: () =>
             <button
               key={p.id}
               onClick={() => openSheet(p)}
-              className="w-full rounded-2xl p-4 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform"
-              style={{ background: "hsl(var(--card))" }}
+              className="w-full rounded-xl p-4 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform border"
+              style={{ background: "#ffffff", borderColor: "#e5e5e5" }}
             >
               <div className="flex items-center gap-3 min-w-0">
                 <Avatar name={p.name} tone={p.isMe ? "orange" : "muted"} photoUrl={p.photoUrl} />
                 <div className="text-left min-w-0">
-                  <div className="text-white font-semibold truncate">
+                  <div className="font-semibold truncate" style={{ color: INK }}>
                     {p.name.split(" ")[0]}
-                    <span className="text-white/40 text-sm font-normal ml-1">CH {pCh}</span>
+                    <span className="text-sm font-normal ml-1" style={{ color: "#8a8a8a" }}>CH {pCh}</span>
                   </div>
-                  <div className="text-white/50 text-sm">{sign} · Net {netSign}</div>
+                  <div className="text-sm" style={{ color: "#8a8a8a" }}>{sign} · Net {netSign}</div>
                 </div>
               </div>
               <div
-                className="min-w-[60px] h-14 rounded-xl flex flex-col items-center justify-center"
-                style={has
-                  ? { background: "rgba(34,197,94,0.15)", border: "2px solid #22c55e" }
-                  : { background: "rgba(255,255,255,0.07)", border: "2px solid rgba(255,255,255,0.1)" }
-                }
+                className="min-w-[60px] h-14 rounded-lg flex flex-col items-center justify-center"
+                style={has ? { background: "#21835b" } : { background: "#e5e5e5" }}
               >
                 {has ? (
                   <>
-                    <div className="text-white font-black text-2xl tabular-nums leading-none">{has.score}</div>
-                    <div className={cn("text-[10px] font-bold mt-0.5", scoreLabelColor(has.score, currentHole.par))}>
+                    <div className="font-black text-2xl tabular-nums leading-none" style={{ color: "#f7f7f7" }}>{has.score}</div>
+                    <div className="text-[10px] font-bold mt-0.5" style={{ color: "#f7f7f7" }}>
                       {scoreLabel(has.score, currentHole.par)}
                     </div>
                   </>
                 ) : (
-                  <div className="text-white/25 text-2xl font-light">—</div>
+                  <div className="text-2xl font-light" style={{ color: "#8a8a8a" }}>—</div>
                 )}
               </div>
             </button>
           );
         })}
-
-        {/* Hole progress dots */}
-        <div className="flex items-center justify-center gap-1.5 pt-1">
-          {playHoles.map((h, i) => (
-            <button
-              key={i}
-              onClick={() => setHoleIdx(i)}
-              className="rounded-full transition-all duration-200"
-              style={{
-                width: i === holeIdx ? 20 : 8,
-                height: 8,
-                background: i === holeIdx
-                  ? "#22c55e"
-                  : activeRound.players.some((p) =>
-                      activeRound.scores[p.id]?.find((s) => s.hole === h.number)
-                    )
-                  ? "rgba(255,255,255,0.35)"
-                  : "rgba(255,255,255,0.12)",
-              }}
-            />
-          ))}
-        </div>
       </div>
 
       {/* ── Exit confirmation ── */}
       {showExitConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-6 animate-in fade-in duration-150" style={{ background: "rgba(0,0,0,0.7)" }}>
-          <div className="w-full rounded-3xl p-6 space-y-4" style={{ background: "hsl(var(--card))" }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6 animate-in fade-in duration-150" style={{ background: "rgba(0,0,0,0.4)" }}>
+          <div className="w-full rounded-2xl p-6 space-y-4" style={{ background: "#ffffff", fontFamily: CUPRUM }}>
             <div className="text-center">
-              <div className="text-white font-black text-xl mb-1">Leave round?</div>
-              <div className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
-                Round saved — come back anytime and continue where you left off
+              <div className="font-bold text-xl mb-1" style={{ color: INK }}>Выйти из раунда?</div>
+              <div className="text-sm" style={{ color: "#8a8a8a" }}>
+                Раунд сохранён — вернитесь в любое время и продолжите с того же места
               </div>
             </div>
             <button
@@ -1482,17 +1369,17 @@ const RoundPlayer = ({ onExit, onCancel }: { onExit: () => void; onCancel: () =>
                 if (activeRound) syncRound(activeRound).catch(() => {});
                 onCancel();
               }}
-              className="w-full h-13 rounded-2xl font-bold text-sm py-4"
-              style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)" }}
+              className="w-full h-12 rounded-xl font-bold text-sm"
+              style={{ background: "#f0f0f0", color: "#8a8a8a" }}
             >
-              Minimize — continue later
+              Свернуть — продолжить позже
             </button>
             <button
               onClick={() => { setShowExitConfirm(false); onExit(); }}
-              className="w-full h-13 rounded-2xl font-bold text-sm py-4"
-              style={{ background: "rgba(239,68,68,0.15)", color: "#f87171", border: "1.5px solid rgba(239,68,68,0.3)" }}
+              className="w-full h-12 rounded-xl font-bold text-sm"
+              style={{ background: "#fdeaea", color: "#d80027", border: "1.5px solid #f3c6c6" }}
             >
-              Cancel round
+              Отменить раунд
             </button>
           </div>
         </div>
@@ -1501,32 +1388,32 @@ const RoundPlayer = ({ onExit, onCancel }: { onExit: () => void; onCancel: () =>
       {/* ── Score Sheet ── */}
       {sheetPlayer && (
         <div className="fixed inset-0 z-50 flex items-end animate-in fade-in duration-150">
-          <button className="absolute inset-0 bg-black/70" onClick={() => setSheetPlayer(null)} />
+          <button className="absolute inset-0 bg-black/40" onClick={() => setSheetPlayer(null)} />
           <div
             className="relative w-full rounded-t-3xl animate-in slide-in-from-bottom duration-250"
-            style={{ background: "hsl(var(--card))", paddingBottom: `max(env(safe-area-inset-bottom), 24px)` }}
+            style={{ background: "#ffffff", paddingBottom: `max(env(safe-area-inset-bottom), 24px)`, fontFamily: CUPRUM }}
           >
             {/* drag handle */}
-            <div className="mx-auto w-10 h-1 rounded-full mt-3 mb-1" style={{ background: "rgba(255,255,255,0.15)" }} />
+            <div className="mx-auto w-10 h-1 rounded-full mt-3 mb-1" style={{ background: "#e5e5e5" }} />
 
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+            <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "#e5e5e5" }}>
               <div className="flex items-center gap-3">
                 <Avatar name={sheetPlayer.name} tone={sheetPlayer.isMe ? "orange" : "muted"} photoUrl={sheetPlayer.photoUrl} />
                 <div>
-                  <div className="text-white font-bold">{sheetPlayer.name.split(" ")[0]}</div>
-                  <div className="text-white/40 text-xs">
-                    Hole {currentHole.number} · Par {currentHole.par}
-                    {(() => { const s = getHoleStrokes(sheetPlayer, currentHole); return s !== 0 ? <span style={{ color: s > 0 ? "#22c55e" : "#f87171" }}> · {s > 0 ? `+${s}` : s} stroke</span> : null })()}
+                  <div className="font-bold" style={{ color: INK }}>{sheetPlayer.name.split(" ")[0]}</div>
+                  <div className="text-xs" style={{ color: "#8a8a8a" }}>
+                    Лунка {currentHole.number} · Par {currentHole.par}
+                    {(() => { const s = getHoleStrokes(sheetPlayer, currentHole); return s !== 0 ? <span style={{ color: s > 0 ? "#21835b" : "#d80027" }}> · {s > 0 ? `+${s}` : s} страйк</span> : null })()}
                   </div>
                 </div>
               </div>
               <button
                 onClick={() => setSheetPlayer(null)}
-                className="h-9 w-9 rounded-full grid place-items-center"
-                style={{ background: "rgba(255,255,255,0.1)" }}
+                className="h-9 w-9 rounded-full grid place-items-center border"
+                style={{ borderColor: "#e5e5e5" }}
               >
-                <X className="h-4 w-4 text-white" />
+                <X className="h-4 w-4" style={{ color: INK }} />
               </button>
             </div>
 
@@ -1559,9 +1446,9 @@ const RoundPlayer = ({ onExit, onCancel }: { onExit: () => void; onCancel: () =>
               <button
                 onClick={submit}
                 className="w-full h-14 rounded-2xl font-black text-base uppercase tracking-wider active:scale-[0.98] transition-transform"
-                style={{ background: "#22c55e", color: "#000" }}
+                style={{ background: "#21835b", color: "#f7f7f7" }}
               >
-                SAVE
+                Сохранить
               </button>
             </div>
           </div>
@@ -1580,24 +1467,24 @@ const ScoreCounter = ({
   sublabel?: string;
   sublabelColor?: string;
 }) => (
-  <div className="rounded-2xl flex flex-col items-center" style={{ background: "rgba(255,255,255,0.06)" }}>
-    <div className="text-[10px] font-bold uppercase tracking-widest pt-3 pb-1" style={{ color: "rgba(255,255,255,0.4)" }}>{label}</div>
+  <div className="rounded-2xl flex flex-col items-center" style={{ background: "#f7f7f7" }}>
+    <div className="text-[10px] font-bold uppercase tracking-widest pt-3 pb-1" style={{ color: "#8a8a8a" }}>{label}</div>
     <button
       onClick={() => onChange(value + 1)}
-      className="w-full h-14 grid place-items-center rounded-xl transition-colors active:bg-white/10"
-      style={{ color: "#22c55e" }}
+      className="w-full h-14 grid place-items-center rounded-xl transition-colors active:bg-black/5"
+      style={{ color: "#21835b" }}
     >
       <Plus className="h-7 w-7" strokeWidth={2.5} />
     </button>
-    <div className="text-4xl font-black tabular-nums text-white py-0.5">{value}</div>
+    <div className="text-4xl font-black tabular-nums py-0.5" style={{ color: INK }}>{value}</div>
     {sublabel
-      ? <div className={cn("text-[11px] font-bold mb-0.5", sublabelColor)}>{sublabel}</div>
+      ? <div className="text-[11px] font-bold mb-0.5" style={{ color: sublabelColor }}>{sublabel}</div>
       : <div className="mb-0.5 h-4" />
     }
     <button
       onClick={() => onChange(Math.max(1, value - 1))}
-      className="w-full h-14 grid place-items-center rounded-xl transition-colors active:bg-white/10"
-      style={{ color: "#22c55e" }}
+      className="w-full h-14 grid place-items-center rounded-xl transition-colors active:bg-black/5"
+      style={{ color: "#21835b" }}
     >
       <span className="text-3xl leading-none font-bold">−</span>
     </button>
@@ -1966,11 +1853,11 @@ const StatToggle = ({ label, active, onClick }: { label: string; active: boolean
     onClick={onClick}
     className="flex flex-col items-center gap-1 py-3 rounded-xl transition-colors"
     style={active
-      ? { background: "rgba(34,197,94,0.15)", border: "2px solid #22c55e", color: "#22c55e" }
-      : { background: "rgba(255,255,255,0.05)", border: "2px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)" }
+      ? { background: "#e8f3ee", border: "2px solid #21835b", color: "#21835b" }
+      : { background: "#f7f7f7", border: "2px solid #e5e5e5", color: "#8a8a8a" }
     }
   >
-    <div className="h-8 w-8 rounded-full grid place-items-center" style={{ background: active ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.05)" }}>
+    <div className="h-8 w-8 rounded-full grid place-items-center" style={{ background: active ? "#d3e9df" : "#ffffff" }}>
       {active && <Check className="h-5 w-5" strokeWidth={3} />}
     </div>
     <div className="text-[9px] font-semibold leading-tight text-center px-1">{label}</div>
@@ -1981,24 +1868,24 @@ const StatCounter = ({ label, value, onChange }: { label: string; value: number;
   <div
     className="flex flex-col items-center rounded-xl overflow-hidden"
     style={value > 0
-      ? { background: "rgba(34,197,94,0.15)", border: "2px solid #22c55e" }
-      : { background: "rgba(255,255,255,0.05)", border: "2px solid rgba(255,255,255,0.1)" }
+      ? { background: "#e8f3ee", border: "2px solid #21835b" }
+      : { background: "#f7f7f7", border: "2px solid #e5e5e5" }
     }
   >
-    <div className="text-[9px] font-semibold uppercase tracking-widest pt-2" style={{ color: value > 0 ? "#22c55e" : "rgba(255,255,255,0.4)" }}>{label}</div>
+    <div className="text-[9px] font-semibold uppercase tracking-widest pt-2" style={{ color: value > 0 ? "#21835b" : "#8a8a8a" }}>{label}</div>
     <button
       onClick={() => onChange(value + 1)}
-      className="w-full h-8 grid place-items-center active:bg-white/10"
-      style={{ color: value > 0 ? "#22c55e" : "rgba(255,255,255,0.35)" }}
+      className="w-full h-8 grid place-items-center active:bg-black/5"
+      style={{ color: value > 0 ? "#21835b" : "#a3a3a3" }}
     >
       <Plus className="h-4 w-4" strokeWidth={2.5} />
     </button>
-    <div className="text-xl font-black tabular-nums leading-none" style={{ color: value > 0 ? "#22c55e" : "rgba(255,255,255,0.3)" }}>{value}</div>
+    <div className="text-xl font-black tabular-nums leading-none" style={{ color: value > 0 ? "#21835b" : "#a3a3a3" }}>{value}</div>
     <button
       onClick={() => onChange(Math.max(0, value - 1))}
       disabled={value === 0}
-      className="w-full h-8 grid place-items-center active:bg-white/10 disabled:opacity-25"
-      style={{ color: value > 0 ? "#22c55e" : "rgba(255,255,255,0.35)" }}
+      className="w-full h-8 grid place-items-center active:bg-black/5 disabled:opacity-25"
+      style={{ color: value > 0 ? "#21835b" : "#a3a3a3" }}
     >
       <span className="text-xl leading-none font-bold">−</span>
     </button>
