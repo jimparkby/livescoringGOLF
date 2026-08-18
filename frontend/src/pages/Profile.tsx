@@ -9,11 +9,11 @@ import { Avatar } from "@/components/PlayerAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Pencil, Check, Trophy, Camera, LogOut, Trash2, ChevronRight, X, Calendar, Settings } from "lucide-react";
+import { Pencil, Check, Trophy, Camera, LogOut, Trash2, X, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getDifferentials, calcHandicapIndex } from "@/lib/handicap";
-import { TEE_CONFIG, COURSES, type TeeColor } from "@/lib/courses";
+import { COURSES } from "@/lib/courses";
 import { compressImage } from "@/lib/imageUtils";
 
 // Helper to get par for a hole from course data
@@ -31,9 +31,7 @@ const ProfilePage = () => {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(profile);
-  const [showTeePicker, setShowTeePicker] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [syncingHDID, setSyncingHDID] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,16 +64,6 @@ const ProfilePage = () => {
     }).catch(console.error);
   }, [hcpIndex]);
 
-  const pushSetting = (patch: Partial<typeof profile>) => {
-    updateProfile(patch);
-    const token = localStorage.getItem('golf_jwt');
-    fetch(`${BASE}/api/profile`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-      body: JSON.stringify({ default_tee: patch.defaultTee, gender: patch.gender }),
-    }).catch(console.error);
-  };
-
   const syncProfile = (data: typeof draft) => {
     const token = localStorage.getItem('golf_jwt');
     fetch(`${BASE}/api/profile`, {
@@ -102,47 +90,6 @@ const ProfilePage = () => {
     toast.success(t.profileUpdated);
     syncProfile(draft);
   };
-
-  const syncWithHDID = async () => {
-    if (!profile.firstName || !profile.lastName) {
-      toast.error("Пожалуйста, укажите имя и фамилию в профиле");
-      return;
-    }
-    setSyncingHDID(true);
-    try {
-      const token = localStorage.getItem('golf_jwt');
-      const res = await fetch(`${BASE}/api/profile/sync-hdid`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.errorRu || data.error || "Ошибка синхронизации");
-        return;
-      }
-      updateProfile({ hcp: data.hcp });
-      toast.success(`HCP обновлен: ${data.hcp.toFixed(1)} (HDID: ${data.hdid_name})`);
-    } catch (err) {
-      toast.error("Ошибка подключения к серверу");
-    } finally {
-      setSyncingHDID(false);
-    }
-  };
-
-  const playedTotals = rounds
-    .map((r) => {
-      const me = r.players.find((p) => p.isMe);
-      return me ? r.scores[me.id]?.reduce((a, s) => a + s.score, 0) ?? null : null;
-    })
-    .filter((x): x is number => x !== null);
-
-  const best = playedTotals.length ? Math.min(...playedTotals) : 0;
-  const avg = playedTotals.length
-    ? Math.round(playedTotals.reduce((a, b) => a + b, 0) / playedTotals.length)
-    : 0;
 
   const isEmpty = !profile.firstName && !profile.lastName;
   const hcpToShow = hcpIndex ?? profile.hcp;
@@ -226,74 +173,69 @@ const ProfilePage = () => {
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
       {/* Hero */}
-      <Card className="p-6 shadow-elevated overflow-hidden relative">
-        <div className="absolute inset-0 gradient-hero opacity-95" />
-        <div className="relative z-10 text-primary-foreground">
-          <div className="flex items-center gap-4">
-            <div className="relative shrink-0">
-              <div className="h-20 w-20 rounded-full overflow-hidden shadow-glow border-2 border-action/30">
-                {profile.photoUrl ? (
-                  <img src={profile.photoUrl} alt={profile.firstName} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="h-full w-full bg-warning grid place-items-center font-bold text-2xl text-primary">
-                    {profile.initials || "?"}
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={() => photoInputRef.current?.click()}
-                className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full grid place-items-center shadow-md"
-                style={{ background: "#22c55e" }}
-              >
-                <Camera className="h-3.5 w-3.5 text-black" />
-              </button>
-              <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
-            </div>
-            <div className="flex-1 min-w-0">
-              {isEmpty ? (
-                <div className="text-base opacity-80">{t.enterYourName}</div>
+      <Card className="p-6 shadow-elevated">
+        <div className="flex items-center gap-4">
+          <div className="relative shrink-0">
+            <div className="h-20 w-20 rounded-full overflow-hidden border-2" style={{ borderColor: "var(--border-hairline)" }}>
+              {profile.photoUrl ? (
+                <img src={profile.photoUrl} alt={profile.firstName} className="h-full w-full object-cover" />
               ) : (
-                <div className="text-xl font-bold">{profile.firstName} {profile.lastName}</div>
-              )}
-              <div className="text-sm opacity-80 flex items-center gap-1.5 mt-1">
-                <Trophy className="h-3.5 w-3.5" /> Golf Club Minsk
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowSettings(true)}
-                className="h-10 w-10 rounded-full bg-primary-foreground/20 hover:bg-primary-foreground/30 grid place-items-center transition-base"
-              >
-                <Settings className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => {
-                  if (editing) save();
-                  else { setDraft(profile); setEditing(true); }
-                }}
-                className="h-10 w-10 rounded-full bg-primary-foreground/20 hover:bg-primary-foreground/30 grid place-items-center transition-base"
-              >
-                {editing ? <Check className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3 mt-5">
-            <div className="text-center bg-primary-foreground/10 backdrop-blur rounded-xl py-3 relative">
-              <div className="text-2xl font-bold tabular-nums">{hcpToShow.toFixed(1)}</div>
-              <div className="text-[10px] uppercase tracking-wider opacity-70 mt-0.5">
-                HCP
-              </div>
-              {hcpIndex !== null && (
-                <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-action grid place-items-center">
-                  <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
-                    <path d="M1 3L3 5L7 1" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                <div className="h-full w-full bg-warning grid place-items-center font-bold text-2xl text-primary">
+                  {profile.initials || "?"}
                 </div>
               )}
             </div>
-            <HeroStat label={t.best} value={best ? String(best) : "—"} />
-            <HeroStat label={t.avg} value={avg ? String(avg) : "—"} />
+            <button
+              onClick={() => photoInputRef.current?.click()}
+              className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full grid place-items-center shadow-md"
+              style={{ background: "#22c55e" }}
+            >
+              <Camera className="h-3.5 w-3.5 text-black" />
+            </button>
+            <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+          </div>
+          <div className="flex-1 min-w-0">
+            {isEmpty ? (
+              <div className="text-base text-muted-foreground">{t.enterYourName}</div>
+            ) : (
+              <div className="text-xl font-bold text-foreground">{profile.firstName} {profile.lastName}</div>
+            )}
+            <div className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
+              <Trophy className="h-3.5 w-3.5" /> Golf Club Minsk
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowSettings(true)}
+              className="h-10 w-10 rounded-full bg-muted hover:bg-muted/80 grid place-items-center transition-base"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => {
+                if (editing) save();
+                else { setDraft(profile); setEditing(true); }
+              }}
+              className="h-10 w-10 rounded-full bg-muted hover:bg-muted/80 grid place-items-center transition-base"
+            >
+              {editing ? <Check className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <div className="text-center rounded-xl py-4 relative" style={{ background: "var(--surface-card)", border: "1px solid var(--border-hairline)" }}>
+            <div className="text-3xl font-bold tabular-nums" style={{ color: "var(--text-primary)" }}>{hcpToShow.toFixed(1)}</div>
+            <div className="text-[11px] uppercase tracking-wider mt-0.5" style={{ color: "var(--text-muted)" }}>
+              HCP
+            </div>
+            {hcpIndex !== null && (
+              <div className="absolute -top-1 right-[calc(50%-2.25rem)] h-4 w-4 rounded-full bg-action grid place-items-center">
+                <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
+                  <path d="M1 3L3 5L7 1" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            )}
           </div>
         </div>
       </Card>
@@ -325,12 +267,7 @@ const ProfilePage = () => {
             {t.saveChanges}
           </Button>
         </Card>
-      ) : (
-        <Card className="p-5 shadow-soft space-y-3 text-sm">
-          <Row icon={<Calendar className="h-4 w-4" />} label={t.memberSince} value={profile.memberSince || "—"} />
-          <Row icon={<Trophy className="h-4 w-4" />} label={t.roundsPlayed} value={String(rounds.length)} />
-        </Card>
-      )}
+      ) : null}
 
       {/* Performance stats */}
       {perfStats && !editing && (
@@ -371,69 +308,6 @@ const ProfilePage = () => {
         </Card>
       )}
 
-      {/* Settings */}
-      <Card className="overflow-hidden shadow-soft divide-y">
-        {/* Default tee */}
-        <button
-          onClick={() => setShowTeePicker(true)}
-          className="w-full flex items-center justify-between px-5 py-4"
-        >
-          <div className="text-sm font-medium">{t.defaultTee}</div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <div
-              className="w-4 h-4 rounded-sm border"
-              style={{
-                background: TEE_CONFIG[profile.defaultTee].cssColor,
-                borderColor: TEE_CONFIG[profile.defaultTee].border,
-              }}
-            />
-            <span className="text-sm">{TEE_CONFIG[profile.defaultTee].label}</span>
-            <ChevronRight className="h-4 w-4" />
-          </div>
-        </button>
-
-        {/* Gender — used to bucket into HCP flights for tournament live scoring */}
-        <div className="w-full flex items-center justify-between px-5 py-4">
-          <div className="text-sm font-medium">Пол</div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => pushSetting({ gender: "man" })}
-              className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors",
-                profile.gender !== "woman" ? "bg-action text-primary-foreground" : "bg-muted text-muted-foreground"
-              )}
-            >
-              Мужской
-            </button>
-            <button
-              onClick={() => pushSetting({ gender: "woman" })}
-              className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors",
-                profile.gender === "woman" ? "bg-action text-primary-foreground" : "bg-muted text-muted-foreground"
-              )}
-            >
-              Женский
-            </button>
-          </div>
-        </div>
-
-        {/* Sync with HDID */}
-        <button
-          onClick={syncWithHDID}
-          disabled={syncingHDID}
-          className="w-full flex items-center justify-between px-5 py-4 hover:bg-accent/50 transition-colors disabled:opacity-50"
-        >
-          <div className="text-sm font-medium">Синхронизировать HCP с HDID</div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            {syncingHDID ? (
-              <div className="h-4 w-4 rounded-full border-2 border-muted-foreground border-t-transparent animate-spin" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </div>
-        </button>
-      </Card>
-
       {/* Sign out */}
       <button
         onClick={() => {
@@ -463,51 +337,6 @@ const ProfilePage = () => {
             ))}
           </div>
         </Card>
-      )}
-
-      {/* Default tee picker sheet */}
-      {showTeePicker && (
-        <div className="fixed inset-0 z-50 flex items-end animate-in fade-in duration-150">
-          <button className="absolute inset-0 bg-black/70" onClick={() => setShowTeePicker(false)} />
-          <div
-            className="relative w-full rounded-t-3xl animate-in slide-in-from-bottom duration-250"
-            style={{ background: "#1c1c1e", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}
-          >
-            <div className="mx-auto w-10 h-1 rounded-full mt-3 mb-4" style={{ background: "rgba(255,255,255,0.15)" }} />
-            <div className="flex items-center justify-between px-5 pb-4">
-              <div className="text-white font-bold text-lg">{t.defaultTee}</div>
-              <button
-                onClick={() => setShowTeePicker(false)}
-                className="h-8 w-8 rounded-full grid place-items-center"
-                style={{ background: "rgba(255,255,255,0.1)" }}
-              >
-                <X className="h-4 w-4 text-white" />
-              </button>
-            </div>
-            <div className="px-4 pb-4 space-y-2">
-              {(Object.keys(TEE_CONFIG) as TeeColor[]).map((color) => (
-                <button
-                  key={color}
-                  onClick={() => { pushSetting({ defaultTee: color }); setShowTeePicker(false); toast.success(`${t.defaultTee}: ${TEE_CONFIG[color].label}`); }}
-                  className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl active:scale-[0.98] transition-transform"
-                  style={{
-                    background: profile.defaultTee === color ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.05)",
-                    border: profile.defaultTee === color ? "2px solid rgba(255,255,255,0.25)" : "2px solid transparent",
-                  }}
-                >
-                  <div
-                    className="w-10 h-10 rounded-md shrink-0 border-2"
-                    style={{ background: TEE_CONFIG[color].cssColor, borderColor: TEE_CONFIG[color].border }}
-                  />
-                  <div className="text-white font-bold">{TEE_CONFIG[color].label}</div>
-                  {profile.defaultTee === color && (
-                    <Check className="h-5 w-5 ml-auto" style={{ color: "#22c55e" }} strokeWidth={3} />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
       )}
 
       {/* ── Settings Modal ── */}
@@ -599,27 +428,10 @@ const SettingsModal = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
-const HeroStat = ({ label, value }: { label: string; value: string }) => (
-  <div className="text-center bg-primary-foreground/10 backdrop-blur rounded-xl py-3">
-    <div className="text-2xl font-bold tabular-nums">{value}</div>
-    <div className="text-[10px] uppercase tracking-wider opacity-70 mt-0.5">{label}</div>
-  </div>
-);
-
 const Field = ({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) => (
   <div className={className}>
     <Label className="text-xs uppercase tracking-wider text-muted-foreground">{label}</Label>
     <div className="mt-1">{children}</div>
-  </div>
-);
-
-const Row = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
-  <div className="flex items-center justify-between py-2 border-b border-border last:border-0">
-    <div className="flex items-center gap-2 text-muted-foreground">
-      {icon}
-      <span>{label}</span>
-    </div>
-    <div className="font-medium">{value}</div>
   </div>
 );
 
