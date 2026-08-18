@@ -1,274 +1,332 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
-import { Trophy, Target, TrendingUp } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Trophy, Users, Search, RefreshCw, Calendar } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
+import NominationsCard from "@/components/NominationsCard";
 
-type PlayerStats = {
-  player_name: string;
-  total_tournaments: number;
-  first_places: number;
-  second_places: number;
-  third_places: number;
-  top3_finishes: number;
-  win_rate?: number;
-  estimated_hcp?: number;
-  best_net?: number;
+type RankPlayer = { rank: number; name: string; tournaments: number; hcp: number; rating: number };
+
+type TournamentResult = {
+  date: string;
+  name: string;
+  group: string;
+  tournament: string;
+  gender: string;
+  hcp: number;
+  grossRank: number;
+  grossScore: number;
+  netRank: number;
+  netScore: number;
 };
 
-type OverallStats = {
-  total_players: number;
-  total_tournaments: number;
-  total_results: number;
-  total_nominations: number;
+type LeaderboardData = {
+  overall: RankPlayer[];
+  male: RankPlayer[];
+  female: RankPlayer[];
+  tournaments: TournamentResult[];
+  stats: {
+    totalPlayers: number;
+    malePlayers: number;
+    femalePlayers: number;
+    totalTournaments: number;
+    tournamentNames: string[];
+  };
+  lastUpdated: string;
 };
 
-type RecentWinner = {
-  tournament_name: string;
-  tournament_date: string;
-  player_name: string;
-  group_name: string;
+type MainTab = "rating" | "tournaments";
+type RatingTab = "overall" | "male" | "female";
+
+// "25.04.2026" -> sortable timestamp
+const parseRuDate = (d: string) => {
+  const [day, month, year] = d.split(".").map(Number);
+  return day && month && year ? new Date(year, month - 1, day).getTime() : 0;
 };
 
 const StatisticsPage = () => {
-  const [topByWins, setTopByWins] = useState<PlayerStats[]>([]);
-  const [topByHcp, setTopByHcp] = useState<PlayerStats[]>([]);
-  const [overallStats, setOverallStats] = useState<OverallStats | null>(null);
-  const [recentWinners, setRecentWinners] = useState<RecentWinner[]>([]);
+  const [data, setData] = useState<LeaderboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"wins" | "hcp" | "recent">("wins");
+  const [refreshing, setRefreshing] = useState(false);
+  const [mainTab, setMainTab] = useState<MainTab>("rating");
+
+  const [ratingTab, setRatingTab] = useState<RatingTab>("overall");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showAll, setShowAll] = useState(false);
+
+  const [selectedTournament, setSelectedTournament] = useState<string | null>(null);
+
+  const fetchData = async (force = false) => {
+    try {
+      if (force) setRefreshing(true);
+      else setLoading(true);
+      const result = force
+        ? await api.post<LeaderboardData>("/api/leaderboard/refresh", {})
+        : await api.get<LeaderboardData>("/api/leaderboard");
+      setData(result);
+    } catch (error) {
+      console.error("[statistics] Error:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [leaderboardsRes, overallRes] = await Promise.all([
-          fetch("/api/statistics/leaderboards"),
-          fetch("/api/statistics/overall"),
-        ]);
-
-        if (leaderboardsRes.ok) {
-          const data = await leaderboardsRes.json();
-          setTopByWins(data.topByWins || []);
-          setTopByHcp(data.topByHcp || []);
-        }
-
-        if (overallRes.ok) {
-          const data = await overallRes.json();
-          setOverallStats(data.stats);
-          setRecentWinners(data.recentWinners || []);
-        }
-      } catch (error) {
-        console.error("Error fetching statistics:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
   }, []);
+
+  // Tournaments ordered by most recent first
+  const tournamentsByRecency = useMemo(() => {
+    if (!data) return [];
+    const latestDate = new Map<string, number>();
+    data.tournaments.forEach((r) => {
+      const ts = parseRuDate(r.date);
+      const cur = latestDate.get(r.tournament) ?? 0;
+      if (ts > cur) latestDate.set(r.tournament, ts);
+    });
+    return [...data.stats.tournamentNames].sort((a, b) => (latestDate.get(b) ?? 0) - (latestDate.get(a) ?? 0));
+  }, [data]);
+
+  useEffect(() => {
+    if (!selectedTournament && tournamentsByRecency.length > 0) {
+      setSelectedTournament(tournamentsByRecency[0]);
+    }
+  }, [tournamentsByRecency, selectedTournament]);
+
+  const tournamentResults = useMemo(() => {
+    if (!data || !selectedTournament) return [];
+    return data.tournaments
+      .filter((r) => r.tournament === selectedTournament)
+      .sort((a, b) => (a.netRank || 999) - (b.netRank || 999));
+  }, [data, selectedTournament]);
+
+  const filteredPlayers = useMemo(() => {
+    if (!data) return [];
+    const players = data[ratingTab];
+    if (!searchQuery.trim()) return players;
+    const query = searchQuery.toLowerCase();
+    return players.filter((p) => p.name.toLowerCase().includes(query));
+  }, [data, ratingTab, searchQuery]);
+
+  const visiblePlayers = showAll || searchQuery ? filteredPlayers : filteredPlayers.slice(0, 20);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="text-muted-foreground">Загрузка статистики...</div>
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <RefreshCw className="h-5 w-5 animate-spin" />
+          <span className="text-sm">Загрузка статистики...</span>
+        </div>
       </div>
     );
   }
 
+  if (!data) return null;
+
+  const allPlayers = data[ratingTab];
+  const hasMore = filteredPlayers.length > 20;
+
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
-      {/* Header */}
-      <div>
-        <div className="text-xs uppercase tracking-[0.25em] text-muted-foreground font-semibold">
-          Statistics
-        </div>
-        <h1 className="text-3xl font-bold mt-1">Общие результаты</h1>
-        {overallStats && (
+      <div className="flex items-center gap-3">
+        <div className="flex-1">
+          <div className="text-xs uppercase tracking-[0.25em] text-muted-foreground font-semibold">Statistics</div>
+          <h1 className="text-2xl sm:text-3xl font-bold mt-1">Статистика 2026</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {overallStats.total_players} игроков · {overallStats.total_tournaments} турниров · {overallStats.total_nominations} номинаций
+            {data.stats.totalPlayers} игроков · {data.stats.totalTournaments} турниров
           </p>
-        )}
-      </div>
-
-      {/* Overall Stats Cards */}
-      {overallStats && (
-        <div className="grid grid-cols-2 gap-3">
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-action/10 flex items-center justify-center shrink-0">
-                <Trophy className="h-5 w-5 text-action" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{overallStats.total_tournaments}</div>
-                <div className="text-xs text-muted-foreground">Турниров проведено</div>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-action/10 flex items-center justify-center shrink-0">
-                <Target className="h-5 w-5 text-action" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{overallStats.total_players}</div>
-                <div className="text-xs text-muted-foreground">Участников</div>
-              </div>
-            </div>
-          </Card>
         </div>
-      )}
-
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-border">
         <button
-          onClick={() => setActiveTab("wins")}
-          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
-            activeTab === "wins"
-              ? "text-action border-action"
-              : "text-muted-foreground border-transparent hover:text-foreground"
-          }`}
+          onClick={() => fetchData(true)}
+          disabled={refreshing}
+          className="h-10 w-10 rounded-full hover:bg-accent grid place-items-center transition-colors disabled:opacity-50 shrink-0"
         >
-          🏆 По победам
-        </button>
-        <button
-          onClick={() => setActiveTab("hcp")}
-          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
-            activeTab === "hcp"
-              ? "text-action border-action"
-              : "text-muted-foreground border-transparent hover:text-foreground"
-          }`}
-        >
-          🎯 По HCP
-        </button>
-        <button
-          onClick={() => setActiveTab("recent")}
-          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
-            activeTab === "recent"
-              ? "text-action border-action"
-              : "text-muted-foreground border-transparent hover:text-foreground"
-          }`}
-        >
-          ⏱️ Недавние победы
+          <RefreshCw className={cn("h-5 w-5", refreshing && "animate-spin")} />
         </button>
       </div>
 
-      {/* Top by Wins */}
-      {activeTab === "wins" && (
-        <Card className="overflow-hidden">
-          <div className="px-4 py-3 bg-muted/50 border-b border-border">
-            <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-action" />
-              <h2 className="font-bold text-sm uppercase tracking-wider">Топ по победам</h2>
-            </div>
-          </div>
-          <div className="divide-y divide-border">
-            {topByWins.slice(0, 20).map((player, index) => (
-              <div key={index} className="px-4 py-3 flex items-center gap-3">
-                <div className="w-8 shrink-0 text-center">
-                  {index === 0 && <span className="text-xl">🥇</span>}
-                  {index === 1 && <span className="text-xl">🥈</span>}
-                  {index === 2 && <span className="text-xl">🥉</span>}
-                  {index > 2 && (
-                    <span className="text-sm font-bold text-muted-foreground">{index + 1}</span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">{player.player_name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {player.total_tournaments} турниров · Top-3: {player.top3_finishes}
-                  </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <div className="text-lg font-bold text-action">{player.first_places}</div>
-                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                    {player.win_rate ? `${Number(player.win_rate).toFixed(0)}%` : "побед"}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
+      {/* Main tabs */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setMainTab("rating")}
+          className={cn(
+            "flex-1 h-11 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all",
+            mainTab === "rating" ? "bg-action text-action-foreground" : "bg-secondary text-muted-foreground hover:bg-secondary/80",
+          )}
+        >
+          <Trophy className="h-4 w-4" /> Рейтинг
+        </button>
+        <button
+          onClick={() => setMainTab("tournaments")}
+          className={cn(
+            "flex-1 h-11 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all",
+            mainTab === "tournaments" ? "bg-action text-action-foreground" : "bg-secondary text-muted-foreground hover:bg-secondary/80",
+          )}
+        >
+          <Calendar className="h-4 w-4" /> Турнирный
+        </button>
+      </div>
 
-      {/* Top by HCP */}
-      {activeTab === "hcp" && (
-        <Card className="overflow-hidden">
-          <div className="px-4 py-3 bg-muted/50 border-b border-border">
-            <div className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-action" />
-              <h2 className="font-bold text-sm uppercase tracking-wider">Топ по HCP</h2>
-            </div>
-          </div>
-          <div className="divide-y divide-border">
-            {topByHcp.slice(0, 20).map((player, index) => (
-              <div key={index} className="px-4 py-3 flex items-center gap-3">
-                <div className="w-8 shrink-0 text-center">
-                  {index === 0 && <span className="text-xl">🥇</span>}
-                  {index === 1 && <span className="text-xl">🥈</span>}
-                  {index === 2 && <span className="text-xl">🥉</span>}
-                  {index > 2 && (
-                    <span className="text-sm font-bold text-muted-foreground">{index + 1}</span>
-                  )}
+      {mainTab === "rating" ? (
+        <>
+          <Card className="overflow-hidden shadow-soft">
+            <div className="p-5 border-b border-border">
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="bg-muted/50 rounded-lg py-3">
+                  <div className="text-2xl font-bold">{data.stats.totalPlayers}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">Игроков</div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">{player.player_name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {player.total_tournaments} турниров · Top-3: {player.top3_finishes}
-                  </div>
+                <div className="bg-muted/50 rounded-lg py-3">
+                  <div className="text-2xl font-bold">{data.stats.totalTournaments}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">Турниров</div>
                 </div>
-                <div className="text-right shrink-0">
-                  <div className="text-lg font-bold text-action">
-                    {player.estimated_hcp?.toFixed(1) || "—"}
-                  </div>
-                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider">HCP</div>
+                <div className="bg-muted/50 rounded-lg py-3">
+                  <div className="text-2xl font-bold">{data.tournaments.length}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">Результатов</div>
                 </div>
               </div>
-            ))}
-          </div>
-        </Card>
-      )}
+            </div>
 
-      {/* Recent Winners */}
-      {activeTab === "recent" && (
-        <Card className="overflow-hidden">
-          <div className="px-4 py-3 bg-muted/50 border-b border-border">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-action" />
-              <h2 className="font-bold text-sm uppercase tracking-wider">Недавние победы</h2>
+            <div className="flex gap-2 p-5 border-b border-border">
+              <TabButton active={ratingTab === "overall"} onClick={() => { setRatingTab("overall"); setSearchQuery(""); setShowAll(false); }} icon={<Users className="h-3.5 w-3.5" />} label="Общий" count={data.stats.totalPlayers} />
+              <TabButton active={ratingTab === "male"} onClick={() => { setRatingTab("male"); setSearchQuery(""); setShowAll(false); }} label="Мужчины" count={data.stats.malePlayers} />
+              <TabButton active={ratingTab === "female"} onClick={() => { setRatingTab("female"); setSearchQuery(""); setShowAll(false); }} label="Женщины" count={data.stats.femalePlayers} />
             </div>
-          </div>
-          <div className="divide-y divide-border">
-            {recentWinners.map((winner, index) => (
-              <div key={index} className="px-4 py-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{winner.player_name}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
-                      {winner.tournament_name}
-                    </div>
-                    {winner.group_name && (
-                      <div className="text-[10px] text-muted-foreground mt-0.5">
-                        {winner.group_name}
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-xs font-medium">
-                      {new Date(winner.tournament_date).toLocaleDateString("ru-RU", {
-                        day: "numeric",
-                        month: "short",
-                      })}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {new Date(winner.tournament_date).getFullYear()}
-                    </div>
-                  </div>
-                </div>
+
+            <div className="px-5 py-4 border-b border-border">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Поиск по имени..." className="pl-10 h-10" />
               </div>
-            ))}
+            </div>
+
+            <div className={cn("divide-y divide-border overflow-y-auto", showAll ? "max-h-[70vh]" : "max-h-[50vh]")}>
+              {visiblePlayers.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground text-sm">{searchQuery ? "Игроки не найдены" : "Нет данных"}</div>
+              ) : (
+                visiblePlayers.map((player, idx) => (
+                  <div key={`${player.name}-${idx}`} className="flex items-center gap-3 px-5 py-3 hover:bg-accent/50 transition-colors">
+                    <div className={cn(
+                      "w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0",
+                      player.rank === 1 ? "bg-yellow-500/20 text-yellow-600 border-2 border-yellow-500/40"
+                        : player.rank === 2 ? "bg-slate-400/20 text-slate-600 border-2 border-slate-400/40"
+                        : player.rank === 3 ? "bg-orange-600/20 text-orange-700 border-2 border-orange-600/40"
+                        : "bg-muted text-muted-foreground",
+                    )}>
+                      {player.rank}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-sm truncate">{player.name}</div>
+                      <div className="text-xs text-muted-foreground">{player.tournaments} турниров • HCP {player.hcp.toFixed(1)}</div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-lg font-black tabular-nums">{player.rating.toLocaleString()}</div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">рейтинг</div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {!searchQuery && hasMore && (
+              <button onClick={() => setShowAll(!showAll)} className="w-full py-3 text-sm font-semibold text-action hover:bg-accent/50 transition-colors border-t border-border">
+                {showAll ? "Свернуть" : `Показать всех (еще ${filteredPlayers.length - 20})`}
+              </button>
+            )}
+
+            <div className="px-5 py-3 bg-muted/30 text-xs text-muted-foreground border-t border-border space-y-1">
+              <div>Показано: {visiblePlayers.length} из {allPlayers.length}</div>
+              <div>Обновлено: {new Date(data.lastUpdated).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
+            </div>
+          </Card>
+
+          <NominationsCard />
+        </>
+      ) : (
+        <Card className="overflow-hidden shadow-soft">
+          <div className="p-5 border-b border-border">
+            <select
+              value={selectedTournament ?? ""}
+              onChange={(e) => setSelectedTournament(e.target.value)}
+              className="w-full h-11 rounded-xl bg-muted border border-border px-3 text-sm font-semibold focus:outline-none focus:border-action"
+            >
+              {tournamentsByRecency.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-muted/30 border-b border-border text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  <th className="px-4 py-2.5 w-14">Место</th>
+                  <th className="px-3 py-2.5">Игрок</th>
+                  <th className="px-3 py-2.5">Группа</th>
+                  <th className="px-3 py-2.5 text-right">HCP</th>
+                  <th className="px-3 py-2.5 text-right">Gross</th>
+                  <th className="px-3 py-2.5 text-right">Net</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {tournamentResults.length === 0 ? (
+                  <tr><td colSpan={6} className="p-8 text-center text-muted-foreground text-sm">Нет данных</td></tr>
+                ) : (
+                  tournamentResults.map((r, idx) => (
+                    <tr key={idx} className={cn(r.netRank === 1 && "bg-action/5")}>
+                      <td className="px-4 py-2.5 font-bold">
+                        {r.netRank <= 3 ? (
+                          <span className={cn(
+                            "inline-flex items-center justify-center h-6 min-w-6 px-1 rounded-full text-xs font-bold",
+                            r.netRank === 1 && "bg-yellow-500 text-black",
+                            r.netRank === 2 && "bg-gray-400 text-white",
+                            r.netRank === 3 && "bg-orange-600 text-white",
+                          )}>
+                            {r.netRank}
+                          </span>
+                        ) : (r.netRank || "—")}
+                      </td>
+                      <td className="px-3 py-2.5 font-medium">{r.name}</td>
+                      <td className="px-3 py-2.5 text-muted-foreground">{r.group}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{r.hcp.toFixed(1)}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{r.grossScore || "—"}</td>
+                      <td className="px-3 py-2.5 text-right font-bold tabular-nums">{r.netScore || "—"}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="px-5 py-3 bg-muted/30 text-xs text-muted-foreground border-t border-border">
+            {tournamentResults.length} участников · обновлено {new Date(data.lastUpdated).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
           </div>
         </Card>
       )}
     </div>
   );
 };
+
+function TabButton({ active, onClick, icon, label, count }: { active: boolean; onClick: () => void; icon?: React.ReactNode; label: string; count?: number }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex-1 h-9 rounded-lg flex items-center justify-center gap-1.5 text-xs font-bold transition-all",
+        active ? "bg-action text-action-foreground" : "bg-secondary text-muted-foreground hover:bg-secondary/80",
+      )}
+    >
+      {icon}
+      <span>{label}</span>
+      {count !== undefined && (
+        <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full", active ? "bg-action-foreground/20" : "bg-muted-foreground/20")}>
+          {count}
+        </span>
+      )}
+    </button>
+  );
+}
 
 export default StatisticsPage;

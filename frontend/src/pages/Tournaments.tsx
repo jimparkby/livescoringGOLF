@@ -51,9 +51,9 @@ const TournamentsPage = () => {
         </button>
       </div>
 
-      {/* Leaderboard Button */}
+      {/* Statistics Button */}
       <Card
-        onClick={() => navigate('/leaderboard')}
+        onClick={() => navigate('/statistics')}
         className="p-5 shadow-soft cursor-pointer hover:bg-accent/30 transition-colors"
       >
         <div className="flex items-center gap-3">
@@ -61,8 +61,8 @@ const TournamentsPage = () => {
             <Trophy className="h-6 w-6 text-action" />
           </div>
           <div className="flex-1">
-            <div className="font-bold text-lg">Leaderboards</div>
-            <div className="text-sm text-muted-foreground">Рейтинг игроков и номинации 2026</div>
+            <div className="font-bold text-lg">Статистика</div>
+            <div className="text-sm text-muted-foreground">Рейтинг игроков и результаты турниров 2026</div>
           </div>
           <div className="text-action text-2xl">›</div>
         </div>

@@ -116,7 +116,9 @@ function parseTournamentsCSV(csvText) {
       const tournament = fields[4] || ''
       const gender = fields[5] || ''
       const hcp = parseFloat(fields[7]?.replace(',', '.')) || 0
+      const grossRank = parseInt(fields[8]) || 0
       const grossScore = parseInt(fields[9]) || 0
+      const netRank = parseInt(fields[10]) || 0
       const netScore = parseInt(fields[11]) || 0
 
       if (name && tournament) {
@@ -127,7 +129,9 @@ function parseTournamentsCSV(csvText) {
           tournament,
           gender,
           hcp: parseFloat(hcp.toFixed(1)),
+          grossRank,
           grossScore,
+          netRank,
           netScore,
         })
       }

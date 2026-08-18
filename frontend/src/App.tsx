@@ -16,7 +16,6 @@ import CreateTournamentPage from "./pages/CreateTournament";
 import StatsPage from "./pages/Stats";
 import StatisticsPage from "./pages/Statistics";
 import ProfilePage from "./pages/Profile";
-import LeaderboardPage from "./pages/Leaderboard";
 import CoursePage from "./pages/Course";
 import AdminPage from "./pages/Admin";
 import BookingPage from "./pages/Booking";
@@ -53,14 +52,13 @@ function AppRoutes() {
         <Route path="/" element={<TournamentsPage />} />
         <Route path="/tournaments" element={<TournamentsPage />} />
         <Route path="/tournament-info/:id" element={<TournamentInfoPage />} />
-        <Route path="/leaderboard" element={<LeaderboardPage />} />
+        <Route path="/statistics" element={<StatisticsPage />} />
         <Route path="/course" element={<CoursePage />} />
 
         <Route path="/play" element={<RequireAuth><PlayPage /></RequireAuth>} />
         <Route path="/tournament/:id" element={<RequireAuth><TournamentPlayPage /></RequireAuth>} />
         <Route path="/create-tournament" element={<RequireAuth><CreateTournamentPage /></RequireAuth>} />
         <Route path="/stats" element={<RequireAuth><StatsPage /></RequireAuth>} />
-        <Route path="/statistics" element={<RequireAuth><StatisticsPage /></RequireAuth>} />
         <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
         <Route path="/admin" element={<RequireAuth><AdminPage /></RequireAuth>} />
         <Route path="/booking" element={<RequireAuth><BookingPage /></RequireAuth>} />

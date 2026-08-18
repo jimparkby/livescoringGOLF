@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Trophy, CircleUserRound, LineChart, Flag, MapPin, LogOut, LogIn } from "lucide-react";
+import { Trophy, CircleUserRound, LineChart, Flag, MapPin, LogOut, LogIn, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useGolf } from "@/store/golfStore";
@@ -7,9 +7,10 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const navLinks = [
   { to: "/", label: "Tournaments", icon: Trophy, end: true },
+  { to: "/statistics", label: "Statistics", icon: BarChart3 },
   { to: "/course", label: "Course", icon: MapPin },
   { to: "/play", label: "Play", icon: Flag },
-  { to: "/stats", label: "Stats", icon: LineChart },
+  { to: "/stats", label: "Handicap", icon: LineChart },
 ];
 
 const AppLayout = () => {
