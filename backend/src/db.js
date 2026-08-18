@@ -240,6 +240,11 @@ async function runMigrations() {
     { name: 'user_email_unique', query: `CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique_idx ON users (LOWER(email)) WHERE email IS NOT NULL` },
     { name: 'user_password_hash', query: `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT` },
     { name: 'user_telegram_id_nullable', query: `ALTER TABLE users ALTER COLUMN telegram_id DROP NOT NULL` },
+    // Per-player live-scoring link — no login needed, same idea as a QR code
+    // handed out at the tee: whoever holds the link can enter their own and
+    // their marker's score. Generated once groups are built (see build-groups).
+    { name: 'tournament_reg_access_token', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS access_token TEXT` },
+    { name: 'tournament_reg_access_token_unique', query: `CREATE UNIQUE INDEX IF NOT EXISTS tournament_reg_access_token_idx ON tournament_registrations (access_token) WHERE access_token IS NOT NULL` },
   ]
 
   for (const migration of migrations) {

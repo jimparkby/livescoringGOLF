@@ -6,6 +6,7 @@ import AppLayout from "@/components/AppLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import DemoPage from "./pages/Demo";
 import LiveScoringPage from "./pages/LiveScoring";
+import TournamentLivePage from "./pages/TournamentLive";
 import PublicLeaderboardPage from "./pages/PublicLeaderboard";
 import AuthPage from "./pages/Auth";
 import PlayPage from "./pages/Play";
@@ -77,6 +78,7 @@ const App = () => (
           <Routes>
             <Route path="/demo" element={<DemoPage />} />
             <Route path="/live/:code" element={<LiveScoringPage />} />
+            <Route path="/tlive/:token" element={<TournamentLivePage />} />
             <Route path="/watch/:id" element={<PublicLeaderboardPage />} />
             <Route
               path="/*"

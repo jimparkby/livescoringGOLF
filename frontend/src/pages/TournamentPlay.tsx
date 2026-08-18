@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar } from "@/components/PlayerAvatar";
@@ -13,9 +13,7 @@ import { ChevronLeft, ChevronRight, Plus, X, Flag, Trophy, Camera } from "lucide
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { TournamentLeaderboard } from "@/components/TournamentLeaderboard";
-import { TournamentGroupScoring } from "@/components/TournamentGroupScoring";
 import { api } from "@/lib/api";
-import { useAuth } from "@/hooks/useAuth";
 
 const tierColor: Record<Tier, string> = {
   gold: "bg-tier-gold",
@@ -45,6 +43,7 @@ type MyGroup = {
   checkedIn?: boolean;
   flightLabel?: string | null;
   roundId?: string | null;
+  accessToken?: string | null;
   group?: { players: { id: string; name: string; hcp: number }[] } | null;
   marker?: { id: string; name: string; hcp: number } | null;
 };
@@ -59,7 +58,6 @@ const TournamentPlayPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { profile, activeRound, cancelActiveRound, customTournaments, startRound } = useGolf();
-  const { userId: myUserId } = useAuth();
 
   const staticT = TOURNAMENTS.find((t) => t.id === id);
   const customT = customTournaments.find((t) => t.id === id);
@@ -98,20 +96,11 @@ const TournamentPlayPage = () => {
     );
   }
 
-  if (myGroup?.roundId && myGroup.group) {
-    return (
-      <TournamentGroupScoring
-        tournamentId={tournament.id}
-        format={tournament.format}
-        courseId={tournament.courseId ?? "championship"}
-        holesMode="18"
-        roundId={myGroup.roundId}
-        myId={myUserId ?? ""}
-        players={myGroup.group.players}
-        marker={myGroup.marker ?? null}
-        onExit={() => navigate("/tournaments")}
-      />
-    );
+  // Official group scoring now happens on the public per-player link
+  // (/tlive/:token, no login) instead of embedded here — redirect straight
+  // to it if we know it (only possible for a logged-in, grouped player).
+  if (myGroup?.roundId && myGroup.accessToken) {
+    return <Navigate to={`/tlive/${myGroup.accessToken}`} replace />;
   }
 
   if ((activeRound && activeRound.tournamentId === tournament.id) || step === "playing") {

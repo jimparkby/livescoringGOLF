@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Users, Clock, CheckCircle, AlertCircle, LayoutGrid } from 'lucide-react'
+import { ArrowLeft, Users, Clock, CheckCircle, AlertCircle, LayoutGrid, Link as LinkIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
 import { TOURNAMENTS } from '@/lib/tournaments'
@@ -23,6 +23,7 @@ type Registration = {
   round_id: string | null
   flight_label: string | null
   checked_in: boolean
+  access_token: string | null
 }
 
 const STATUS_LABELS = {
@@ -219,8 +220,21 @@ export default function TournamentRegistrationsPage() {
                       HCP {reg.hcp.toFixed(1)} • {new Date(reg.created_at).toLocaleDateString('ru-RU')}
                     </div>
                     {reg.round_id && (
-                      <div className="text-xs text-action font-medium mt-0.5">
-                        {reg.flight_label} {reg.checked_in ? '· на поле' : '· ждём старта'}
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <div className="text-xs text-action font-medium">
+                          {reg.flight_label} {reg.checked_in ? '· на поле' : '· ждём старта'}
+                        </div>
+                        {reg.access_token && (
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(`${window.location.origin}/tlive/${reg.access_token}`)
+                              toast.success('Ссылка скопирована')
+                            }}
+                            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-action transition-colors"
+                          >
+                            <LinkIcon className="h-3 w-3" /> Ссылка на live-скоринг
+                          </button>
+                        )}
                       </div>
                     )}
 

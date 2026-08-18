@@ -6,9 +6,10 @@ import { COURSES } from "@/lib/courses";
 import { getFormat, stablefordPoints, type FormatId } from "@/lib/formats";
 import { api } from "@/lib/api";
 import type { Round, Player } from "@/store/golfStore";
-import { ChevronLeft, ChevronRight, Plus, X, Trophy, UserPlus } from "lucide-react";
+import { Plus, X, Trophy, Flag, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { HoleGridNav } from "@/components/HoleGridNav";
 
 const scoreLabel = (score: number, par: number) => {
   const d = score - par;
@@ -173,27 +174,11 @@ const LiveScoringPage = () => {
         <div className="flex items-center gap-1.5 text-white/60 text-xs font-semibold">
           <span>{fmt.emoji}</span> {fmt.name}
         </div>
-        {view === "scoring" ? (
-          <div className="flex items-center gap-3">
-            <button onClick={() => setHoleIdx(Math.max(0, holeIdx - 1))} disabled={holeIdx === 0} className="h-9 w-9 grid place-items-center disabled:opacity-20">
-              <ChevronLeft className="h-6 w-6 text-white" strokeWidth={2.5} />
-            </button>
-            <span className="text-white font-bold text-base tracking-wider min-w-[90px] text-center">
-              Лунка {currentHole.number}
-            </span>
-            <button onClick={() => setHoleIdx(Math.min(totalHoles - 1, holeIdx + 1))} disabled={holeIdx === totalHoles - 1} className="h-9 w-9 grid place-items-center disabled:opacity-20">
-              <ChevronRight className="h-6 w-6 text-white" strokeWidth={2.5} />
-            </button>
-          </div>
-        ) : (
-          <span className="text-white font-bold text-base tracking-wider">Leaderboard</span>
-        )}
+        <div className="text-white/30 text-xs">{course.name} · {course.club}</div>
         <button onClick={() => setShowAddPlayer(true)} className="h-9 w-9 rounded-full grid place-items-center" style={{ background: "rgba(255,255,255,0.1)" }} title="Добавить игрока">
           <UserPlus className="h-4 w-4 text-white" strokeWidth={2.5} />
         </button>
       </div>
-
-      <div className="px-5 pb-2 text-white/30 text-xs">{course.name} · {course.club}</div>
 
       {round.completed && (
         <div className="mx-5 mb-2 px-3 py-2 rounded-xl text-xs text-center" style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e" }}>
@@ -201,29 +186,22 @@ const LiveScoringPage = () => {
         </div>
       )}
 
-      {/* View toggle */}
-      <div className="px-5 pb-3">
-        <div className="flex rounded-full p-1 gap-1" style={{ background: "rgba(255,255,255,0.07)" }}>
-          <button
-            onClick={() => setView("scoring")}
-            className="flex-1 h-8 rounded-full text-xs font-bold tracking-wider transition-all"
-            style={view === "scoring" ? { background: "#22c55e", color: "#000" } : { color: "rgba(255,255,255,0.5)" }}
-          >
-            СЧЁТ
-          </button>
-          <button
-            onClick={() => setView("leaderboard")}
-            className="flex-1 h-8 rounded-full text-xs font-bold tracking-wider transition-all flex items-center justify-center gap-1"
-            style={view === "leaderboard" ? { background: "#22c55e", color: "#000" } : { color: "rgba(255,255,255,0.5)" }}
-          >
-            <Trophy className="h-3 w-3" /> ТАБЛИЦА
-          </button>
+      {view === "scoring" && (
+        <div className="px-5 pb-3">
+          <HoleGridNav
+            holes={playHoles.map((h) => h.number)}
+            currentHole={currentHole.number}
+            playedHoles={new Set(playHoles.filter((h) => scoringPlayers.some((p) => p && round.scores[p.id]?.some((s) => s.hole === h.number))).map((h) => h.number))}
+            onSelect={(h) => setHoleIdx(playHoles.findIndex((x) => x.number === h))}
+          />
         </div>
-      </div>
+      )}
 
       {/* Content */}
       {view === "leaderboard" ? (
-        <TournamentLeaderboard activeRound={round} course={course} format={format} />
+        <div className="flex-1 overflow-y-auto">
+          <TournamentLeaderboard activeRound={round} course={course} format={format} />
+        </div>
       ) : (
         <div className="flex-1 flex flex-col px-5 pb-4 gap-3 overflow-y-auto">
           {isScramble ? (
@@ -311,30 +289,28 @@ const LiveScoringPage = () => {
               );
             })
           )}
-
-          {/* Hole progress dots */}
-          <div className="flex items-center justify-center gap-1.5 pt-1">
-            {playHoles.map((h, i) => {
-              const checkIds = isScramble
-                ? [teamAPlayers[0]?.id, teamBPlayers[0]?.id].filter(Boolean) as string[]
-                : round.players.map((p) => p.id);
-              const scored = checkIds.some((id) => round.scores[id]?.find((s) => s.hole === h.number));
-              return (
-                <button
-                  key={i}
-                  onClick={() => setHoleIdx(i)}
-                  className="rounded-full transition-all duration-200"
-                  style={{
-                    width: i === holeIdx ? 20 : 8,
-                    height: 8,
-                    background: i === holeIdx ? "#22c55e" : scored ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.12)",
-                  }}
-                />
-              );
-            })}
-          </div>
         </div>
       )}
+
+      {/* Bottom nav */}
+      <div className="flex shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+        <button
+          onClick={() => setView("scoring")}
+          className="flex-1 h-14 flex flex-col items-center justify-center gap-1 text-[11px] font-bold tracking-wider"
+          style={{ color: view === "scoring" ? "#22c55e" : "rgba(255,255,255,0.4)" }}
+        >
+          <Flag className="h-4 w-4" />
+          СЧЁТ
+        </button>
+        <button
+          onClick={() => setView("leaderboard")}
+          className="flex-1 h-14 flex flex-col items-center justify-center gap-1 text-[11px] font-bold tracking-wider"
+          style={{ color: view === "leaderboard" ? "#22c55e" : "rgba(255,255,255,0.4)" }}
+        >
+          <Trophy className="h-4 w-4" />
+          ТАБЛИЦА
+        </button>
+      </div>
 
       {/* Score Sheet */}
       {sheetPlayer && !round.completed && (
