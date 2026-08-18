@@ -97,7 +97,7 @@ const AppLayout = () => {
             </>
           ) : (
             <NavLink
-              to="/play"
+              to="/profile"
               className="flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-semibold bg-white text-black hover:bg-white/90 transition-colors shrink-0"
             >
               <LogIn className="h-4 w-4" strokeWidth={2.25} />

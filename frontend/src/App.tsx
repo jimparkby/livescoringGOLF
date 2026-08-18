@@ -54,11 +54,11 @@ function AppRoutes() {
         <Route path="/tournament-info/:id" element={<TournamentInfoPage />} />
         <Route path="/statistics" element={<StatisticsPage />} />
         <Route path="/course" element={<CoursePage />} />
+        <Route path="/play" element={<PlayPage />} />
+        <Route path="/stats" element={<StatsPage />} />
 
-        <Route path="/play" element={<RequireAuth><PlayPage /></RequireAuth>} />
         <Route path="/tournament/:id" element={<RequireAuth><TournamentPlayPage /></RequireAuth>} />
         <Route path="/create-tournament" element={<RequireAuth><CreateTournamentPage /></RequireAuth>} />
-        <Route path="/stats" element={<RequireAuth><StatsPage /></RequireAuth>} />
         <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
         <Route path="/admin" element={<RequireAuth><AdminPage /></RequireAuth>} />
         <Route path="/booking" element={<RequireAuth><BookingPage /></RequireAuth>} />
