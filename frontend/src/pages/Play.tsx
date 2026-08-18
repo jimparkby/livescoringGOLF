@@ -151,15 +151,45 @@ const HomeScreen = ({ onStart, activeRound, onResume, onAbandon, extraCourses, o
   onAddCourse?: (course: Course) => void;
 }) => {
   const { t } = useTranslation();
-  const { rounds, profile } = useGolf();
+  const { rounds, profile, updateProfile } = useGolf();
   const [showSearch, setShowSearch] = useState(false);
   const navigate = useNavigate();
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const russianCourses = COURSES.filter(c => RUSSIA_IDS.includes(c.id));
   const customCourses = extraCourses ?? [];
 
+  const name = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "Player";
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const compressed = await compressImage(file, 400);
+    updateProfile({ photoUrl: compressed });
+    toast.success(t.profilePhotoUpdated);
+    e.target.value = "";
+  };
+
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
+
+      {/* ── Profile photo ── */}
+      <button
+        onClick={() => photoInputRef.current?.click()}
+        className="w-full flex items-center gap-3 p-4 rounded-xl border border-border bg-card active:scale-[0.98] transition-transform text-left"
+      >
+        {profile.photoUrl ? (
+          <img src={profile.photoUrl} alt={name} className="h-12 w-12 rounded-full object-cover shrink-0" />
+        ) : (
+          <Avatar name={name} tone="orange" />
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="font-semibold text-sm truncate">{name}</div>
+          <div className="text-xs text-muted-foreground mt-0.5">Загрузить фото профиля</div>
+        </div>
+        <Camera className="h-4 w-4 text-muted-foreground shrink-0" />
+      </button>
+      <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
 
       {/* ── Unfinished round ── */}
       {activeRound && onResume && (
@@ -193,8 +223,7 @@ const HomeScreen = ({ onStart, activeRound, onResume, onAbandon, extraCourses, o
       )}
 
       {/* ── Stats ── */}
-      <div className="grid grid-cols-3 gap-3">
-        <StatTile label="HCP" value={String(profile.hcp)} />
+      <div className="grid grid-cols-2 gap-3">
         <StatTile label={t.rounds} value={String(rounds.length)} />
         <StatTile label={t.best} value={rounds.length === 0 ? "—" : String(Math.min(...rounds.map((r) => r.players[0] ? (r.scores[r.players[0].id] ?? []).reduce((a, s) => a + s.score, 0) : 999)))} />
       </div>
