@@ -97,10 +97,15 @@ const StatisticsPage = () => {
 
   const tournamentResults = useMemo(() => {
     if (!data || !selectedTournament) return [];
-    return data.tournaments
-      .filter((r) => r.tournament === selectedTournament)
-      .sort((a, b) => (a.netRank || 999) - (b.netRank || 999));
+    const rows = data.tournaments.filter((r) => r.tournament === selectedTournament);
+    // Not every event in the sheet tracks net scores (some are gross/Stableford-points
+    // only) — fall back to gross rank so the table still sorts meaningfully.
+    const hasNet = rows.some((r) => r.netRank > 0);
+    const rankOf = (r: TournamentResult) => (hasNet ? r.netRank : r.grossRank) || 999;
+    return [...rows].sort((a, b) => rankOf(a) - rankOf(b));
   }, [data, selectedTournament]);
+
+  const tournamentHasNet = tournamentResults.some((r) => r.netRank > 0);
 
   const filteredPlayers = useMemo(() => {
     if (!data) return [];
@@ -274,19 +279,21 @@ const StatisticsPage = () => {
                 {tournamentResults.length === 0 ? (
                   <tr><td colSpan={6} className="p-8 text-center text-muted-foreground text-sm">Нет данных</td></tr>
                 ) : (
-                  tournamentResults.map((r, idx) => (
-                    <tr key={idx} className={cn(r.netRank === 1 && "bg-action/5")}>
+                  tournamentResults.map((r, idx) => {
+                    const place = (tournamentHasNet ? r.netRank : r.grossRank) || 0;
+                    return (
+                    <tr key={idx} className={cn(place === 1 && "bg-action/5")}>
                       <td className="px-4 py-2.5 font-bold">
-                        {r.netRank <= 3 ? (
+                        {place >= 1 && place <= 3 ? (
                           <span className={cn(
                             "inline-flex items-center justify-center h-6 min-w-6 px-1 rounded-full text-xs font-bold",
-                            r.netRank === 1 && "bg-yellow-500 text-black",
-                            r.netRank === 2 && "bg-gray-400 text-white",
-                            r.netRank === 3 && "bg-orange-600 text-white",
+                            place === 1 && "bg-yellow-500 text-black",
+                            place === 2 && "bg-gray-400 text-white",
+                            place === 3 && "bg-orange-600 text-white",
                           )}>
-                            {r.netRank}
+                            {place}
                           </span>
-                        ) : (r.netRank || "—")}
+                        ) : (place || "—")}
                       </td>
                       <td className="px-3 py-2.5 font-medium">{r.name}</td>
                       <td className="px-3 py-2.5 text-muted-foreground">{r.group}</td>
@@ -294,7 +301,8 @@ const StatisticsPage = () => {
                       <td className="px-3 py-2.5 text-right tabular-nums">{r.grossScore || "—"}</td>
                       <td className="px-3 py-2.5 text-right font-bold tabular-nums">{r.netScore || "—"}</td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>
