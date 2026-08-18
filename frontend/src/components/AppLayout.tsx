@@ -22,9 +22,9 @@ const AppLayout = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header className="border-b border-border sticky top-0 z-30 bg-background/95 backdrop-blur">
+      <header className="sticky top-0 z-30" style={{ background: "#000000" }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-6">
-          <NavLink to="/" className="font-black tracking-wider text-sm sm:text-base shrink-0">
+          <NavLink to="/" className="font-black tracking-wider text-sm sm:text-base shrink-0 text-white">
             GOLF CLUB MINSK
           </NavLink>
 
@@ -36,13 +36,18 @@ const AppLayout = () => {
                 end={end}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors",
-                    isActive ? "bg-action/15 text-action" : "text-muted-foreground hover:text-foreground",
+                    "relative flex items-center gap-1.5 h-9 px-3 text-sm font-semibold whitespace-nowrap transition-colors",
+                    isActive ? "text-white" : "text-white/55 hover:text-white/85",
                   )
                 }
               >
-                <Icon className="h-4 w-4" strokeWidth={2.25} />
-                {label}
+                {({ isActive }) => (
+                  <>
+                    <Icon className="h-4 w-4" strokeWidth={2.25} />
+                    {label}
+                    {isActive && <span className="absolute left-3 right-3 -bottom-[1px] h-[2px] bg-white" />}
+                  </>
+                )}
               </NavLink>
             ))}
             {isAdmin && (
@@ -51,7 +56,7 @@ const AppLayout = () => {
                 className={({ isActive }) =>
                   cn(
                     "flex items-center h-9 px-3 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors",
-                    isActive ? "bg-action/15 text-action" : "text-muted-foreground hover:text-foreground",
+                    isActive ? "text-white" : "text-white/55 hover:text-white/85",
                   )
                 }
               >
@@ -65,14 +70,14 @@ const AppLayout = () => {
             className={({ isActive }) =>
               cn(
                 "flex items-center gap-2 h-9 pl-1 pr-3 rounded-full shrink-0 transition-colors",
-                isActive ? "bg-action/15 text-action" : "hover:bg-muted",
+                isActive ? "bg-white/15 text-white" : "text-white/70 hover:bg-white/10 hover:text-white",
               )
             }
           >
             {profile.photoUrl ? (
               <img src={profile.photoUrl} alt={name} className="h-7 w-7 rounded-full object-cover" />
             ) : (
-              <span className="h-7 w-7 rounded-full bg-muted-foreground/20 grid place-items-center text-[11px] font-bold">
+              <span className="h-7 w-7 rounded-full bg-white/15 grid place-items-center text-[11px] font-bold">
                 {initials || <CircleUserRound className="h-4 w-4" />}
               </span>
             )}
@@ -82,7 +87,7 @@ const AppLayout = () => {
           <button
             onClick={signOut}
             title="Выйти"
-            className="h-9 w-9 rounded-full grid place-items-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+            className="h-9 w-9 rounded-full grid place-items-center text-white/60 hover:text-white hover:bg-white/10 transition-colors shrink-0"
           >
             <LogOut className="h-4 w-4" strokeWidth={2.25} />
           </button>

@@ -2,30 +2,20 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 
-type Mode = "login" | "register";
-
 export default function AuthPage() {
   const { signIn } = useAuth();
-  const [mode, setMode] = useState<Mode>("login");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     try {
-      const path = mode === "login" ? "/api/auth/login" : "/api/auth/register";
-      const body =
-        mode === "login"
-          ? { email, password }
-          : { email, password, firstName, lastName };
-      const data = await api.post<{ jwt: string; error?: string }>(path, body);
+      const data = await api.post<{ jwt: string; error?: string }>("/api/auth/login", { email, password });
       await signIn(data.jwt);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -42,44 +32,7 @@ export default function AuthPage() {
           <div className="text-xs text-muted-foreground uppercase tracking-[0.25em] mt-1">Live Scoring</div>
         </div>
 
-        <div className="flex rounded-xl bg-muted p-1 mb-6">
-          <button
-            type="button"
-            onClick={() => { setMode("login"); setError(""); }}
-            className={`flex-1 h-10 rounded-lg text-sm font-semibold transition-colors ${mode === "login" ? "bg-action text-action-foreground" : "text-muted-foreground"}`}
-          >
-            Вход
-          </button>
-          <button
-            type="button"
-            onClick={() => { setMode("register"); setError(""); }}
-            className={`flex-1 h-10 rounded-lg text-sm font-semibold transition-colors ${mode === "register" ? "bg-action text-action-foreground" : "text-muted-foreground"}`}
-          >
-            Регистрация
-          </button>
-        </div>
-
         <form onSubmit={submit} className="space-y-3">
-          {mode === "register" && (
-            <div className="grid grid-cols-2 gap-3">
-              <input
-                type="text"
-                placeholder="Имя"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-xl bg-muted text-foreground placeholder:text-muted-foreground border border-border focus:border-action focus:outline-none text-sm"
-              />
-              <input
-                type="text"
-                placeholder="Фамилия"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-xl bg-muted text-foreground placeholder:text-muted-foreground border border-border focus:border-action focus:outline-none text-sm"
-              />
-            </div>
-          )}
           <input
             type="email"
             placeholder="Email"
@@ -95,20 +48,12 @@ export default function AuthPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            minLength={8}
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
+            autoComplete="current-password"
             className="w-full px-4 py-3 rounded-xl bg-muted text-foreground placeholder:text-muted-foreground border border-border focus:border-action focus:outline-none text-sm"
           />
 
-          {mode === "register" && (
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Регистрация доступна только членам Golf Club Minsk — имя и фамилия сверяются со
-              списком клуба.
-            </p>
-          )}
-
           {error && (
-            <div className="text-sm text-red-400 leading-relaxed">{error}</div>
+            <div className="text-sm text-red-500 leading-relaxed">{error}</div>
           )}
 
           <button
@@ -116,9 +61,14 @@ export default function AuthPage() {
             disabled={loading}
             className="w-full h-12 rounded-xl font-bold text-sm bg-action hover:bg-action/90 text-action-foreground disabled:opacity-60 transition-colors"
           >
-            {loading ? "..." : mode === "login" ? "Войти" : "Создать аккаунт"}
+            {loading ? "..." : "Войти"}
           </button>
         </form>
+
+        <p className="text-xs text-muted-foreground text-center mt-6 leading-relaxed">
+          Доступ только для членов Golf Club Minsk. Обратитесь к администратору клуба, если у вас
+          ещё нет аккаунта.
+        </p>
       </div>
     </div>
   );

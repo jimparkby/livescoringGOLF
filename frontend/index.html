@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -24,6 +24,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="GolfMinsk" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <style>
+      /* Paint the correct background before React mounts / CSS loads, so
+         there's no dark-then-light flash on first paint. */
+      html, body, #root { background: #ffffff; }
+    </style>
   </head>
 
   <body>
@@ -40,31 +46,6 @@
         custom: function() {},
         dismiss: function() {}
       };
-    </script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script>
-      // Apply Telegram safe area CSS variables before React mounts so toasts
-      // never overlap Telegram's close button / status bar chrome.
-      (function () {
-        var tg = window.Telegram && window.Telegram.WebApp;
-        if (!tg) return;
-        function apply() {
-          var d = tg.safeAreaInset, c = tg.contentSafeAreaInset;
-          var dTop = (d && d.top) || 0, cTop = (c && c.top) || 0;
-          var isFs = tg.isFullscreen || false;
-          var top = cTop > 0 ? cTop : (isFs ? Math.max(dTop, 52) : dTop);
-          document.documentElement.style.setProperty('--tg-safe-top', top + 'px');
-          document.documentElement.style.setProperty('--tg-safe-bottom', ((d && d.bottom) || 0) + 'px');
-        }
-        // Signal readiness and request fullscreen as early as possible so that
-        // safe area values are populated before React's useTelegram hook runs.
-        try { tg.ready(); } catch (e) {}
-        try { if (typeof tg.requestFullscreen === 'function') tg.requestFullscreen(); } catch (e) {}
-        apply();
-        tg.onEvent && tg.onEvent('fullscreenChanged',       apply);
-        tg.onEvent && tg.onEvent('safeAreaChanged',         apply);
-        tg.onEvent && tg.onEvent('contentSafeAreaChanged',  apply);
-      })();
     </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
