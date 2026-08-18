@@ -25,13 +25,16 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function AppRoutes() {
+// Gates actions that need a real identity (entering scores, profile, admin).
+// Everything else — tournaments, leaderboard, course, results — is public,
+// same as pgatour.com requires no login to browse.
+function RequireAuth({ children }: { children: React.ReactNode }) {
   const { userId, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen gradient-hero flex items-center justify-center">
-        <div className="text-center text-primary-foreground">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center text-muted-foreground">
           <div className="text-5xl mb-3">⛳</div>
           <div className="text-sm opacity-70 tracking-widest uppercase">Loading…</div>
         </div>
@@ -39,27 +42,29 @@ function AppRoutes() {
     );
   }
 
-  if (!userId) {
-    return <AuthPage />;
-  }
+  if (!userId) return <AuthPage />;
+  return <>{children}</>;
+}
 
+function AppRoutes() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
         <Route path="/" element={<TournamentsPage />} />
-        <Route path="/play" element={<PlayPage />} />
         <Route path="/tournaments" element={<TournamentsPage />} />
         <Route path="/tournament-info/:id" element={<TournamentInfoPage />} />
-        <Route path="/tournament/:id" element={<TournamentPlayPage />} />
-        <Route path="/create-tournament" element={<CreateTournamentPage />} />
-        <Route path="/stats" element={<StatsPage />} />
-        <Route path="/statistics" element={<StatisticsPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/course" element={<CoursePage />} />
-        <Route path="/admin" element={<AdminPage />} />
-        <Route path="/booking" element={<BookingPage />} />
-        <Route path="/tournament-registrations/:id" element={<TournamentRegistrationsPage />} />
+
+        <Route path="/play" element={<RequireAuth><PlayPage /></RequireAuth>} />
+        <Route path="/tournament/:id" element={<RequireAuth><TournamentPlayPage /></RequireAuth>} />
+        <Route path="/create-tournament" element={<RequireAuth><CreateTournamentPage /></RequireAuth>} />
+        <Route path="/stats" element={<RequireAuth><StatsPage /></RequireAuth>} />
+        <Route path="/statistics" element={<RequireAuth><StatisticsPage /></RequireAuth>} />
+        <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+        <Route path="/admin" element={<RequireAuth><AdminPage /></RequireAuth>} />
+        <Route path="/booking" element={<RequireAuth><BookingPage /></RequireAuth>} />
+        <Route path="/tournament-registrations/:id" element={<RequireAuth><TournamentRegistrationsPage /></RequireAuth>} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

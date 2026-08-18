@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Trophy, CircleUserRound, LineChart, Flag, MapPin, LogOut } from "lucide-react";
+import { Trophy, CircleUserRound, LineChart, Flag, MapPin, LogOut, LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useGolf } from "@/store/golfStore";
@@ -13,7 +13,7 @@ const navLinks = [
 ];
 
 const AppLayout = () => {
-  const { signOut } = useAuth();
+  const { userId, signOut } = useAuth();
   const { profile } = useGolf();
   const { isAdmin } = useIsAdmin();
 
@@ -65,32 +65,44 @@ const AppLayout = () => {
             )}
           </nav>
 
-          <NavLink
-            to="/profile"
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-2 h-9 pl-1 pr-3 rounded-full shrink-0 transition-colors",
-                isActive ? "bg-white/15 text-white" : "text-white/70 hover:bg-white/10 hover:text-white",
-              )
-            }
-          >
-            {profile.photoUrl ? (
-              <img src={profile.photoUrl} alt={name} className="h-7 w-7 rounded-full object-cover" />
-            ) : (
-              <span className="h-7 w-7 rounded-full bg-white/15 grid place-items-center text-[11px] font-bold">
-                {initials || <CircleUserRound className="h-4 w-4" />}
-              </span>
-            )}
-            <span className="text-sm font-semibold hidden sm:inline">{name}</span>
-          </NavLink>
+          {userId ? (
+            <>
+              <NavLink
+                to="/profile"
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-2 h-9 pl-1 pr-3 rounded-full shrink-0 transition-colors",
+                    isActive ? "bg-white/15 text-white" : "text-white/70 hover:bg-white/10 hover:text-white",
+                  )
+                }
+              >
+                {profile.photoUrl ? (
+                  <img src={profile.photoUrl} alt={name} className="h-7 w-7 rounded-full object-cover" />
+                ) : (
+                  <span className="h-7 w-7 rounded-full bg-white/15 grid place-items-center text-[11px] font-bold">
+                    {initials || <CircleUserRound className="h-4 w-4" />}
+                  </span>
+                )}
+                <span className="text-sm font-semibold hidden sm:inline">{name}</span>
+              </NavLink>
 
-          <button
-            onClick={signOut}
-            title="Выйти"
-            className="h-9 w-9 rounded-full grid place-items-center text-white/60 hover:text-white hover:bg-white/10 transition-colors shrink-0"
-          >
-            <LogOut className="h-4 w-4" strokeWidth={2.25} />
-          </button>
+              <button
+                onClick={signOut}
+                title="Выйти"
+                className="h-9 w-9 rounded-full grid place-items-center text-white/60 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+              >
+                <LogOut className="h-4 w-4" strokeWidth={2.25} />
+              </button>
+            </>
+          ) : (
+            <NavLink
+              to="/play"
+              className="flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-semibold bg-white text-black hover:bg-white/90 transition-colors shrink-0"
+            >
+              <LogIn className="h-4 w-4" strokeWidth={2.25} />
+              Войти
+            </NavLink>
+          )}
         </div>
       </header>
 
