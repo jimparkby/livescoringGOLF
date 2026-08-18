@@ -7,18 +7,18 @@ type Props = {
   onSelect: (hole: number) => void;
 };
 
-// Numbered hole grid, tap any hole to jump to it — matches how on-course
-// scoring apps do navigation (vs. a prev/next stepper): the whole round is
-// visible at a glance, and you can jump straight to a hole someone asks
-// about instead of stepping through one at a time.
+// Numbered hole grid, tap any hole to jump to it — matches livescoring.ru's
+// FOLLOW scoring app: filled tiles (played = green, open = gray), underlined
+// numbers, Cuprum type. Whole round visible at a glance instead of stepping
+// through holes one at a time with prev/next.
 export const HoleGridNav = ({ holes, currentHole, playedHoles, onSelect }: Props) => {
   const rows: number[][] = [];
   for (let i = 0; i < holes.length; i += 9) rows.push(holes.slice(i, i + 9));
 
   return (
-    <div className="space-y-1.5">
+    <div className="flex flex-col gap-[3px]" style={{ fontFamily: "Cuprum, Arial, Helvetica, sans-serif" }}>
       {rows.map((row, i) => (
-        <div key={i} className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${row.length}, minmax(0, 1fr))` }}>
+        <div key={i} className="flex gap-[3px]">
           {row.map((h) => {
             const isCurrent = h === currentHole;
             const isPlayed = playedHoles.has(h);
@@ -26,11 +26,12 @@ export const HoleGridNav = ({ holes, currentHole, playedHoles, onSelect }: Props
               <button
                 key={h}
                 onClick={() => onSelect(h)}
-                className={cn(
-                  "h-9 rounded-lg text-sm font-bold tabular-nums transition-all",
-                  isCurrent ? "text-black" : isPlayed ? "bg-action/15 text-action" : "bg-white/10 text-white/40",
-                )}
-                style={isCurrent ? { background: "#22c55e" } : undefined}
+                className="flex-1 aspect-square min-w-0 grid place-items-center text-lg underline transition-transform active:scale-95"
+                style={{
+                  background: isPlayed ? "#21835b" : "#cccccc",
+                  color: isPlayed ? "#f7f7f7" : "#222430",
+                  boxShadow: isCurrent ? "0 0 0 2px #f7f7f7, 0 0 0 4px #222430" : undefined,
+                }}
               >
                 {h}
               </button>
