@@ -5,8 +5,6 @@ import { getTournamentData } from "@/lib/tournament-data";
 import { Card } from "@/components/ui/card";
 import { Plus, Image, Trophy, QrCode, MapPin } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { NextTournamentHero } from "@/components/NextTournamentHero";
-import { LatestResultsCard } from "@/components/LatestResultsCard";
 
 const TournamentsPage = () => {
   const navigate = useNavigate();
@@ -52,9 +50,6 @@ const TournamentsPage = () => {
           <Plus className="h-4 w-4" strokeWidth={2.5} /> Создать
         </button>
       </div>
-
-      <NextTournamentHero />
-      <LatestResultsCard />
 
       {/* Statistics Button */}
       <Card
