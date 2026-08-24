@@ -12,3 +12,5 @@ console.log('[adminAccess] Loaded admin IDs:', ADMIN_IDS.length > 0 ? ADMIN_IDS 
 export function isAdmin(telegramId) {
   return ADMIN_IDS.includes(telegramId)
 }
+
+export { ADMIN_IDS }

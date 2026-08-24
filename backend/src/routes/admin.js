@@ -104,6 +104,32 @@ router.post('/tournaments/:id/results/save', async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
+// Bot-parsed results photo from the club's Telegram group, staged for the
+// admin to review/edit and save via the normal results/save route above.
+router.get('/tournaments/pending-results/:id', async (req, res, next) => {
+  try {
+    const { rows: [pending] } = await db.query(
+      `SELECT tournament_id, rows, match_confidence
+       FROM pending_tournament_results
+       WHERE id = $1 AND status = 'pending' AND expires_at > NOW()`,
+      [req.params.id]
+    )
+    if (!pending) return res.status(404).json({ error: 'Not found or expired' })
+    res.json({
+      tournamentId: pending.tournament_id,
+      rows: pending.rows,
+      matchConfidence: pending.match_confidence,
+    })
+  } catch (err) { next(err) }
+})
+
+router.delete('/tournaments/pending-results/:id', async (req, res, next) => {
+  try {
+    await db.query('DELETE FROM pending_tournament_results WHERE id = $1', [req.params.id])
+    res.json({ success: true })
+  } catch (err) { next(err) }
+})
+
 // ── Participants ─────────────────────────────────────────────────────────────
 
 router.post('/tournaments/:id/participants/parse', async (req, res, next) => {

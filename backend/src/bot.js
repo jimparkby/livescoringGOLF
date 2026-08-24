@@ -3,6 +3,9 @@ import { createRequire } from 'module'
 import https from 'https'
 import { db } from './db.js'
 import { parseScorecardPhoto } from './services/scoreParser.js'
+import { parseTournamentResultsPhoto } from './services/adminPhotoParser.js'
+import { matchTournament } from './services/tournamentMatcher.js'
+import { ADMIN_IDS } from './utils/adminAccess.js'
 
 const require = createRequire(import.meta.url)
 
@@ -117,8 +120,74 @@ if (!token) {
     }
   })
 
+  // Logs the chat id of any group message from a group we haven't wired up
+  // yet, so RESULTS_GROUP_CHAT_ID can be read off the Railway logs once the
+  // bot is added to the club's results group — no separate lookup bot needed.
+  bot.on('message', (msg) => {
+    if (msg.chat.type === 'private') return
+    if (String(msg.chat.id) === String(process.env.RESULTS_GROUP_CHAT_ID)) return
+    console.log('[bot] message from unconfigured group:', msg.chat.id, msg.chat.title)
+  })
+
+  // ── Photo: results table posted in the club's results group ────────────────
+  async function handleGroupResultsPhoto(msg) {
+    try {
+      const photo = msg.photo[msg.photo.length - 1]
+      const buffer = await downloadTelegramPhoto(bot, photo.file_id)
+      if (!buffer) return
+
+      const { results } = await parseTournamentResultsPhoto(buffer)
+      // Fewer than 3 rows almost certainly means this wasn't a results table
+      // (event photo, flyer, regulations page, etc.) — ignore it silently
+      // rather than pinging admins about every unrelated photo in the group.
+      if (results.length < 3) return
+
+      const messageDate = new Date(msg.date * 1000)
+      const { tournamentId, confidence } = await matchTournament({ caption: msg.caption || null, messageDate })
+
+      const { rows: [pending] } = await db.query(
+        `INSERT INTO pending_tournament_results
+           (tournament_id, match_confidence, rows, source_chat_id, source_message_id, photo_file_id)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id`,
+        [tournamentId, confidence, JSON.stringify(results), msg.chat.id, msg.message_id, photo.file_id]
+      )
+
+      let tournamentName = 'не определён — выберите вручную'
+      if (tournamentId) {
+        const { rows: [t] } = await db.query('SELECT name FROM tournaments WHERE id = $1', [tournamentId])
+        if (t) tournamentName = t.name
+      }
+
+      const text = [
+        '📊 Похоже на результаты турнира из группы клуба.',
+        `Турнир: <b>${tournamentName}</b>`,
+        `Распознано строк: ${results.length}`,
+        '',
+        'Проверьте и сохраните в панели.',
+      ].join('\n')
+
+      for (const adminId of ADMIN_IDS) {
+        bot.sendMessage(adminId, text, {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [[
+              { text: '✅ Проверить и сохранить', url: `${webAppUrl}/admin?pendingResults=${pending.id}` },
+            ]],
+          },
+        }).catch((err) => console.error('[bot] group-results notify failed:', adminId, err.message))
+      }
+    } catch (err) {
+      console.error('[bot] handleGroupResultsPhoto error:', err.message)
+    }
+  }
+
   // ── Photo: scorecard processing ───────────────────────────────────────────
   bot.on('photo', async (msg) => {
+    if (process.env.RESULTS_GROUP_CHAT_ID && String(msg.chat.id) === String(process.env.RESULTS_GROUP_CHAT_ID)) {
+      return handleGroupResultsPhoto(msg)
+    }
+
     const telegramId = msg.from?.id
     if (!telegramId) return
 

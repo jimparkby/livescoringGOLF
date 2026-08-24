@@ -245,6 +245,22 @@ async function runMigrations() {
     // their marker's score. Generated once groups are built (see build-groups).
     { name: 'tournament_reg_access_token', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS access_token TEXT` },
     { name: 'tournament_reg_access_token_unique', query: `CREATE UNIQUE INDEX IF NOT EXISTS tournament_reg_access_token_idx ON tournament_registrations (access_token) WHERE access_token IS NOT NULL` },
+    // Results photos posted in the club's Telegram group get auto-parsed by the
+    // bot and staged here for one-tap admin confirmation (see bot.js
+    // handleGroupResultsPhoto and admin.js pending-results routes) instead of
+    // requiring a manual screenshot upload in the admin panel.
+    { name: 'pending_tournament_results', query: `CREATE TABLE IF NOT EXISTS pending_tournament_results (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      tournament_id INTEGER REFERENCES tournaments(id) ON DELETE SET NULL,
+      match_confidence TEXT,
+      rows JSONB NOT NULL,
+      source_chat_id BIGINT,
+      source_message_id BIGINT,
+      photo_file_id TEXT,
+      status TEXT DEFAULT 'pending',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      expires_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '7 days'
+    )` },
   ]
 
   for (const migration of migrations) {
