@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { useGolf, type Round, type CustomTournament } from "@/store/golfStore";
 import { getFormat } from "@/lib/formats";
@@ -48,35 +48,6 @@ const AdminPage = () => {
   const navigate = useNavigate();
   const { isAdmin, loading } = useIsAdmin();
   const [tab, setTab] = useState<Tab>("live");
-  const [searchParams, setSearchParams] = useSearchParams();
-  const pendingResultsId = searchParams.get("pendingResults");
-  const [pendingResults, setPendingResults] = useState<{
-    tournamentId: number | null;
-    rows: Record<string, string | number>[];
-  } | null>(null);
-
-  // Bot-parsed results photo from the club's Telegram group — deep-linked in
-  // via ?pendingResults=<id>, prefills the Results tab instead of requiring
-  // a manual photo upload there.
-  useEffect(() => {
-    if (!pendingResultsId) return;
-    setTab("results");
-    api
-      .get<{ tournamentId: number | null; rows: Record<string, string | number>[] }>(
-        `/api/admin/tournaments/pending-results/${pendingResultsId}`
-      )
-      .then(setPendingResults)
-      .catch(() => toast.error("Не удалось загрузить распознанные результаты — возможно, ссылка устарела"));
-  }, [pendingResultsId]);
-
-  const clearPendingResults = () => {
-    const id = pendingResultsId;
-    setPendingResults(null);
-    const next = new URLSearchParams(searchParams);
-    next.delete("pendingResults");
-    setSearchParams(next, { replace: true });
-    if (id) api.delete(`/api/admin/tournaments/pending-results/${id}`).catch(() => {});
-  };
 
   if (loading) {
     return (
@@ -135,9 +106,6 @@ const AdminPage = () => {
           keyName="results"
           parseUrl={(id) => `/api/admin/tournaments/${id}/results/parse`}
           saveUrl={(id) => `/api/admin/tournaments/${id}/results/save`}
-          initialTournamentId={pendingResults?.tournamentId ?? undefined}
-          initialRows={pendingResults?.rows}
-          onSaved={pendingResultsId ? clearPendingResults : undefined}
         />
       )}
       {tab === "participants" && (
@@ -476,9 +444,6 @@ const PhotoImportPanel = ({
   parseUrl,
   saveUrl,
   includeImageOnSave,
-  initialTournamentId,
-  initialRows,
-  onSaved,
 }: {
   title: string;
   hint: string;
@@ -487,9 +452,6 @@ const PhotoImportPanel = ({
   parseUrl: (tournamentId: number) => string;
   saveUrl: (tournamentId: number) => string;
   includeImageOnSave?: boolean;
-  initialTournamentId?: number;
-  initialRows?: Record<string, string | number>[];
-  onSaved?: () => void;
 }) => {
   const [tournaments, setTournaments] = useState<TournamentOption[]>([]);
   const [tournamentId, setTournamentId] = useState("");
@@ -502,13 +464,6 @@ const PhotoImportPanel = ({
   useEffect(() => {
     api.get<TournamentOption[]>("/api/admin/tournaments").then(setTournaments).catch(() => {});
   }, []);
-
-  // Prefill from a bot-parsed results photo (see ?pendingResults= in AdminPage)
-  // instead of the usual upload-and-parse flow.
-  useEffect(() => {
-    if (initialTournamentId) setTournamentId(String(initialTournamentId));
-    if (initialRows && initialRows.length > 0) setRows(initialRows);
-  }, [initialTournamentId, initialRows]);
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -553,7 +508,6 @@ const PhotoImportPanel = ({
       toast.success(`Сохранено: ${data.saved}`);
       setRows([]);
       setImage(null);
-      onSaved?.();
     } catch {
       toast.error("Ошибка сохранения");
     } finally {
