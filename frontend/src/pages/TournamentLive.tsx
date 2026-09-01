@@ -173,20 +173,20 @@ const TournamentLivePage = () => {
       <div className="fixed inset-0 z-50 flex flex-col bg-background">
         <Header />
 
-        <div className="flex-1 overflow-y-auto px-5 py-2">
+        <div className="flex-1 min-w-0 overflow-y-auto px-5 py-2">
           <div className="text-xl mt-4 text-foreground">Привет, <b>{link.myName}</b>!</div>
           <div className="text-sm mt-1 text-muted-foreground">Добро пожаловать на <b>{link.tournamentName}</b></div>
 
           <div className="rounded-xl mt-5 overflow-hidden" style={{ background: "#15361f" }}>
             {link.flightLabel && (
-              <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.12)" }}>
-                <span className="text-sm" style={{ color: "#9fc2a8" }}>Группа</span>
-                <span className="text-sm font-bold text-white">{link.flightLabel}</span>
+              <div className="flex items-center justify-between gap-3 px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.12)" }}>
+                <span className="text-sm shrink-0" style={{ color: "#9fc2a8" }}>Группа</span>
+                <span className="text-sm font-bold text-white text-right truncate">{link.flightLabel}</span>
               </div>
             )}
-            <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-sm" style={{ color: "#9fc2a8" }}>Поле</span>
-              <span className="text-sm font-bold text-white">{course.name}</span>
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <span className="text-sm shrink-0" style={{ color: "#9fc2a8" }}>Поле</span>
+              <span className="text-sm font-bold text-white text-right truncate">{course.name}</span>
             </div>
           </div>
 
