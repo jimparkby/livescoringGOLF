@@ -310,13 +310,7 @@ const ProfilePage = () => {
 
       {/* Sign out */}
       <button
-        onClick={() => {
-          signOut();
-          const tg = (window as any)?.Telegram?.WebApp;
-          if (tg?.close) {
-            tg.close();
-          }
-        }}
+        onClick={signOut}
         className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors"
       >
         <LogOut className="h-4 w-4" />

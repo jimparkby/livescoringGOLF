@@ -157,7 +157,7 @@ router.post('/:id/notify', requireAuth, async (req, res, next) => {
             parse_mode: 'HTML',
             reply_markup: {
               inline_keyboard: [[
-                { text: '⛳ Открыть Golf Live', web_app: { url: webAppUrl } },
+                { text: '⛳ Открыть Golf Live', url: webAppUrl },
               ]],
             },
           }

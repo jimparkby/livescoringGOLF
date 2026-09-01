@@ -496,7 +496,7 @@ const TournamentRoundPlayer = ({
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#0a0a0a" }}>
       {/* Header */}
-      <div className="flex items-center justify-between px-5" style={{ paddingTop: "calc(var(--tg-safe-top) + 10px)", paddingBottom: 10 }}>
+      <div className="flex items-center justify-between px-5" style={{ paddingTop: 10, paddingBottom: 10 }}>
         <button onClick={onExit} className="h-9 w-9 rounded-full grid place-items-center" style={{ background: "rgba(255,255,255,0.1)" }}>
           <X className="h-4 w-4 text-white" strokeWidth={2.5} />
         </button>

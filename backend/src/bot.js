@@ -108,7 +108,7 @@ if (!token) {
         parse_mode: 'HTML',
         reply_markup: {
           inline_keyboard: [
-            [{ text: '⛳ Открыть GolfMinsk Live', web_app: { url: webAppUrl } }],
+            [{ text: '⛳ Открыть GolfMinsk Live', url: webAppUrl }],
           ],
         },
       })
@@ -175,7 +175,7 @@ if (!token) {
         message_id: statusMsg.message_id,
         reply_markup: {
           inline_keyboard: [[
-            { text: '✅ Подтвердить счёт', web_app: { url: `${webAppUrl}?confirm=${sc.id}` } },
+            { text: '✅ Подтвердить счёт', url: `${webAppUrl}?confirm=${sc.id}` },
           ]],
         },
       })
