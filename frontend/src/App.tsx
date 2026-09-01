@@ -14,7 +14,6 @@ import TournamentsPage from "./pages/Tournaments";
 import TournamentInfoPage from "./pages/TournamentInfo";
 import TournamentPlayPage from "./pages/TournamentPlay";
 import CreateTournamentPage from "./pages/CreateTournament";
-import StatsPage from "./pages/Stats";
 import StatisticsPage from "./pages/Statistics";
 import ProfilePage from "./pages/Profile";
 import CoursePage from "./pages/Course";
@@ -56,7 +55,6 @@ function AppRoutes() {
         <Route path="/statistics" element={<StatisticsPage />} />
         <Route path="/course" element={<CoursePage />} />
         <Route path="/play" element={<PlayPage />} />
-        <Route path="/stats" element={<StatsPage />} />
 
         <Route path="/tournament/:id" element={<RequireAuth><TournamentPlayPage /></RequireAuth>} />
         <Route path="/create-tournament" element={<RequireAuth><CreateTournamentPage /></RequireAuth>} />

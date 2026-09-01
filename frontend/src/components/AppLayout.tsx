@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Trophy, CircleUserRound, LineChart, Flag, MapPin, LogOut, UserRound, BarChart3 } from "lucide-react";
+import { Trophy, CircleUserRound, Flag, MapPin, LogOut, UserRound, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useGolf } from "@/store/golfStore";
@@ -10,7 +10,6 @@ const navLinks = [
   { to: "/statistics", label: "Statistics", icon: BarChart3 },
   { to: "/course", label: "Course", icon: MapPin },
   { to: "/play", label: "Play", icon: Flag },
-  { to: "/stats", label: "Handicap", icon: LineChart },
 ];
 
 const mobileNavLinks = [
