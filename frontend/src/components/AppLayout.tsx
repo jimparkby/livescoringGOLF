@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Trophy, CircleUserRound, LineChart, Flag, MapPin, LogOut, LogIn, BarChart3 } from "lucide-react";
+import { Trophy, CircleUserRound, LineChart, Flag, MapPin, LogOut, UserRound, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useGolf } from "@/store/golfStore";
@@ -29,7 +29,7 @@ const AppLayout = () => {
             GOLF CLUB MINSK
           </NavLink>
 
-          <nav className="flex items-center gap-1 flex-1 overflow-x-auto">
+          <nav className="flex items-center gap-1 flex-1 overflow-x-auto overflow-y-hidden">
             {navLinks.map(({ to, label, icon: Icon, end }) => (
               <NavLink
                 key={to}
@@ -98,9 +98,11 @@ const AppLayout = () => {
           ) : (
             <NavLink
               to="/profile"
-              className="flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-semibold bg-white text-black hover:bg-white/90 transition-colors shrink-0"
+              className="group flex items-center gap-2 h-9 pl-1.5 pr-4 rounded-full text-sm font-semibold bg-white text-black hover:bg-accent hover:text-accent-foreground transition-colors shrink-0"
             >
-              <LogIn className="h-4 w-4" strokeWidth={2.25} />
+              <span className="h-6 w-6 rounded-full bg-black/10 grid place-items-center group-hover:bg-black/15 transition-colors">
+                <UserRound className="h-3.5 w-3.5" strokeWidth={2.5} />
+              </span>
               Войти
             </NavLink>
           )}
