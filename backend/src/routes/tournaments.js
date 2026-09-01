@@ -298,8 +298,8 @@ router.post('/:id/build-groups', requireAuth, requireAdmin, async (req, res, nex
             const initials = ((p.first_name?.[0] ?? '') + (p.last_name?.[0] ?? '')).toUpperCase() || 'P'
             await db.query(
               `INSERT INTO round_players (round_id, player_id, name, initials, hcp, is_me, user_id)
-               VALUES ($1,$2,$3,$4,$5,false,$2)`,
-              [round.id, p.user_id, name, initials, p.hcp]
+               VALUES ($1,$2,$3,$4,$5,false,$6)`,
+              [round.id, p.user_id, name, initials, p.hcp, p.user_id]
             )
             const accessToken = crypto.randomBytes(6).toString('base64url')
             await db.query(
