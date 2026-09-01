@@ -255,6 +255,15 @@ async function runMigrations() {
       created_at TIMESTAMPTZ DEFAULT NOW(),
       expires_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '15 minutes'
     )` },
+    // Login/sign-up is Telegram-only now: the Auth page requests a code before
+    // it has any session, so user_id starts NULL and is filled in by bot.js's
+    // /start handler once the person presses Start (see routes/auth.js).
+    { name: 'telegram_auth_codes', query: `CREATE TABLE IF NOT EXISTS telegram_auth_codes (
+      code TEXT PRIMARY KEY,
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      expires_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '10 minutes'
+    )` },
   ]
 
   for (const migration of migrations) {

@@ -6,6 +6,38 @@ import { parseScorecardPhoto } from './services/scoreParser.js'
 
 const require = createRequire(import.meta.url)
 
+const normalizeName = (name) => (name || '').trim().toUpperCase()
+
+// Find a member in the HDID whitelist by name — gates account creation for
+// people signing in with Telegram for the first time (see /start's auth_
+// handler below). Mirrors the matching that used to live in routes/auth.js
+// before login moved to Telegram-only.
+async function findHDIDMember(firstName, lastName) {
+  const normFirst = normalizeName(firstName)
+  const normLast = normalizeName(lastName)
+  if (!normFirst || !normLast) return null
+
+  try {
+    const { rows: exactMatch } = await db.query(
+      `SELECT * FROM hdid_members WHERE UPPER(first_name) = $1 AND UPPER(last_name) = $2`,
+      [normFirst, normLast]
+    )
+    if (exactMatch.length > 0) return exactMatch[0]
+
+    const { rows: fuzzyMatch } = await db.query(
+      `SELECT *, similarity(UPPER(first_name), $1) + similarity(UPPER(last_name), $2) as score
+       FROM hdid_members
+       WHERE similarity(UPPER(first_name), $1) > 0.6 AND similarity(UPPER(last_name), $2) > 0.6
+       ORDER BY score DESC LIMIT 1`,
+      [normFirst, normLast]
+    )
+    return fuzzyMatch.length > 0 ? fuzzyMatch[0] : null
+  } catch (err) {
+    console.warn('[bot] HDID fuzzy matching unavailable, exact match only:', err.message)
+    return null
+  }
+}
+
 function createProxyAgent() {
   const proxyUrl = process.env.TELEGRAM_PROXY_URL
   if (!proxyUrl) return null
@@ -122,6 +154,65 @@ if (!token) {
           console.error('[bot] link error:', err.message)
           await bot.sendMessage(msg.chat.id, '❌ Не удалось подключить Telegram. Попробуйте ещё раз.')
         }
+      }
+      return
+    }
+
+    // Deep link from the Auth page (t.me/<bot>?start=auth_<code>) — login and
+    // sign-up both go through here now that email/password is gone. Finds an
+    // existing account by telegram_id, falls back to linking an existing
+    // account by name (e.g. someone created before Telegram-only login) to
+    // avoid duplicates, and only creates a new row if neither matches — gated
+    // by the HDID member whitelist, same rule the old email flow enforced.
+    if (payload?.startsWith('auth_')) {
+      const code = payload.slice(5)
+      const telegramId = msg.from.id
+      const tgFirstName = msg.from.first_name || ''
+      const tgLastName = msg.from.last_name || ''
+      const tgUsername = msg.from.username || null
+
+      try {
+        const { rows: [codeRow] } = await db.query(
+          `SELECT 1 FROM telegram_auth_codes WHERE code = $1 AND expires_at > NOW()`,
+          [code]
+        )
+        if (!codeRow) {
+          await bot.sendMessage(msg.chat.id, '❌ Ссылка для входа истекла. Вернитесь в приложение и попробуйте снова.')
+          return
+        }
+
+        let { rows: [user] } = await db.query('SELECT id FROM users WHERE telegram_id = $1', [telegramId])
+
+        if (!user) {
+          const { rows: [nameMatch] } = await db.query(
+            `SELECT id FROM users WHERE telegram_id IS NULL AND UPPER(first_name) = UPPER($1) AND UPPER(last_name) = UPPER($2) LIMIT 1`,
+            [tgFirstName, tgLastName]
+          )
+          if (nameMatch) {
+            user = nameMatch
+            await db.query('UPDATE users SET telegram_id = $1, username = COALESCE($2, username) WHERE id = $3', [telegramId, tgUsername, user.id])
+          }
+        }
+
+        if (!user) {
+          const hdidMember = await findHDIDMember(tgFirstName, tgLastName)
+          if (!hdidMember) {
+            await bot.sendMessage(msg.chat.id, '❌ Доступ запрещён. Вы не найдены в списке членов Golf Club Minsk. Обратитесь к администратору клуба.')
+            await db.query('DELETE FROM telegram_auth_codes WHERE code = $1', [code])
+            return
+          }
+          const { rows: [newUser] } = await db.query(
+            `INSERT INTO users (telegram_id, username, first_name, last_name, hcp) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+            [telegramId, tgUsername, tgFirstName, tgLastName, hdidMember.hcp ?? 36.0]
+          )
+          user = newUser
+        }
+
+        await db.query('UPDATE telegram_auth_codes SET user_id = $1 WHERE code = $2', [user.id, code])
+        await bot.sendMessage(msg.chat.id, '✅ Вход выполнен! Возвращайтесь в приложение — вы уже авторизованы.')
+      } catch (err) {
+        console.error('[bot] auth error:', err.message)
+        await bot.sendMessage(msg.chat.id, '❌ Не удалось войти. Попробуйте ещё раз.')
       }
       return
     }

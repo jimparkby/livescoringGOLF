@@ -1,73 +1,88 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
+import { Send } from "lucide-react";
+
+type Status = "idle" | "waiting" | "expired" | "error";
 
 export default function AuthPage() {
   const { signIn } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [status, setStatus] = useState<Status>("idle");
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  useEffect(() => () => {
+    if (pollRef.current) clearInterval(pollRef.current);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  }, []);
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+  const startTelegramAuth = async () => {
+    setStatus("waiting");
     try {
-      const data = await api.post<{ jwt: string; error?: string }>("/api/auth/login", { email, password });
-      await signIn(data.jwt);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setLoading(false);
+      const { code, deepLink } = await api.post<{ code: string; deepLink: string | null }>("/api/auth/telegram-code", {});
+      if (!deepLink) {
+        setStatus("error");
+        return;
+      }
+      window.open(deepLink, "_blank");
+
+      pollRef.current = setInterval(async () => {
+        try {
+          const data = await api.get<{ jwt?: string; pending?: boolean }>(`/api/auth/telegram-code/${code}`);
+          if (data.jwt) {
+            if (pollRef.current) clearInterval(pollRef.current);
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            await signIn(data.jwt);
+          }
+        } catch {
+          if (pollRef.current) clearInterval(pollRef.current);
+          setStatus("expired");
+        }
+      }, 2500);
+
+      timeoutRef.current = setTimeout(() => {
+        if (pollRef.current) clearInterval(pollRef.current);
+        setStatus((s) => (s === "waiting" ? "expired" : s));
+      }, 10 * 60_000);
+    } catch {
+      setStatus("error");
     }
   };
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="font-black text-3xl tracking-wider text-foreground">GOLF CLUB MINSK</div>
-          <div className="text-xs text-muted-foreground uppercase tracking-[0.25em] mt-1">Live Scoring</div>
-        </div>
+      <div className="w-full max-w-sm text-center">
+        <div className="font-black text-3xl tracking-wider text-foreground">GOLF CLUB MINSK</div>
+        <div className="text-xs text-muted-foreground uppercase tracking-[0.25em] mt-1 mb-10">Live Scoring</div>
 
-        <form onSubmit={submit} className="space-y-3">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            className="w-full px-4 py-3 rounded-xl bg-muted text-foreground placeholder:text-muted-foreground border border-border focus:border-action focus:outline-none text-sm"
-          />
-          <input
-            type="password"
-            placeholder="Пароль"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-            className="w-full px-4 py-3 rounded-xl bg-muted text-foreground placeholder:text-muted-foreground border border-border focus:border-action focus:outline-none text-sm"
-          />
+        <button
+          onClick={startTelegramAuth}
+          disabled={status === "waiting"}
+          className="w-full h-12 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2.5 disabled:opacity-70 transition-colors"
+          style={{ background: "#15361f" }}
+        >
+          <Send className="h-4 w-4" strokeWidth={2.25} />
+          {status === "waiting" ? "Ждём подтверждения в Telegram…" : "Войти через Telegram"}
+        </button>
 
-          {error && (
-            <div className="text-sm text-red-500 leading-relaxed">{error}</div>
-          )}
+        {status === "waiting" && (
+          <p className="text-xs text-muted-foreground mt-4 leading-relaxed">
+            Откроется Telegram — нажмите <b>Start</b> в чате с ботом, и вы автоматически вернётесь сюда авторизованным.
+          </p>
+        )}
+        {status === "expired" && (
+          <p className="text-xs mt-4 leading-relaxed" style={{ color: "#a5822f" }}>
+            Ссылка для входа истекла. Нажмите кнопку ещё раз.
+          </p>
+        )}
+        {status === "error" && (
+          <p className="text-xs mt-4 leading-relaxed text-destructive">
+            Бот сейчас недоступен. Попробуйте немного позже.
+          </p>
+        )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full h-12 rounded-xl font-bold text-sm bg-action hover:bg-action/90 text-action-foreground disabled:opacity-60 transition-colors"
-          >
-            {loading ? "..." : "Войти"}
-          </button>
-        </form>
-
-        <p className="text-xs text-muted-foreground text-center mt-6 leading-relaxed">
-          Доступ только для членов Golf Club Minsk. Обратитесь к администратору клуба, если у вас
-          ещё нет аккаунта.
+        <p className="text-xs text-muted-foreground text-center mt-8 leading-relaxed">
+          Доступ только для членов Golf Club Minsk — бот проверит вас по списку клуба при первом входе.
         </p>
       </div>
     </div>
