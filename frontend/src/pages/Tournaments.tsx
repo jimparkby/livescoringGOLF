@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { TOURNAMENTS } from "@/lib/tournaments";
+import { TOURNAMENTS, isTournamentUpcoming, tournamentStartDate } from "@/lib/tournaments";
 import { getTournamentData } from "@/lib/tournament-data";
 import { Card } from "@/components/ui/card";
 import { Plus, Image, Trophy, QrCode, MapPin } from "lucide-react";
@@ -35,6 +35,14 @@ const TournamentsPage = () => {
     return Array.from(map.entries());
   }, []);
 
+  const upcoming = useMemo(
+    () =>
+      TOURNAMENTS.filter(isTournamentUpcoming)
+        .sort((a, b) => tournamentStartDate(a).getTime() - tournamentStartDate(b).getTime())
+        .slice(1, 3),
+    [],
+  );
+
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
       {/* Header */}
@@ -53,42 +61,82 @@ const TournamentsPage = () => {
         </button>
       </div>
 
-      <NextTournamentHero />
-      <LatestResultsCard />
-
-      {/* Statistics Button */}
-      <Card
-        onClick={() => navigate('/statistics')}
-        className="p-5 shadow-soft cursor-pointer hover:bg-accent/30 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-full grid place-items-center shrink-0" style={{ background: "rgba(44,107,61,0.1)" }}>
-            <Trophy className="h-6 w-6" style={{ color: "#2c6b3d" }} />
-          </div>
-          <div className="flex-1">
-            <div className="font-bold text-lg">Статистика</div>
-            <div className="text-sm text-muted-foreground">Рейтинг игроков и результаты турниров 2026</div>
-          </div>
-          <div className="text-2xl" style={{ color: "#93a598" }}>›</div>
+      <div className="grid lg:grid-cols-[1.6fr_1fr] gap-5 items-start">
+        <div className="space-y-5 min-w-0">
+          <NextTournamentHero />
+          <LatestResultsCard />
         </div>
-      </Card>
 
-      {/* Course map */}
-      <Card
-        onClick={() => navigate('/course')}
-        className="p-5 shadow-soft cursor-pointer hover:bg-accent/30 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-full grid place-items-center shrink-0" style={{ background: "rgba(201,162,75,0.14)" }}>
-            <MapPin className="h-6 w-6" style={{ color: "#a5822f" }} />
-          </div>
-          <div className="flex-1">
-            <div className="font-bold text-lg">Карта полей</div>
-            <div className="text-sm text-muted-foreground">Схема поля и скоркарты Golf Club Minsk</div>
-          </div>
-          <div className="text-2xl" style={{ color: "#93a598" }}>›</div>
+        <div className="space-y-4 min-w-0">
+          {/* Statistics tile */}
+          <Card
+            onClick={() => navigate('/statistics')}
+            className="p-5 shadow-soft cursor-pointer hover:bg-accent/30 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-full grid place-items-center shrink-0" style={{ background: "rgba(44,107,61,0.1)" }}>
+                <Trophy className="h-6 w-6" style={{ color: "#2c6b3d" }} />
+              </div>
+              <div className="flex-1">
+                <div className="font-bold text-lg">Статистика</div>
+                <div className="text-sm text-muted-foreground">Рейтинг игроков и результаты турниров 2026</div>
+              </div>
+              <div className="text-2xl" style={{ color: "#93a598" }}>›</div>
+            </div>
+          </Card>
+
+          {/* Course map tile */}
+          <Card
+            onClick={() => navigate('/course')}
+            className="p-5 shadow-soft cursor-pointer hover:bg-accent/30 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-full grid place-items-center shrink-0" style={{ background: "rgba(201,162,75,0.14)" }}>
+                <MapPin className="h-6 w-6" style={{ color: "#a5822f" }} />
+              </div>
+              <div className="flex-1">
+                <div className="font-bold text-lg">Карта полей</div>
+                <div className="text-sm text-muted-foreground">Схема поля и скоркарты Golf Club Minsk</div>
+              </div>
+              <div className="text-2xl" style={{ color: "#93a598" }}>›</div>
+            </div>
+          </Card>
+
+          {/* Upcoming tournaments */}
+          {upcoming.length > 0 && (
+            <div className="rounded-2xl p-6 space-y-3.5" style={{ background: "#15361f" }}>
+              <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#9fc2a8" }}>
+                Ближайшие турниры
+              </div>
+              {upcoming.map((t) => (
+                <div
+                  key={t.id}
+                  onClick={() => navigate(`/tournament-info/${t.id}`)}
+                  className="flex items-center gap-3.5 cursor-pointer"
+                >
+                  <div className="w-9 text-center shrink-0">
+                    <div className="text-lg font-black text-white leading-none tabular-nums">{t.date}</div>
+                    <div className="text-[9px] font-bold mt-0.5" style={{ color: "#9fc2a8" }}>
+                      {t.month.slice(0, 3).toUpperCase()}
+                    </div>
+                  </div>
+                  <div className="text-[13px] font-semibold leading-snug" style={{ color: "#e7ede8" }}>
+                    {t.name}
+                  </div>
+                </div>
+              ))}
+              <div className="h-px" style={{ background: "rgba(255,255,255,0.1)" }} />
+              <button
+                onClick={() => document.getElementById("calendar")?.scrollIntoView({ behavior: "smooth" })}
+                className="text-[12.5px] font-bold"
+                style={{ color: "#c9a24b" }}
+              >
+                Весь календарь →
+              </button>
+            </div>
+          )}
         </div>
-      </Card>
+      </div>
 
       {/* Admin panel — app management, visible only to the whitelisted admin account */}
       {isAdmin && (
@@ -110,6 +158,7 @@ const TournamentsPage = () => {
       )}
 
       {/* Calendar */}
+      <div id="calendar" className="space-y-5 scroll-mt-20">
       {grouped.map(([month, items]) => (
         <Card key={month} className="overflow-hidden shadow-soft">
           <div className="px-4 py-2.5 bg-muted/50 border-b border-border">
@@ -142,6 +191,7 @@ const TournamentsPage = () => {
           </div>
         </Card>
       ))}
+      </div>
     </div>
   );
 };

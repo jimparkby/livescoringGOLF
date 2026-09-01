@@ -174,15 +174,16 @@ All colors MUST be HSL.
     --surface-card-alt: #ffffff;
     --border-hairline: rgba(0, 0, 0, 0.08);
 
-    --accent: 142 70% 38%;           /* #16a34a deepened for contrast */
+    /* Brand green (Golf Club Minsk / golfminsk.by) — deep forest green, #1f7a3d */
+    --accent: 140 55% 30%;
     --accent-foreground: 0 0% 100%;
-    --accent-soft: 142 60% 92%;      /* #dcfce7 */
-    --accent-tint: rgba(22, 163, 74, 0.1);
-    --accent-tint-border: rgba(22, 163, 74, 0.28);
+    --accent-soft: 140 45% 92%;
+    --accent-tint: rgba(31, 122, 61, 0.1);
+    --accent-tint-border: rgba(31, 122, 61, 0.28);
 
-    --action: 142 70% 38%;
+    --action: 140 55% 30%;
     --action-foreground: 0 0% 100%;
-    --action-glow: 142 75% 45%;
+    --action-glow: 140 50% 42%;
 
     --score-eagle: #ca8a04;
     --score-birdie: #16a34a;
@@ -193,15 +194,15 @@ All colors MUST be HSL.
     --destructive: 0 72% 50%;        /* #dc2626 */
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 70% 38%;
+    --success: 140 55% 30%;
     --warning: 38 90% 45%;
 
     --border: 0 0% 89%;              /* #e1e4e8 */
     --input: 0 0% 93%;
-    --ring: 142 70% 38%;
+    --ring: 140 55% 30%;
 
     --gradient-hero: linear-gradient(180deg, #ffffff 0%, #eef1f4 100%);
-    --gradient-fairway: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    --gradient-fairway: linear-gradient(135deg, #2c6b3d 0%, #15361f 100%);
     --gradient-card: linear-gradient(180deg, #ffffff 0%, #f6f7f9 100%);
   }
 }
