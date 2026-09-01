@@ -162,8 +162,9 @@ if (!token) {
     // sign-up both go through here now that email/password is gone. Finds an
     // existing account by telegram_id, falls back to linking an existing
     // account by name (e.g. someone created before Telegram-only login) to
-    // avoid duplicates, and only creates a new row if neither matches — gated
-    // by the HDID member whitelist, same rule the old email flow enforced.
+    // avoid duplicates, and only creates a new row if neither matches. Open
+    // signup — anyone can join; the HDID whitelist is only consulted to seed
+    // a known member's real starting HCP instead of the default 36.0.
     if (payload?.startsWith('auth_')) {
       const code = payload.slice(5)
       const telegramId = msg.from.id
@@ -196,14 +197,9 @@ if (!token) {
 
         if (!user) {
           const hdidMember = await findHDIDMember(tgFirstName, tgLastName)
-          if (!hdidMember) {
-            await bot.sendMessage(msg.chat.id, '❌ Доступ запрещён. Вы не найдены в списке членов Golf Club Minsk. Обратитесь к администратору клуба.')
-            await db.query('DELETE FROM telegram_auth_codes WHERE code = $1', [code])
-            return
-          }
           const { rows: [newUser] } = await db.query(
             `INSERT INTO users (telegram_id, username, first_name, last_name, hcp) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-            [telegramId, tgUsername, tgFirstName, tgLastName, hdidMember.hcp ?? 36.0]
+            [telegramId, tgUsername, tgFirstName, tgLastName, hdidMember?.hcp ?? 36.0]
           )
           user = newUser
         }
