@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Minus, Plus, Trophy, Flag } from "lucide-react";
-import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { COURSES, type Hole } from "@/lib/courses";
 import type { HolesMode, Round } from "@/store/golfStore";
@@ -87,6 +86,8 @@ const TournamentLivePage = () => {
   const [myScore, setMyScore] = useState(4);
   const [markerScore, setMarkerScore] = useState(4);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [lastHoleSaved, setLastHoleSaved] = useState(false);
   const [confirmed, setConfirmed] = useState(() => token ? sessionStorage.getItem(`tlive-confirmed-${token}`) === "1" : false);
 
   const confirmIntro = () => {
@@ -122,12 +123,14 @@ const TournamentLivePage = () => {
     if (!currentHole || !link) return;
     setMyScore(scoreFor(link.myId, currentHole.number) ?? currentHole.par);
     setMarkerScore(link.marker ? (scoreFor(link.marker.id, currentHole.number) ?? currentHole.par) : currentHole.par);
+    setLastHoleSaved(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [holeIdx, rounds, link]);
 
   const save = async () => {
     if (!currentHole || !token || !link) return;
     setSaving(true);
+    setSaveError(null);
     try {
       await api.post(`/api/tournaments/live/${token}/scores`, {
         hole: currentHole.number,
@@ -135,8 +138,17 @@ const TournamentLivePage = () => {
         markerScore: link.marker ? markerScore : undefined,
       });
       await loadRounds();
+      // Toasts are disabled app-wide, so a silent success looks identical to
+      // a silent failure — auto-advance to the next hole instead, which is
+      // its own unmistakable confirmation the save went through.
+      const nextIdx = playHoles.findIndex((h) => h.number === currentHole.number) + 1;
+      if (nextIdx < playHoles.length) {
+        setHoleIdx(nextIdx);
+      } else {
+        setLastHoleSaved(true);
+      }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Ошибка сохранения");
+      setSaveError(e instanceof Error ? e.message : "Не удалось сохранить счёт. Попробуйте ещё раз.");
     } finally {
       setSaving(false);
     }
@@ -283,6 +295,14 @@ const TournamentLivePage = () => {
           </div>
 
           <div className="px-5 pb-4">
+            {lastHoleSaved && !saveError && (
+              <div className="text-sm text-center mb-2 font-semibold" style={{ color: "#2c6b3d" }}>
+                ✓ Все лунки сохранены
+              </div>
+            )}
+            {saveError && (
+              <div className="text-sm text-center mb-2 text-destructive">{saveError}</div>
+            )}
             <button
               onClick={save}
               disabled={saving}
