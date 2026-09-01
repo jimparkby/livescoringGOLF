@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, Trophy, Flag } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { COURSES, type Hole } from "@/lib/courses";
@@ -9,10 +9,6 @@ import type { FormatId } from "@/lib/formats";
 import { courseHandicap, playingHandicap } from "@/lib/handicap";
 import { TournamentLiveLeaderboard } from "@/components/TournamentLiveLeaderboard";
 import { HoleGridNav } from "@/components/HoleGridNav";
-import { LiveScoringLogo } from "@/components/LiveScoringLogo";
-
-const CUPRUM = "Cuprum, Arial, Helvetica, sans-serif";
-const INK = "#222430";
 
 type GroupPlayer = { id: string; name: string; hcp: number };
 
@@ -48,24 +44,30 @@ const scoreLabel = (score: number, par: number) => {
   return `+${d}`;
 };
 
+const Header = () => (
+  <div className="flex items-center gap-2 px-5 h-14 shrink-0" style={{ background: "#0d1f14", paddingTop: "env(safe-area-inset-top, 0px)" }}>
+    <Trophy className="h-5 w-5" style={{ color: "#c9a24b" }} strokeWidth={2} />
+    <span className="font-black tracking-wider text-sm text-white">GOLF CLUB MINSK</span>
+  </div>
+);
+
 const Stepper = ({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) => (
   <div className="flex-1 flex flex-col items-center gap-3">
-    <div className="text-xs uppercase tracking-wider font-bold truncate max-w-[140px]" style={{ color: "#8a8a8a" }}>{label}</div>
+    <div className="text-xs uppercase tracking-wider font-bold truncate max-w-[140px] text-muted-foreground">{label}</div>
     <div className="flex items-center gap-4">
       <button
         onClick={() => onChange(Math.max(1, value - 1))}
-        className="h-11 w-11 rounded-full grid place-items-center active:scale-95 transition-transform border"
-        style={{ borderColor: "#e5e5e5" }}
+        className="h-11 w-11 rounded-full grid place-items-center active:scale-95 transition-transform border border-border"
       >
-        <Minus className="h-5 w-5" style={{ color: INK }} strokeWidth={2.5} />
+        <Minus className="h-5 w-5 text-foreground" strokeWidth={2.5} />
       </button>
-      <div className="text-5xl font-black tabular-nums w-16 text-center" style={{ color: INK }}>{value}</div>
+      <div className="text-5xl font-black tabular-nums w-16 text-center text-foreground">{value}</div>
       <button
         onClick={() => onChange(Math.min(15, value + 1))}
         className="h-11 w-11 rounded-full grid place-items-center active:scale-95 transition-transform"
-        style={{ background: "#e8f3ee" }}
+        style={{ background: "rgba(44,107,61,0.12)" }}
       >
-        <Plus className="h-5 w-5" style={{ color: "#21835b" }} strokeWidth={2.5} />
+        <Plus className="h-5 w-5" style={{ color: "#2c6b3d" }} strokeWidth={2.5} />
       </button>
     </div>
   </div>
@@ -142,18 +144,18 @@ const TournamentLivePage = () => {
 
   if (notFound) {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center" style={{ background: "#f7f7f7", fontFamily: CUPRUM }}>
-        <div className="text-4xl mb-2">⛳</div>
-        <div className="font-bold text-lg" style={{ color: INK }}>Ссылка недействительна</div>
-        <div className="text-sm" style={{ color: "#8a8a8a" }}>Проверьте ссылку или обратитесь к организатору</div>
+      <div className="fixed inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center bg-background">
+        <Flag className="h-10 w-10 mb-2 text-muted-foreground" />
+        <div className="font-bold text-lg text-foreground">Ссылка недействительна</div>
+        <div className="text-sm text-muted-foreground">Проверьте ссылку или обратитесь к организатору</div>
       </div>
     );
   }
 
   if (!link || !course || !currentHole) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center" style={{ background: "#f7f7f7" }}>
-        <div className="h-8 w-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "#21835b", borderTopColor: "transparent" }} />
+      <div className="fixed inset-0 flex items-center justify-center bg-background">
+        <div className="h-8 w-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "#15361f", borderTopColor: "transparent" }} />
       </div>
     );
   }
@@ -168,49 +170,47 @@ const TournamentLivePage = () => {
     const ph = link.rating != null && link.slope != null ? playingHandicap(myHcp, link.slope, link.rating, course.totalPar) : null;
 
     return (
-      <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#f7f7f7", fontFamily: CUPRUM }}>
-        <div className="flex items-center px-5" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 14px)", paddingBottom: 10 }}>
-          <LiveScoringLogo />
-        </div>
+      <div className="fixed inset-0 z-50 flex flex-col bg-background">
+        <Header />
 
         <div className="flex-1 overflow-y-auto px-5 py-2">
-          <div className="text-xl mt-2" style={{ color: INK }}>Привет, <b>{link.myName}</b>!</div>
-          <div className="text-sm mt-1" style={{ color: "#8a8a8a" }}>Добро пожаловать на <b>{link.tournamentName}</b></div>
+          <div className="text-xl mt-4 text-foreground">Привет, <b>{link.myName}</b>!</div>
+          <div className="text-sm mt-1 text-muted-foreground">Добро пожаловать на <b>{link.tournamentName}</b></div>
 
-          <div className="rounded-xl mt-5 overflow-hidden" style={{ background: "#3a3d4a" }}>
+          <div className="rounded-xl mt-5 overflow-hidden" style={{ background: "#15361f" }}>
             {link.flightLabel && (
               <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.12)" }}>
-                <span className="text-sm" style={{ color: "#c7c9d3" }}>Группа</span>
+                <span className="text-sm" style={{ color: "#9fc2a8" }}>Группа</span>
                 <span className="text-sm font-bold text-white">{link.flightLabel}</span>
               </div>
             )}
             <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-sm" style={{ color: "#c7c9d3" }}>Поле</span>
+              <span className="text-sm" style={{ color: "#9fc2a8" }}>Поле</span>
               <span className="text-sm font-bold text-white">{course.name}</span>
             </div>
           </div>
 
-          <div className="rounded-xl mt-3 overflow-hidden" style={{ background: "#e2e2df" }}>
-            <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
-              <span className="text-sm" style={{ color: "#5a5a55" }}>Handicap Index</span>
-              <span className="text-sm font-bold" style={{ color: INK }}>{myHcp.toFixed(1)}</span>
+          <div className="rounded-xl mt-3 overflow-hidden bg-card border border-border shadow-soft">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <span className="text-sm text-muted-foreground">Handicap Index</span>
+              <span className="text-sm font-bold text-foreground">{myHcp.toFixed(1)}</span>
             </div>
-            <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
-              <span className="text-sm" style={{ color: "#5a5a55" }}>Course Handicap</span>
-              <span className="text-sm font-bold" style={{ color: INK }}>{ch ?? "—"}</span>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <span className="text-sm text-muted-foreground">Course Handicap</span>
+              <span className="text-sm font-bold text-foreground">{ch ?? "—"}</span>
             </div>
             <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-sm" style={{ color: "#5a5a55" }}>Playing Handicap</span>
-              <span className="text-sm font-bold" style={{ color: INK }}>{ph ?? "—"}</span>
+              <span className="text-sm text-muted-foreground">Playing Handicap</span>
+              <span className="text-sm font-bold text-foreground">{ph ?? "—"}</span>
             </div>
           </div>
 
           {link.marker && (
-            <div className="rounded-xl mt-3 overflow-hidden" style={{ background: "#3d6fa3" }}>
+            <div className="rounded-xl mt-3 overflow-hidden" style={{ background: "rgba(201,162,75,0.12)", border: "1px solid rgba(201,162,75,0.35)" }}>
               <div className="px-4 py-3">
-                <div className="text-xs uppercase tracking-wide" style={{ color: "#cfe0f2" }}>Вы маркер для</div>
-                <div className="text-base font-bold text-white mt-0.5">{link.marker.name}</div>
-                <div className="text-xs mt-1" style={{ color: "#cfe0f2" }}>Вносите его счёт и свой — он делает то же самое для вас</div>
+                <div className="text-xs uppercase tracking-wide font-bold" style={{ color: "#a5822f" }}>Вы маркер для</div>
+                <div className="text-base font-bold text-foreground mt-0.5">{link.marker.name}</div>
+                <div className="text-xs mt-1 text-muted-foreground">Вносите его счёт и свой — он делает то же самое для вас</div>
               </div>
             </div>
           )}
@@ -219,8 +219,8 @@ const TournamentLivePage = () => {
         <div className="px-5 pb-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}>
           <button
             onClick={confirmIntro}
-            className="w-full h-14 rounded-xl font-bold text-base active:scale-[0.98] transition-transform"
-            style={{ background: "#21835b", color: "#f7f7f7" }}
+            className="w-full h-14 rounded-xl font-bold text-base text-white active:scale-[0.98] transition-transform"
+            style={{ background: "#15361f" }}
           >
             Подтвердить и продолжить
           </button>
@@ -230,19 +230,18 @@ const TournamentLivePage = () => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#f7f7f7", fontFamily: CUPRUM }}>
-      <div className="flex items-center justify-between px-5" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 14px)", paddingBottom: 10 }}>
-        <LiveScoringLogo />
-      </div>
+    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+      <Header />
 
-      <div className="px-5 py-3 text-center" style={{ background: "#e2e2e2" }}>
-        <div className="font-bold text-lg tracking-wide truncate" style={{ color: INK }}>{link.tournamentName}</div>
-        {link.flightLabel && <div className="text-xs uppercase tracking-wide mt-0.5" style={{ color: "#8a8a8a" }}>{link.flightLabel}</div>}
+      <div className="px-5 py-3 text-center border-b border-border">
+        <div className="font-bold text-lg tracking-wide truncate text-foreground">{link.tournamentName}</div>
+        {link.flightLabel && <div className="text-xs uppercase tracking-wide mt-0.5 text-muted-foreground">{link.flightLabel}</div>}
       </div>
 
       {view === "scoring" && (
         <div className="px-5 pt-3 pb-1">
           <HoleGridNav
+            variant="brand"
             holes={playHoles.map((h) => h.number)}
             currentHole={currentHole.number}
             playedHoles={playedHoles}
@@ -258,10 +257,10 @@ const TournamentLivePage = () => {
       ) : (
         <>
           <div className="flex-1 flex flex-col items-center justify-center px-6">
-            <div className="text-xs uppercase tracking-[0.2em] font-bold mb-1" style={{ color: "#8a8a8a" }}>
+            <div className="text-xs uppercase tracking-[0.2em] font-bold mb-1 text-muted-foreground">
               Par {currentHole.par} · Hole {currentHole.number}
             </div>
-            <div className="flex items-center justify-center gap-2 text-xs mb-8" style={{ color: "#8a8a8a" }}>
+            <div className="flex items-center justify-center gap-2 text-xs mb-8 text-muted-foreground">
               <span>{scoreLabel(myScore, currentHole.par)}</span>
               {link.marker && <><span>·</span><span>{scoreLabel(markerScore, currentHole.par)}</span></>}
             </div>
@@ -270,14 +269,14 @@ const TournamentLivePage = () => {
               <Stepper label={(link.myName || "Я").split(" ")[0]} value={myScore} onChange={setMyScore} />
               {link.marker && (
                 <>
-                  <div className="w-px self-stretch" style={{ background: "#e5e5e5" }} />
+                  <div className="w-px self-stretch bg-border" />
                   <Stepper label={`${link.marker.name.split(" ")[0]} · маркер`} value={markerScore} onChange={setMarkerScore} />
                 </>
               )}
             </div>
 
             {!link.marker && (
-              <div className="text-xs mt-6 text-center max-w-xs" style={{ color: "#8a8a8a" }}>
+              <div className="text-xs mt-6 text-center max-w-xs text-muted-foreground">
                 Вы играете один в группе — маркер не назначен
               </div>
             )}
@@ -287,8 +286,8 @@ const TournamentLivePage = () => {
             <button
               onClick={save}
               disabled={saving}
-              className="w-full h-14 rounded-xl font-bold text-base active:scale-[0.98] transition-transform disabled:opacity-60"
-              style={{ background: "#21835b", color: "#f7f7f7" }}
+              className="w-full h-14 rounded-xl font-bold text-base text-white active:scale-[0.98] transition-transform disabled:opacity-60"
+              style={{ background: "#15361f" }}
             >
               {saving ? "Сохранение..." : "Сохранить"}
             </button>
@@ -297,21 +296,21 @@ const TournamentLivePage = () => {
       )}
 
       {/* Bottom nav */}
-      <div className="flex shrink-0" style={{ background: "#ffffff", borderTop: "1px solid #e5e5e5", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+      <div className="flex shrink-0 bg-card border-t border-border" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
         <button
           onClick={() => setView("scoring")}
           className="flex-1 h-16 flex flex-col items-center justify-center gap-1 text-[11px] font-bold uppercase tracking-wide"
-          style={{ color: view === "scoring" ? "#21835b" : "#8a8a8a" }}
+          style={{ color: view === "scoring" ? "#15361f" : "#a9b6ac" }}
         >
-          <span className="text-xl leading-none">🧮</span>
+          <Flag className="h-5 w-5" strokeWidth={2.25} />
           Счёт
         </button>
         <button
           onClick={() => setView("live")}
           className="flex-1 h-16 flex flex-col items-center justify-center gap-1 text-[11px] font-bold uppercase tracking-wide"
-          style={{ color: view === "live" ? "#21835b" : "#8a8a8a" }}
+          style={{ color: view === "live" ? "#15361f" : "#a9b6ac" }}
         >
-          <span className="text-xl leading-none">🏆</span>
+          <Trophy className="h-5 w-5" strokeWidth={2.25} />
           Таблица
         </button>
       </div>
