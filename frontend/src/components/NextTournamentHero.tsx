@@ -46,34 +46,34 @@ export const NextTournamentHero = () => {
   return (
     <div
       className="relative overflow-hidden rounded-2xl p-6 sm:p-8"
-      style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #161616 100%)", border: `1px solid ${glow}33` }}
+      style={{ background: "linear-gradient(115deg, #0e2416 0%, #1c4a2b 55%, #2c6b3d 100%)" }}
     >
       <div
-        className="absolute -top-24 -right-24 h-64 w-64 rounded-full blur-3xl opacity-20 pointer-events-none"
-        style={{ background: glow }}
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: `radial-gradient(420px circle at 82% 15%, ${glow}40, transparent 70%)` }}
       />
 
       <div className="relative space-y-4">
         <div className="flex items-center gap-2 flex-wrap">
-          <span
-            className="inline-flex items-center h-6 px-2.5 rounded-full text-[10px] font-black uppercase tracking-widest"
-            style={{ background: glow, color: "#000" }}
-          >
+          <span className="inline-flex items-center h-6 px-2.5 rounded-full text-[11px] font-bold text-white" style={{ background: "rgba(255,255,255,0.12)" }}>
             {daysUntil === 0 ? "Сегодня" : daysUntil === 1 ? "Завтра" : `Через ${daysUntil} дн.`}
           </span>
-          <span className="text-[10px] uppercase tracking-widest font-bold" style={{ color: glow }}>
+          <span
+            className="inline-flex items-center h-6 px-2.5 rounded-full text-[11px] font-bold uppercase tracking-wide"
+            style={{ background: `${glow}26`, border: `1px solid ${glow}80`, color: glow }}
+          >
             {TIER_LABELS[tournament.tier]}
           </span>
         </div>
 
         <div>
-          <div className="text-[10px] uppercase tracking-[0.25em] text-white/40 font-semibold mb-1">
+          <div className="text-[10px] uppercase tracking-[0.25em] text-white/50 font-semibold mb-1">
             Следующий турнир
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight">{tournament.name}</h2>
         </div>
 
-        <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-white/60">
+        <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-white/70">
           <span className="flex items-center gap-1.5">
             <CalendarDays className="h-3.5 w-3.5" /> {tournament.date} {tournament.month} · {tournament.day}
           </span>
@@ -93,13 +93,13 @@ export const NextTournamentHero = () => {
           <button
             onClick={() => navigate(`/tournament-info/${tournament.id}`)}
             className="inline-flex items-center gap-1.5 h-11 px-5 rounded-xl font-bold text-sm"
-            style={{ background: "#22c55e", color: "#000" }}
+            style={{ background: "#c9a24b", color: "#0d1f14" }}
           >
             Записаться <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
           </button>
           <button
             onClick={() => navigate(`/tournament-info/${tournament.id}`)}
-            className="inline-flex items-center h-11 px-5 rounded-xl font-bold text-sm text-white/80 border border-white/15 hover:bg-white/5 transition-colors"
+            className="inline-flex items-center h-11 px-5 rounded-xl font-bold text-sm text-white/85 border border-white/25 hover:bg-white/5 transition-colors"
           >
             Подробнее
           </button>

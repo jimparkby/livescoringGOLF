@@ -97,38 +97,46 @@ export const LatestResultsCard = () => {
   if (loading || !data) return null;
 
   return (
-    <Card className="p-5 shadow-soft space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-action/20 text-action">
-          <Trophy className="h-3 w-3" /> Результаты
-        </span>
+    <Card className="p-5 shadow-soft space-y-1">
+      <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest mb-1" style={{ color: "#c9a24b" }}>
+        <Trophy className="h-3 w-3" /> Результаты
       </div>
 
-      <h3 className="text-xl font-black leading-tight">{data.name}</h3>
+      <h3 className="text-xl font-black leading-tight mb-2">{data.name}</h3>
 
       <div className="divide-y divide-border">
-        {data.rows.map((r) => (
-          <div key={r.place} className="flex items-center gap-3 py-2.5">
+        {data.rows.map((r) => {
+          const isLeader = r.place === 1;
+          return (
             <div
-              className="h-9 w-9 rounded-full grid place-items-center text-xs font-bold shrink-0"
-              style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e" }}
+              key={r.place}
+              className="flex items-center gap-3 py-2.5 -mx-2 px-2 rounded-lg"
+              style={isLeader ? { background: "rgba(201,162,75,0.08)" } : undefined}
             >
-              {initials(r.name)}
+              <div className="w-5 text-center font-black tabular-nums text-sm shrink-0" style={{ color: isLeader ? "#c9a24b" : "#93a598" }}>
+                {r.place}
+              </div>
+              <div
+                className="h-9 w-9 rounded-full grid place-items-center text-xs font-bold shrink-0"
+                style={isLeader ? { background: "#15361f", color: "#fff" } : { background: "#eef1ec", color: "#15361f" }}
+              >
+                {initials(r.name)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-sm truncate">{r.name}</div>
+              </div>
+              <div className="text-lg font-black tabular-nums shrink-0">{r.value}</div>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-sm truncate">{r.name}</div>
-              <div className="text-[11px] text-muted-foreground">Место {r.place}</div>
-            </div>
-            <div className="text-lg font-black tabular-nums shrink-0">{r.value}</div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <button
         onClick={() => navigate(`/tournament-info/${data.tournament.id}`)}
-        className="w-full h-10 rounded-xl border border-border text-sm font-bold text-muted-foreground hover:bg-muted/50 transition-colors"
+        className="w-full h-11 text-sm font-bold border-t border-border mt-2 pt-3"
+        style={{ color: "#2c6b3d" }}
       >
-        Все результаты
+        Все результаты →
       </button>
     </Card>
   );

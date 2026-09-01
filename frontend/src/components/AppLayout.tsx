@@ -13,6 +13,13 @@ const navLinks = [
   { to: "/stats", label: "Handicap", icon: LineChart },
 ];
 
+const mobileNavLinks = [
+  { to: "/", label: "Турниры", icon: Trophy, end: true },
+  { to: "/statistics", label: "Статистика", icon: BarChart3 },
+  { to: "/play", label: "Играть", icon: Flag },
+  { to: "/course", label: "Поле", icon: MapPin },
+];
+
 const AppLayout = () => {
   const { userId, signOut } = useAuth();
   const { profile } = useGolf();
@@ -23,13 +30,14 @@ const AppLayout = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header className="sticky top-0 z-30" style={{ background: "#000000" }}>
+      <header className="sticky top-0 z-30" style={{ background: "#0d1f14" }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-6">
-          <NavLink to="/" className="font-black tracking-wider text-sm sm:text-base shrink-0 text-white">
-            GOLF CLUB MINSK
+          <NavLink to="/" className="flex items-center gap-2 shrink-0">
+            <Trophy className="h-5 w-5" style={{ color: "#c9a24b" }} strokeWidth={2} />
+            <span className="font-black tracking-wider text-sm sm:text-base text-white">GOLF CLUB MINSK</span>
           </NavLink>
 
-          <nav className="flex items-center gap-1 flex-1 overflow-x-auto overflow-y-hidden">
+          <nav className="hidden md:flex items-center gap-1 flex-1 overflow-x-auto overflow-y-hidden">
             {navLinks.map(({ to, label, icon: Icon, end }) => (
               <NavLink
                 key={to}
@@ -46,7 +54,9 @@ const AppLayout = () => {
                   <>
                     <Icon className="h-4 w-4" strokeWidth={2.25} />
                     {label}
-                    {isActive && <span className="absolute left-3 right-3 -bottom-[1px] h-[2px] bg-white" />}
+                    {isActive && (
+                      <span className="absolute left-3 right-3 -bottom-[1px] h-[2px]" style={{ background: "#c9a24b" }} />
+                    )}
                   </>
                 )}
               </NavLink>
@@ -65,6 +75,8 @@ const AppLayout = () => {
               </NavLink>
             )}
           </nav>
+
+          <div className="flex-1 md:hidden" />
 
           {userId ? (
             <>
@@ -98,7 +110,9 @@ const AppLayout = () => {
           ) : (
             <NavLink
               to="/profile"
-              className="group flex items-center gap-2 h-9 pl-1.5 pr-4 rounded-full text-sm font-semibold bg-white text-black hover:bg-accent hover:text-accent-foreground transition-colors shrink-0"
+              className="group flex items-center gap-2 h-9 pl-1.5 pr-4 rounded-full text-sm font-semibold bg-white text-black transition-colors shrink-0"
+              onMouseEnter={(e) => { e.currentTarget.style.background = "#c9a24b"; e.currentTarget.style.color = "#0d1f14"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#000"; }}
             >
               <span className="h-6 w-6 rounded-full bg-black/10 grid place-items-center group-hover:bg-black/15 transition-colors">
                 <UserRound className="h-3.5 w-3.5" strokeWidth={2.5} />
@@ -109,9 +123,46 @@ const AppLayout = () => {
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 pb-24 md:pb-6">
         <Outlet />
       </main>
+
+      {/* Mobile bottom tab bar */}
+      <nav
+        className="md:hidden fixed bottom-0 inset-x-0 z-30 grid grid-cols-5 bg-white"
+        style={{ borderTop: "1px solid rgba(13,31,20,0.08)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        {mobileNavLinks.map(({ to, label, icon: Icon, end }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            className={({ isActive }) =>
+              cn("flex flex-col items-center gap-1 pt-2 pb-2.5", isActive ? "" : "")
+            }
+            style={({ isActive }) => ({ color: isActive ? "#15361f" : "#a9b6ac" })}
+          >
+            {({ isActive }) => (
+              <>
+                <Icon className="h-5 w-5" strokeWidth={2.25} />
+                <span className="text-[9.5px]" style={{ fontWeight: isActive ? 700 : 600 }}>{label}</span>
+              </>
+            )}
+          </NavLink>
+        ))}
+        <NavLink
+          to="/profile"
+          className="flex flex-col items-center gap-1 pt-2 pb-2.5"
+          style={({ isActive }) => ({ color: isActive ? "#15361f" : "#a9b6ac" })}
+        >
+          {userId && profile.photoUrl ? (
+            <img src={profile.photoUrl} alt={name} className="h-5 w-5 rounded-full object-cover" />
+          ) : (
+            <UserRound className="h-5 w-5" strokeWidth={2.25} />
+          )}
+          <span className="text-[9.5px] font-semibold">Профиль</span>
+        </NavLink>
+      </nav>
     </div>
   );
 };

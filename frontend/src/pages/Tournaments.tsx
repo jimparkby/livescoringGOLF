@@ -46,8 +46,8 @@ const TournamentsPage = () => {
         </div>
         <button
           onClick={() => navigate("/create-tournament")}
-          className="flex items-center gap-1.5 h-10 px-4 rounded-xl font-bold text-sm mt-1 shrink-0"
-          style={{ background: "rgba(34,197,94,0.12)", border: "1.5px solid rgba(34,197,94,0.3)", color: "#22c55e" }}
+          className="flex items-center gap-1.5 h-10 px-4 rounded-xl font-bold text-sm mt-1 shrink-0 text-white"
+          style={{ background: "#15361f" }}
         >
           <Plus className="h-4 w-4" strokeWidth={2.5} /> Создать
         </button>
@@ -62,14 +62,14 @@ const TournamentsPage = () => {
         className="p-5 shadow-soft cursor-pointer hover:bg-accent/30 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-full bg-action/20 grid place-items-center shrink-0">
-            <Trophy className="h-6 w-6 text-action" />
+          <div className="h-12 w-12 rounded-full grid place-items-center shrink-0" style={{ background: "rgba(44,107,61,0.1)" }}>
+            <Trophy className="h-6 w-6" style={{ color: "#2c6b3d" }} />
           </div>
           <div className="flex-1">
             <div className="font-bold text-lg">Статистика</div>
             <div className="text-sm text-muted-foreground">Рейтинг игроков и результаты турниров 2026</div>
           </div>
-          <div className="text-action text-2xl">›</div>
+          <div className="text-2xl" style={{ color: "#93a598" }}>›</div>
         </div>
       </Card>
 
@@ -79,14 +79,14 @@ const TournamentsPage = () => {
         className="p-5 shadow-soft cursor-pointer hover:bg-accent/30 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-full bg-action/20 grid place-items-center shrink-0">
-            <MapPin className="h-6 w-6 text-action" />
+          <div className="h-12 w-12 rounded-full grid place-items-center shrink-0" style={{ background: "rgba(201,162,75,0.14)" }}>
+            <MapPin className="h-6 w-6" style={{ color: "#a5822f" }} />
           </div>
           <div className="flex-1">
             <div className="font-bold text-lg">Карта полей</div>
             <div className="text-sm text-muted-foreground">Схема поля и скоркарты Golf Club Minsk</div>
           </div>
-          <div className="text-action text-2xl">›</div>
+          <div className="text-2xl" style={{ color: "#93a598" }}>›</div>
         </div>
       </Card>
 
@@ -113,7 +113,7 @@ const TournamentsPage = () => {
       {grouped.map(([month, items]) => (
         <Card key={month} className="overflow-hidden shadow-soft">
           <div className="px-4 py-2.5 bg-muted/50 border-b border-border">
-            <div className="text-xs uppercase tracking-[0.2em] font-bold text-action">{month}</div>
+            <div className="text-xs uppercase tracking-[0.2em] font-bold" style={{ color: "#2c6b3d" }}>{month}</div>
           </div>
           <div className="divide-y divide-border">
             {items.map((t) => (
@@ -129,9 +129,9 @@ const TournamentsPage = () => {
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium leading-snug">{t.name}</div>
                   {(getTournamentData(t.id) || tournamentsWithResults.has(t.id)) && (
-                    <div className="flex items-center gap-1 mt-1">
-                      <Image className="h-3 w-3 text-action" />
-                      <span className="text-[10px] text-action font-semibold uppercase tracking-wider">
+                    <div className="flex items-center gap-1 mt-1" style={{ color: "#2c6b3d" }}>
+                      <Image className="h-3 w-3" />
+                      <span className="text-[10px] font-semibold uppercase tracking-wider">
                         Результаты
                       </span>
                     </div>
