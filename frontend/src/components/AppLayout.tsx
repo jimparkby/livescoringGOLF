@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Trophy, CircleUserRound, Flag, MapPin, LogOut, UserRound, BarChart3 } from "lucide-react";
+import { Trophy, CircleUserRound, MapPin, LogOut, UserRound, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useGolf } from "@/store/golfStore";
@@ -9,13 +9,11 @@ const navLinks = [
   { to: "/", label: "Tournaments", icon: Trophy, end: true },
   { to: "/statistics", label: "Statistics", icon: BarChart3 },
   { to: "/course", label: "Course", icon: MapPin },
-  { to: "/play", label: "Play", icon: Flag },
 ];
 
 const mobileNavLinks = [
   { to: "/", label: "Турниры", icon: Trophy, end: true },
   { to: "/statistics", label: "Статистика", icon: BarChart3 },
-  { to: "/play", label: "Играть", icon: Flag },
   { to: "/course", label: "Поле", icon: MapPin },
 ];
 
@@ -128,7 +126,7 @@ const AppLayout = () => {
 
       {/* Mobile bottom tab bar */}
       <nav
-        className="md:hidden fixed bottom-0 inset-x-0 z-30 grid grid-cols-5 bg-white"
+        className="md:hidden fixed bottom-0 inset-x-0 z-30 grid grid-cols-4 bg-white"
         style={{ borderTop: "1px solid rgba(13,31,20,0.08)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         {mobileNavLinks.map(({ to, label, icon: Icon, end }) => (

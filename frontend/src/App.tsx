@@ -9,7 +9,6 @@ import LiveScoringPage from "./pages/LiveScoring";
 import TournamentLivePage from "./pages/TournamentLive";
 import PublicLeaderboardPage from "./pages/PublicLeaderboard";
 import AuthPage from "./pages/Auth";
-import PlayPage from "./pages/Play";
 import TournamentsPage from "./pages/Tournaments";
 import TournamentInfoPage from "./pages/TournamentInfo";
 import TournamentPlayPage from "./pages/TournamentPlay";
@@ -54,7 +53,6 @@ function AppRoutes() {
         <Route path="/tournament-info/:id" element={<TournamentInfoPage />} />
         <Route path="/statistics" element={<StatisticsPage />} />
         <Route path="/course" element={<CoursePage />} />
-        <Route path="/play" element={<PlayPage />} />
 
         <Route path="/tournament/:id" element={<RequireAuth><TournamentPlayPage /></RequireAuth>} />
         <Route path="/create-tournament" element={<RequireAuth><CreateTournamentPage /></RequireAuth>} />
