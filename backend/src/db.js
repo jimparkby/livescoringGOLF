@@ -264,6 +264,10 @@ async function runMigrations() {
       created_at TIMESTAMPTZ DEFAULT NOW(),
       expires_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '10 minutes'
     )` },
+    // Tracks whether a player's /tlive/:token link has already been sent by
+    // the tournament-morning cron (services/tournamentDayNotifier.js), so a
+    // restart or a slow query window never double-sends it.
+    { name: 'tournament_reg_notified_at', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS notified_at TIMESTAMPTZ` },
   ]
 
   for (const migration of migrations) {

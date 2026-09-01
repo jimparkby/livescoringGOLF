@@ -6,6 +6,7 @@ import cron from 'node-cron'
 import { existsSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { runBookingReminders } from './services/bookingReminders.js'
+import { runTournamentDayNotifications } from './services/tournamentDayNotifier.js'
 import authRouter from './routes/auth.js'
 import profileRouter from './routes/profile.js'
 import roundsRouter from './routes/rounds.js'
@@ -85,6 +86,9 @@ if (distPath) {
 }
 
 cron.schedule('*/10 * * * *', () => runBookingReminders())
+// Once each tournament morning, 7:00 Minsk time — sends each flighted player
+// their personal /tlive/:token link (see services/tournamentDayNotifier.js).
+cron.schedule('0 7 * * *', () => runTournamentDayNotifications(), { timezone: 'Europe/Minsk' })
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => console.log(`Backend running on port ${PORT}`))

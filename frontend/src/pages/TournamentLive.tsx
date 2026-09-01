@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { COURSES, type Hole } from "@/lib/courses";
 import type { HolesMode, Round } from "@/store/golfStore";
 import type { FormatId } from "@/lib/formats";
+import { courseHandicap, playingHandicap } from "@/lib/handicap";
 import { TournamentLiveLeaderboard } from "@/components/TournamentLiveLeaderboard";
 import { HoleGridNav } from "@/components/HoleGridNav";
 import { LiveScoringLogo } from "@/components/LiveScoringLogo";
@@ -21,6 +22,9 @@ type LiveLinkData = {
   courseId: string | null;
   format: FormatId;
   holesMode: HolesMode;
+  tee: string;
+  rating: number | null;
+  slope: number | null;
   roundId: string;
   myId: string;
   myName: string;
@@ -81,6 +85,12 @@ const TournamentLivePage = () => {
   const [myScore, setMyScore] = useState(4);
   const [markerScore, setMarkerScore] = useState(4);
   const [saving, setSaving] = useState(false);
+  const [confirmed, setConfirmed] = useState(() => token ? sessionStorage.getItem(`tlive-confirmed-${token}`) === "1" : false);
+
+  const confirmIntro = () => {
+    if (token) sessionStorage.setItem(`tlive-confirmed-${token}`, "1");
+    setConfirmed(true);
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -151,6 +161,73 @@ const TournamentLivePage = () => {
   const playedHoles = new Set(
     playHoles.filter((h) => scoreFor(link.myId, h.number) != null).map((h) => h.number),
   );
+
+  if (!confirmed) {
+    const myHcp = link.group.players.find((p) => p.id === link.myId)?.hcp ?? 0;
+    const ch = link.rating != null && link.slope != null ? courseHandicap(myHcp, link.slope, link.rating, course.totalPar) : null;
+    const ph = link.rating != null && link.slope != null ? playingHandicap(myHcp, link.slope, link.rating, course.totalPar) : null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#f7f7f7", fontFamily: CUPRUM }}>
+        <div className="flex items-center px-5" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 14px)", paddingBottom: 10 }}>
+          <LiveScoringLogo />
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-2">
+          <div className="text-xl mt-2" style={{ color: INK }}>Привет, <b>{link.myName}</b>!</div>
+          <div className="text-sm mt-1" style={{ color: "#8a8a8a" }}>Добро пожаловать на <b>{link.tournamentName}</b></div>
+
+          <div className="rounded-xl mt-5 overflow-hidden" style={{ background: "#3a3d4a" }}>
+            {link.flightLabel && (
+              <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.12)" }}>
+                <span className="text-sm" style={{ color: "#c7c9d3" }}>Группа</span>
+                <span className="text-sm font-bold text-white">{link.flightLabel}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-sm" style={{ color: "#c7c9d3" }}>Поле</span>
+              <span className="text-sm font-bold text-white">{course.name}</span>
+            </div>
+          </div>
+
+          <div className="rounded-xl mt-3 overflow-hidden" style={{ background: "#e2e2df" }}>
+            <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+              <span className="text-sm" style={{ color: "#5a5a55" }}>Handicap Index</span>
+              <span className="text-sm font-bold" style={{ color: INK }}>{myHcp.toFixed(1)}</span>
+            </div>
+            <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+              <span className="text-sm" style={{ color: "#5a5a55" }}>Course Handicap</span>
+              <span className="text-sm font-bold" style={{ color: INK }}>{ch ?? "—"}</span>
+            </div>
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-sm" style={{ color: "#5a5a55" }}>Playing Handicap</span>
+              <span className="text-sm font-bold" style={{ color: INK }}>{ph ?? "—"}</span>
+            </div>
+          </div>
+
+          {link.marker && (
+            <div className="rounded-xl mt-3 overflow-hidden" style={{ background: "#3d6fa3" }}>
+              <div className="px-4 py-3">
+                <div className="text-xs uppercase tracking-wide" style={{ color: "#cfe0f2" }}>Вы маркер для</div>
+                <div className="text-base font-bold text-white mt-0.5">{link.marker.name}</div>
+                <div className="text-xs mt-1" style={{ color: "#cfe0f2" }}>Вносите его счёт и свой — он делает то же самое для вас</div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="px-5 pb-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}>
+          <button
+            onClick={confirmIntro}
+            className="w-full h-14 rounded-xl font-bold text-base active:scale-[0.98] transition-transform"
+            style={{ background: "#21835b", color: "#f7f7f7" }}
+          >
+            Подтвердить и продолжить
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#f7f7f7", fontFamily: CUPRUM }}>
