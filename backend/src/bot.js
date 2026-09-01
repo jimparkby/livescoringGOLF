@@ -92,8 +92,40 @@ if (!token) {
   }
 
   // ── /start ────────────────────────────────────────────────────────────────
-  bot.onText(/\/start/, async (msg) => {
+  bot.onText(/\/start(?:\s+(\S+))?/, async (msg, match) => {
     console.log('[bot] /start from', msg.from?.id)
+
+    // Deep link from Profile → "Подключить Telegram" (t.me/<bot>?start=link_<code>):
+    // links this Telegram chat to the web account that generated the code, so
+    // bot.sendMessage(user.telegram_id, ...) notifications reach them.
+    const payload = match?.[1]
+    if (payload?.startsWith('link_')) {
+      const code = payload.slice(5)
+      try {
+        const { rows: [link] } = await db.query(
+          `DELETE FROM telegram_link_codes WHERE code = $1 AND expires_at > NOW() RETURNING user_id`,
+          [code]
+        )
+        if (!link) {
+          await bot.sendMessage(msg.chat.id, '❌ Код недействителен или истёк. Сгенерируйте новый в приложении → Профиль.')
+          return
+        }
+        await db.query(
+          `UPDATE users SET telegram_id = $2, username = COALESCE($3, username) WHERE id = $1`,
+          [link.user_id, msg.from.id, msg.from.username ?? null]
+        )
+        await bot.sendMessage(msg.chat.id, '✅ Telegram подключён! Теперь уведомления о записи на турниры, бронированиях и раундах будут приходить сюда.')
+      } catch (err) {
+        if (err.code === '23505') {
+          await bot.sendMessage(msg.chat.id, '❌ Этот Telegram-аккаунт уже привязан к другому профилю GolfMinsk Live.')
+        } else {
+          console.error('[bot] link error:', err.message)
+          await bot.sendMessage(msg.chat.id, '❌ Не удалось подключить Telegram. Попробуйте ещё раз.')
+        }
+      }
+      return
+    }
+
     const text = [
       `GolfMinsk Live — онлайн-счёт прямо в Telegram`,
       ``,
@@ -217,6 +249,24 @@ export function processUpdate(update) {
   }
   console.log('[bot] Processing update:', update.message?.text || update.callback_query?.data || 'photo/other')
   bot.processUpdate(update)
+}
+
+let cachedBotUsername = null
+
+// Used to build the t.me/<bot>?start=link_<code> deep link for Profile's
+// "Подключить Telegram" flow — fetched once and cached rather than requiring
+// a separate TELEGRAM_BOT_USERNAME env var.
+export async function getBotUsername() {
+  if (cachedBotUsername) return cachedBotUsername
+  if (!bot) return null
+  try {
+    const me = await bot.getMe()
+    cachedBotUsername = me.username
+    return cachedBotUsername
+  } catch (err) {
+    console.error('[bot] getMe failed:', err.message)
+    return null
+  }
 }
 
 export { bot }

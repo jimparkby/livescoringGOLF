@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { BASE } from "@/lib/api";
+import { BASE, api } from "@/lib/api";
 import { useGolf } from "@/store/golfStore";
 import { useAuth } from "@/hooks/useAuth";
 import { useSettings } from "@/store/settingsStore";
@@ -9,7 +9,7 @@ import { Avatar } from "@/components/PlayerAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Pencil, Check, Trophy, Camera, LogOut, Trash2, X, Settings } from "lucide-react";
+import { Pencil, Check, Trophy, Camera, LogOut, Trash2, X, Settings, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getDifferentials, calcHandicapIndex } from "@/lib/handicap";
@@ -33,6 +33,47 @@ const ProfilePage = () => {
   const [draft, setDraft] = useState(profile);
   const [showSettings, setShowSettings] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
+
+  // Telegram — connects this account to a Telegram chat so bot notifications
+  // (tournament sign-ups, bookings, round-start pings) have somewhere to go.
+  const [telegramLinked, setTelegramLinked] = useState<boolean | null>(null);
+  const [connectingTelegram, setConnectingTelegram] = useState(false);
+
+  useEffect(() => {
+    api.get<{ telegram_id: number | null }>("/api/profile")
+      .then((u) => setTelegramLinked(!!u.telegram_id))
+      .catch(() => setTelegramLinked(false));
+  }, []);
+
+  const connectTelegram = async () => {
+    setConnectingTelegram(true);
+    try {
+      const { deepLink } = await api.post<{ deepLink: string | null }>("/api/profile/telegram-link-code", {});
+      if (!deepLink) {
+        toast.error("Бот сейчас недоступен, попробуйте позже");
+        setConnectingTelegram(false);
+        return;
+      }
+      window.open(deepLink, "_blank");
+
+      const poll = setInterval(async () => {
+        const u = await api.get<{ telegram_id: number | null }>("/api/profile").catch(() => null);
+        if (u?.telegram_id) {
+          clearInterval(poll);
+          setTelegramLinked(true);
+          setConnectingTelegram(false);
+          toast.success("Telegram подключён");
+        }
+      }, 3000);
+      setTimeout(() => {
+        clearInterval(poll);
+        setConnectingTelegram(false);
+      }, 120000);
+    } catch {
+      toast.error("Не удалось создать ссылку для подключения");
+      setConnectingTelegram(false);
+    }
+  };
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -304,6 +345,38 @@ const ProfilePage = () => {
                 <span className="gm-nums text-sm font-bold">{s.count}</span>
               </div>
             ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Telegram connect */}
+      {telegramLinked !== null && !editing && (
+        <Card className="p-5 shadow-soft">
+          <div className="flex items-center gap-3">
+            <div
+              className="h-11 w-11 rounded-full grid place-items-center shrink-0"
+              style={{ background: telegramLinked ? "rgba(44,107,61,0.1)" : "rgba(201,162,75,0.14)" }}
+            >
+              <Send className="h-5 w-5" style={{ color: telegramLinked ? "#2c6b3d" : "#a5822f" }} strokeWidth={2} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-bold text-sm">Telegram</div>
+              <div className="text-xs text-muted-foreground">
+                {telegramLinked
+                  ? "Подключён — уведомления приходят в бот"
+                  : "Подключите, чтобы получать уведомления о записи на турниры и бронированиях"}
+              </div>
+            </div>
+            {!telegramLinked && (
+              <button
+                onClick={connectTelegram}
+                disabled={connectingTelegram}
+                className="h-9 px-4 rounded-full text-xs font-bold text-white shrink-0 disabled:opacity-60"
+                style={{ background: "#15361f" }}
+              >
+                {connectingTelegram ? "Ожидание…" : "Подключить"}
+              </button>
+            )}
           </div>
         </Card>
       )}

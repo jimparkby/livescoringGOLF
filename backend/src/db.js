@@ -245,6 +245,16 @@ async function runMigrations() {
     // their marker's score. Generated once groups are built (see build-groups).
     { name: 'tournament_reg_access_token', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS access_token TEXT` },
     { name: 'tournament_reg_access_token_unique', query: `CREATE UNIQUE INDEX IF NOT EXISTS tournament_reg_access_token_idx ON tournament_registrations (access_token) WHERE access_token IS NOT NULL` },
+    // Links a web account (email/password) to a Telegram chat so the bot can
+    // send notifications — the profile page generates a code, the user sends
+    // it to the bot via a t.me/<bot>?start=link_<code> deep link, and the
+    // bot's /start handler consumes it (see bot.js).
+    { name: 'telegram_link_codes', query: `CREATE TABLE IF NOT EXISTS telegram_link_codes (
+      code TEXT PRIMARY KEY,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      expires_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '15 minutes'
+    )` },
   ]
 
   for (const migration of migrations) {

@@ -1,6 +1,8 @@
 import { Router } from 'express'
+import crypto from 'crypto'
 import { db } from '../db.js'
 import { requireAuth } from '../middleware/auth.js'
+import { getBotUsername } from '../bot.js'
 
 const router = Router()
 
@@ -43,6 +45,25 @@ router.put('/', requireAuth, async (req, res, next) => {
       ]
     )
     res.json(user)
+  } catch (err) { next(err) }
+})
+
+// Generate a one-time code + t.me deep link for "Подключить Telegram" in
+// Profile — the bot's /start handler consumes it and sets users.telegram_id,
+// which is what every bot.sendMessage(...) notification is addressed to.
+router.post('/telegram-link-code', requireAuth, async (req, res, next) => {
+  try {
+    const code = crypto.randomBytes(6).toString('hex')
+    await db.query(
+      `INSERT INTO telegram_link_codes (code, user_id) VALUES ($1, $2)`,
+      [code, req.user.userId]
+    )
+    const botUsername = await getBotUsername()
+    res.json({
+      code,
+      botUsername,
+      deepLink: botUsername ? `https://t.me/${botUsername}?start=link_${code}` : null,
+    })
   } catch (err) { next(err) }
 })
 
