@@ -3,15 +3,21 @@ import { useNavigate } from "react-router-dom";
 import { TOURNAMENTS, isTournamentUpcoming, tournamentStartDate } from "@/lib/tournaments";
 import { getTournamentData } from "@/lib/tournament-data";
 import { Card } from "@/components/ui/card";
-import { Plus, Image, Trophy, QrCode, MapPin } from "lucide-react";
+import { Plus, Image, Trophy, QrCode, MapPin, ArrowRight } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useAuth } from "@/hooks/useAuth";
+import { api } from "@/lib/api";
 import { NextTournamentHero } from "@/components/NextTournamentHero";
 import { LatestResultsCard } from "@/components/LatestResultsCard";
+
+type ActiveRound = { active: boolean; accessToken?: string; tournamentName?: string; flightLabel?: string };
 
 const TournamentsPage = () => {
   const navigate = useNavigate();
   const { isAdmin } = useIsAdmin();
+  const { userId } = useAuth();
   const [tournamentsWithResults, setTournamentsWithResults] = useState<Set<string>>(new Set());
+  const [activeRound, setActiveRound] = useState<ActiveRound | null>(null);
 
   useEffect(() => {
     // Fetch list of tournaments with results from API
@@ -24,6 +30,11 @@ const TournamentsPage = () => {
       })
       .catch(err => console.error("Failed to fetch tournaments with results:", err));
   }, []);
+
+  useEffect(() => {
+    if (!userId) { setActiveRound(null); return; }
+    api.get<ActiveRound>("/api/tournaments/my-active-round").then(setActiveRound).catch(() => {});
+  }, [userId]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, typeof TOURNAMENTS>();
@@ -60,6 +71,25 @@ const TournamentsPage = () => {
           <Plus className="h-4 w-4" strokeWidth={2.5} /> Создать
         </button>
       </div>
+
+      {activeRound?.active && (
+        <div
+          onClick={() => navigate(`/tlive/${activeRound.accessToken}`)}
+          className="rounded-2xl px-5 py-4 flex items-center gap-4 cursor-pointer"
+          style={{ background: "#15361f" }}
+        >
+          <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: "#c9a24b" }} />
+          <div className="flex-1 min-w-0">
+            <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#9fc2a8" }}>Раунд идёт</div>
+            <div className="text-sm font-bold text-white truncate">
+              {activeRound.tournamentName}{activeRound.flightLabel ? ` · ${activeRound.flightLabel}` : ""}
+            </div>
+          </div>
+          <span className="flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-bold shrink-0" style={{ background: "#c9a24b", color: "#0d1f14" }}>
+            Продолжить <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+          </span>
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-[1.6fr_1fr] gap-5 items-start">
         <div className="space-y-5 min-w-0">

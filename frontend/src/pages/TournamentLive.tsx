@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Minus, Plus, Trophy, Flag } from "lucide-react";
 import { api } from "@/lib/api";
 import { COURSES, type Hole } from "@/lib/courses";
@@ -44,10 +44,10 @@ const scoreLabel = (score: number, par: number) => {
 };
 
 const Header = () => (
-  <div className="flex items-center gap-2 px-5 h-14 shrink-0" style={{ background: "#0d1f14", paddingTop: "env(safe-area-inset-top, 0px)" }}>
+  <Link to="/" className="flex items-center gap-2 px-5 h-14 shrink-0" style={{ background: "#0d1f14", paddingTop: "env(safe-area-inset-top, 0px)" }}>
     <Trophy className="h-5 w-5" style={{ color: "#c9a24b" }} strokeWidth={2} />
     <span className="font-black tracking-wider text-sm text-white">GOLF CLUB MINSK</span>
-  </div>
+  </Link>
 );
 
 const Stepper = ({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) => (

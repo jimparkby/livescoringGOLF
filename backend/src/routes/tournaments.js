@@ -144,6 +144,39 @@ router.get('/list/with-results', async (req, res) => {
 })
 
 /**
+ * GET /api/tournaments/my-active-round
+ * For the "continue your round" banner on the homepage — the caller's most
+ * recently updated tournament round that's flighted (access_token set) and
+ * not yet finished, across every tournament, so the homepage doesn't need
+ * to know which tournament to ask about. Registered before /:id so it
+ * doesn't get swallowed by that catch-all.
+ */
+router.get('/my-active-round', requireAuth, async (req, res, next) => {
+  try {
+    const { rows: [row] } = await db.query(
+      `SELECT tr.access_token, tr.flight_label, t.name AS tournament_name
+       FROM tournament_registrations tr
+       JOIN rounds r ON r.id = tr.round_id
+       JOIN tournaments t ON (t.slug = tr.tournament_id OR t.id::text = tr.tournament_id)
+       WHERE tr.user_id = $1 AND tr.access_token IS NOT NULL AND r.completed = false
+       ORDER BY r.updated_at DESC
+       LIMIT 1`,
+      [req.user.userId]
+    )
+    if (!row) return res.json({ active: false })
+    res.json({
+      active: true,
+      accessToken: row.access_token,
+      tournamentName: row.tournament_name,
+      flightLabel: row.flight_label,
+    })
+  } catch (error) {
+    console.error('Error getting active round:', error)
+    res.status(500).json({ error: 'Failed to get active round' })
+  }
+})
+
+/**
  * GET /api/tournaments/:id
  * Get tournament details (accepts both numeric ID and slug)
  */
