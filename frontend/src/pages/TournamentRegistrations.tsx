@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Users, Clock, CheckCircle, AlertCircle, LayoutGrid, Link as LinkIcon } from 'lucide-react'
+import { ArrowLeft, Users, Clock, CheckCircle, AlertCircle, LayoutGrid, Link as LinkIcon, Receipt } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
 import { TOURNAMENTS } from '@/lib/tournaments'
 import { COURSES } from '@/lib/courses'
 import { toast } from 'sonner'
+import { SendInvoiceModal } from '@/components/SendInvoiceModal'
 
 type Registration = {
   id: number
@@ -24,6 +25,8 @@ type Registration = {
   flight_label: string | null
   checked_in: boolean
   access_token: string | null
+  invoice_number: string | null
+  payment_deadline: string | null
 }
 
 const STATUS_LABELS = {
@@ -51,6 +54,7 @@ export default function TournamentRegistrationsPage() {
   const [loading, setLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState<number | null>(null)
   const [buildingGroups, setBuildingGroups] = useState(false)
+  const [invoiceModalReg, setInvoiceModalReg] = useState<Registration | null>(null)
 
   const tournament = TOURNAMENTS.find(t => t.id === id)
 
@@ -73,17 +77,43 @@ export default function TournamentRegistrationsPage() {
     }
   }
 
-  const updateStatus = async (registrationId: number, newStatus: 'pending_review' | 'awaiting_payment' | 'paid') => {
+  const updateStatus = async (registrationId: number, newStatus: 'pending_review' | 'paid') => {
     setUpdatingId(registrationId)
     try {
       await api.patch(`/api/tournament-registrations/${registrationId}/status`, { status: newStatus })
       setRegistrations(prev =>
         prev.map(r => r.id === registrationId ? { ...r, status: newStatus, updated_at: new Date().toISOString() } : r)
       )
-      toast.success('Статус обновлен')
+      toast.success(newStatus === 'paid' ? 'Оплата подтверждена, игроку отправлено уведомление' : 'Статус обновлен')
     } catch (error) {
       console.error('[TournamentRegistrations] Error updating status:', error)
       toast.error('Ошибка при обновлении статуса')
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  // 'awaiting_payment' needs an invoice number/deadline before the bot can
+  // message the player, so it goes through the modal instead of the direct
+  // status PATCH the other two statuses use.
+  const handleStatusChange = (reg: Registration, newStatus: Registration['status']) => {
+    if (newStatus === 'awaiting_payment') {
+      setInvoiceModalReg(reg)
+      return
+    }
+    updateStatus(reg.id, newStatus)
+  }
+
+  const rejectRegistration = async (reg: Registration) => {
+    if (!window.confirm(`Отклонить заявку ${reg.first_name} ${reg.last_name}? Игроку придёт уведомление от бота.`)) return
+    setUpdatingId(reg.id)
+    try {
+      await api.delete(`/api/tournament-registrations/${reg.id}/reject`)
+      setRegistrations(prev => prev.filter(r => r.id !== reg.id))
+      toast.success('Заявка отклонена')
+    } catch (error) {
+      console.error('[TournamentRegistrations] Error rejecting registration:', error)
+      toast.error('Не удалось отклонить заявку')
     } finally {
       setUpdatingId(null)
     }
@@ -242,7 +272,7 @@ export default function TournamentRegistrationsPage() {
                     <div className="mt-3 flex items-center gap-2">
                       <select
                         value={reg.status}
-                        onChange={(e) => updateStatus(reg.id, e.target.value as any)}
+                        onChange={(e) => handleStatusChange(reg, e.target.value as Registration['status'])}
                         disabled={updatingId === reg.id}
                         className={cn(
                           "px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer",
@@ -261,13 +291,56 @@ export default function TournamentRegistrationsPage() {
                         reg.status === 'awaiting_payment' && "text-orange-600",
                         reg.status === 'paid' && "text-green-600"
                       )} />
+
+                      {reg.status === 'awaiting_payment' && (
+                        <button
+                          onClick={() => setInvoiceModalReg(reg)}
+                          className="flex items-center gap-1 text-xs font-semibold text-action ml-auto"
+                        >
+                          <Receipt className="h-3.5 w-3.5" /> Переслать счёт
+                        </button>
+                      )}
+
+                      {reg.status === 'pending_review' && (
+                        <button
+                          onClick={() => rejectRegistration(reg)}
+                          disabled={updatingId === reg.id}
+                          className="text-xs font-semibold text-destructive ml-auto disabled:opacity-50"
+                        >
+                          Отклонить
+                        </button>
+                      )}
                     </div>
+
+                    {reg.status === 'awaiting_payment' && reg.invoice_number && (
+                      <div className="text-xs text-muted-foreground mt-1.5">
+                        Счёт №{reg.invoice_number}{reg.payment_deadline ? ` · оплатить до ${reg.payment_deadline}` : ''}
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>
             )
           })}
         </div>
+      )}
+
+      {invoiceModalReg && (
+        <SendInvoiceModal
+          registrationId={invoiceModalReg.id}
+          playerName={`${invoiceModalReg.first_name} ${invoiceModalReg.last_name}`}
+          initialInvoiceNumber={invoiceModalReg.invoice_number}
+          onClose={() => setInvoiceModalReg(null)}
+          onSent={(invoiceNumber, deadlineLabel) => {
+            setRegistrations(prev =>
+              prev.map(r => r.id === invoiceModalReg.id
+                ? { ...r, status: 'awaiting_payment', invoice_number: invoiceNumber, payment_deadline: deadlineLabel, updated_at: new Date().toISOString() }
+                : r
+              )
+            )
+            setInvoiceModalReg(null)
+          }}
+        />
       )}
     </div>
   )

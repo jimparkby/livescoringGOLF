@@ -268,6 +268,13 @@ async function runMigrations() {
     // the tournament-morning cron (services/tournamentDayNotifier.js), so a
     // restart or a slow query window never double-sends it.
     { name: 'tournament_reg_notified_at', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS notified_at TIMESTAMPTZ` },
+    // Invoice sent by the admin panel (see routes/tournament-registrations.js
+    // PATCH /:id/status) when moving a registration to 'awaiting_payment' —
+    // the ERIP invoice number/deadline shown to the player and re-shown to
+    // the admin so an invoice can be resent without retyping it.
+    { name: 'tournament_reg_invoice_number', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS invoice_number TEXT` },
+    { name: 'tournament_reg_payment_deadline', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS payment_deadline TEXT` },
+    { name: 'tournament_reg_invoice_sent_at', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS invoice_sent_at TIMESTAMPTZ` },
   ]
 
   for (const migration of migrations) {
