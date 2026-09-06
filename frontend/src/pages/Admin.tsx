@@ -1,17 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { useGolf, type Round, type CustomTournament } from "@/store/golfStore";
+import { useGolf, type Round, type CustomTournament, type Player } from "@/store/golfStore";
 import { getFormat } from "@/lib/formats";
 import { compressImage } from "@/lib/imageUtils";
+import { COURSES } from "@/lib/courses";
 import { api } from "@/lib/api";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { ShareRoundModal } from "@/components/ShareRoundModal";
 import { toast } from "sonner";
 import {
   ChevronLeft, QrCode, Plus, PlayCircle, Settings, Camera, X,
-  Trophy, Users, ClipboardList, Lock, CalendarClock, Trash2,
+  Trophy, Users, ClipboardList, Lock, CalendarClock, Trash2, Sparkles,
 } from "lucide-react";
+
+// Fake roster for the one-click demo tournament admins use to show live
+// scoring to directors without touching real player/registration data.
+const DEMO_PLAYERS: { name: string; hcp: number }[] = [
+  { name: "Алексей Смирнов", hcp: 12.4 },
+  { name: "Дмитрий Ковалёв", hcp: 18.0 },
+  { name: "Сергей Бондаренко", hcp: 24.6 },
+];
 
 type Tab = "live" | "schedule" | "results" | "participants" | "registrations";
 
@@ -132,8 +141,43 @@ const AdminPage = () => {
 /* ── Live tools: QR / share for your quick tournaments ── */
 const LiveToolsTab = () => {
   const navigate = useNavigate();
-  const { customTournaments, rounds, activeRound } = useGolf();
+  const { customTournaments, rounds, activeRound, profile, addCustomTournament, startRound } = useGolf();
   const [shareRoundId, setShareRoundId] = useState<string | null>(null);
+  const [startingDemo, setStartingDemo] = useState(false);
+
+  const startDemoTournament = () => {
+    setStartingDemo(true);
+    const course = COURSES[0];
+    const me: Player = {
+      id: "me",
+      name: `${profile.firstName} ${profile.lastName}`.trim() || "Admin",
+      initials: profile.initials || "AD",
+      hcp: profile.hcp,
+      isMe: true,
+      photoUrl: profile.photoUrl,
+    };
+    const demoPlayers: Player[] = DEMO_PLAYERS.map((p, i) => ({
+      id: `demo-${i + 1}`,
+      name: p.name,
+      initials: p.name.split(" ").map((w) => w[0]).join(""),
+      hcp: p.hcp,
+    }));
+
+    const id = `demo-${Date.now()}`;
+    const now = new Date();
+    addCustomTournament({
+      id,
+      name: "Демо-турнир",
+      format: "stableford",
+      courseId: course.id,
+      holesMode: "18",
+      date: String(now.getDate()),
+      day: now.toLocaleDateString("ru-RU", { weekday: "short" }).toUpperCase(),
+      month: now.toLocaleDateString("ru-RU", { month: "long" }),
+    });
+    startRound(course, [me, ...demoPlayers], id, "stableford", "18");
+    navigate(`/tournament/${id}`);
+  };
 
   const entries: LiveEntry[] = useMemo(() => {
     return [...customTournaments]
@@ -145,26 +189,51 @@ const LiveToolsTab = () => {
       });
   }, [customTournaments, rounds, activeRound]);
 
+  const demoCard = (
+    <Card className="p-4 shadow-soft flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <div className="font-bold text-sm flex items-center gap-1.5">
+          <Sparkles className="h-4 w-4" style={{ color: "#22c55e" }} /> Демо для директоров
+        </div>
+        <div className="text-xs text-muted-foreground mt-0.5">
+          Запускает тестовый раунд с вымышленными игроками — показать live-скоринг, не трогая реальные заявки
+        </div>
+      </div>
+      <button
+        onClick={startDemoTournament}
+        disabled={startingDemo}
+        className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl font-bold text-sm shrink-0 disabled:opacity-50"
+        style={{ background: "#22c55e", color: "#000" }}
+      >
+        <PlayCircle className="h-4 w-4" strokeWidth={2.5} /> Начать
+      </button>
+    </Card>
+  );
+
   if (entries.length === 0) {
     return (
-      <Card className="p-8 text-center space-y-3">
-        <div className="h-12 w-12 rounded-full bg-action/15 grid place-items-center mx-auto">
-          <Settings className="h-6 w-6 text-action" />
-        </div>
-        <div className="text-muted-foreground text-sm">Вы ещё не создавали турниры</div>
-        <button
-          onClick={() => navigate("/create-tournament")}
-          className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl font-bold text-sm"
-          style={{ background: "rgba(34,197,94,0.12)", border: "1.5px solid rgba(34,197,94,0.3)", color: "#22c55e" }}
-        >
-          <Plus className="h-4 w-4" strokeWidth={2.5} /> Создать турнир
-        </button>
-      </Card>
+      <div className="space-y-3">
+        {demoCard}
+        <Card className="p-8 text-center space-y-3">
+          <div className="h-12 w-12 rounded-full bg-action/15 grid place-items-center mx-auto">
+            <Settings className="h-6 w-6 text-action" />
+          </div>
+          <div className="text-muted-foreground text-sm">Вы ещё не создавали турниры</div>
+          <button
+            onClick={() => navigate("/create-tournament")}
+            className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl font-bold text-sm"
+            style={{ background: "rgba(34,197,94,0.12)", border: "1.5px solid rgba(34,197,94,0.3)", color: "#22c55e" }}
+          >
+            <Plus className="h-4 w-4" strokeWidth={2.5} /> Создать турнир
+          </button>
+        </Card>
+      </div>
     );
   }
 
   return (
     <div className="space-y-3">
+      {demoCard}
       {entries.map(({ tournament, round, isActive }) => {
         const fmt = getFormat(tournament.format);
         return (

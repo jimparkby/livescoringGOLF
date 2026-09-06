@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { TOURNAMENTS, isTournamentUpcoming, tournamentStartDate } from "@/lib/tournaments";
 import { getTournamentData } from "@/lib/tournament-data";
 import { Card } from "@/components/ui/card";
-import { Plus, Image, Trophy, QrCode, MapPin, ArrowRight } from "lucide-react";
+import { Image, Trophy, QrCode, MapPin, ArrowRight } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
@@ -57,19 +57,10 @@ const TournamentsPage = () => {
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="text-xs uppercase tracking-[0.25em] text-muted-foreground font-semibold">Calendar</div>
-          <h1 className="text-3xl font-bold mt-1">Tournaments 2026</h1>
-          <p className="text-sm text-muted-foreground mt-1">Golf Club Minsk · {TOURNAMENTS.length} events</p>
-        </div>
-        <button
-          onClick={() => navigate("/create-tournament")}
-          className="flex items-center gap-1.5 h-10 px-4 rounded-xl font-bold text-sm mt-1 shrink-0 text-white"
-          style={{ background: "#15361f" }}
-        >
-          <Plus className="h-4 w-4" strokeWidth={2.5} /> Создать
-        </button>
+      <div>
+        <div className="text-xs uppercase tracking-[0.25em] text-muted-foreground font-semibold">Calendar</div>
+        <h1 className="text-3xl font-bold mt-1">Tournaments 2026</h1>
+        <p className="text-sm text-muted-foreground mt-1">Golf Club Minsk · {TOURNAMENTS.length} events</p>
       </div>
 
       {activeRound?.active && (
