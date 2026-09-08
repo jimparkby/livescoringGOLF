@@ -76,7 +76,7 @@ export const TournamentLeaderboard = ({
     const statusPlayer = diff > 0 ? p1.name.split(" ")[0] : diff < 0 ? p2.name.split(" ")[0] : null;
     return (
       <div className="flex-1 overflow-y-auto px-5 pb-4 pt-2 space-y-3">
-        <div className="p-4 text-center bg-card border border-border">
+        <div className="p-4 text-center bg-card border border-border rounded-xl">
           <div className="gm-eyebrow mb-1" style={{ color: "#8a7f68" }}>Match status (net)</div>
           <div className="font-display font-bold text-3xl" style={{ color: "#1b1b16" }}>{statusPlayer ? `${statusPlayer} ${statusText}` : "AS"}</div>
           <div className="text-xs mt-1 text-muted-foreground">{p1Wins + p2Wins} holes played</div>
@@ -86,7 +86,7 @@ export const TournamentLeaderboard = ({
             </div>
           )}
         </div>
-        <div className="overflow-hidden bg-card border border-border">
+        <div className="overflow-hidden bg-card border border-border rounded-xl">
           <div className="grid px-4 py-2.5 gm-eyebrow" style={{ gridTemplateColumns: "1fr auto auto 1fr", color: "#8a7f68", borderBottom: "1px solid hsl(var(--border))" }}>
             <div>{p1.name.split(" ")[0]}</div>
             <div className="w-8 text-center">#</div>
@@ -184,7 +184,7 @@ export const TournamentLeaderboard = ({
 
     return (
       <div className="flex-1 overflow-y-auto px-5 pb-4 pt-2">
-        <div className="overflow-hidden bg-card border border-border">
+        <div className="overflow-hidden bg-card border border-border rounded-xl">
           <div className="grid px-4 py-2.5 gm-eyebrow" style={{ gridTemplateColumns: "2rem 1fr auto auto", color: "#8a7f68", borderBottom: "1px solid hsl(var(--border))" }}>
             <div>#</div><div>Команда</div>
             <div className="w-14 text-center">{isStableford ? "Net Pts" : "Net"}</div>
@@ -224,7 +224,7 @@ export const TournamentLeaderboard = ({
 
   return (
     <div className="flex-1 overflow-y-auto px-5 pb-4 pt-2">
-      <div className="overflow-hidden bg-card border border-border">
+      <div className="overflow-hidden bg-card border border-border rounded-xl">
         <div className="grid px-4 py-2.5 gm-eyebrow" style={{ gridTemplateColumns: "2rem 1fr auto auto", color: "#8a7f68", borderBottom: "1px solid hsl(var(--border))" }}>
           <div>#</div><div>Игрок</div>
           <div className="w-14 text-center">{isStableford ? "Net Pts" : "Net"}</div>

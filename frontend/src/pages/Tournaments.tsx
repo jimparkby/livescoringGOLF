@@ -66,7 +66,7 @@ const TournamentsPage = () => {
       {activeRound?.active && (
         <div
           onClick={() => navigate(`/tlive/${activeRound.accessToken}`)}
-          className="px-5 py-4 flex items-center gap-4 cursor-pointer"
+          className="px-5 py-4 flex items-center gap-4 cursor-pointer rounded-2xl"
           style={{ background: "#15361f", border: "1px solid #c9a24b" }}
         >
           <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: "#c9a24b" }} />
@@ -119,7 +119,7 @@ const TournamentsPage = () => {
 
           {/* Upcoming tournaments */}
           {upcoming.length > 0 && (
-            <div className="p-6 space-y-3.5" style={{ background: "#15361f" }}>
+            <div className="p-6 space-y-3.5 rounded-2xl" style={{ background: "#15361f" }}>
               <div className="gm-eyebrow" style={{ color: "#9fc2a8" }}>
                 Ближайшие турниры
               </div>

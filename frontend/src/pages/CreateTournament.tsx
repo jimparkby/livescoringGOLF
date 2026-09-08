@@ -328,7 +328,7 @@ const CreateTournamentPage = () => {
         {[0, 1].map((teamIdx) => {
           const teamPlayers = players.filter((_, i) => teamAssignment[i] === teamIdx);
           return (
-            <div key={teamIdx} className="overflow-hidden bg-card border border-border">
+            <div key={teamIdx} className="overflow-hidden bg-card border border-border rounded-xl">
               <div className="gm-eyebrow px-3 py-2 text-center border-b border-border" style={{ color: teamIdx === 0 ? "#15361f" : "#a5822f" }}>
                 {teamIdx === 0 ? "Team A" : "Team B"}
               </div>

@@ -242,8 +242,11 @@ async function fetchLeaderboard() {
     const maleNames = new Set(male.map(p => p.name))
     const nominations = parseStatisticsCSV(statisticsCSV, maleNames, femaleNames)
 
-    // Create overall ranking from male + female, sorted by rating
-    const overall = [...male, ...female].sort((a, b) => b.rating - a.rating)
+    // Create overall ranking from male + female, sorted by rating.
+    // Clone the entries here — otherwise reassigning rank below mutates the
+    // same objects referenced by male/female, overwriting their gender-only
+    // rank with the combined-overall rank.
+    const overall = [...male, ...female].map(p => ({ ...p })).sort((a, b) => b.rating - a.rating)
     overall.forEach((p, i) => p.rank = i + 1)
 
     // Get unique tournament names

@@ -45,15 +45,15 @@ export const NextTournamentHero = () => {
 
   return (
     <div
-      className="relative p-6 sm:p-8"
+      className="relative p-6 sm:p-8 rounded-2xl overflow-hidden"
       style={{ background: "#15361f", border: "1px solid #c9a24b" }}
     >
       <div className="relative space-y-4">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="gm-eyebrow inline-flex items-center px-2 py-1" style={{ color: "#e9d9ad", border: "1px solid rgba(201,162,75,0.55)" }}>
+          <span className="gm-eyebrow inline-flex items-center px-2.5 py-1 rounded-full" style={{ color: "#e9d9ad", border: "1px solid rgba(201,162,75,0.55)" }}>
             {daysUntil === 0 ? "Сегодня" : daysUntil === 1 ? "Завтра" : `Через ${daysUntil} дн.`}
           </span>
-          <span className="gm-eyebrow inline-flex items-center px-2 py-1" style={{ color: "#15361f", background: glow }}>
+          <span className="gm-eyebrow inline-flex items-center px-2.5 py-1 rounded-full" style={{ color: "#15361f", background: glow }}>
             {TIER_LABELS[tournament.tier]}
           </span>
         </div>
@@ -84,14 +84,14 @@ export const NextTournamentHero = () => {
         <div className="flex flex-wrap gap-2.5 pt-1">
           <button
             onClick={() => navigate(`/tournament-info/${tournament.id}`)}
-            className="inline-flex items-center gap-1.5 h-11 px-5 text-sm font-bold tracking-wide"
+            className="inline-flex items-center gap-1.5 h-11 px-5 text-sm font-bold tracking-wide rounded-xl"
             style={{ background: "#c9a24b", color: "#15361f" }}
           >
             Записаться <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
           </button>
           <button
             onClick={() => navigate(`/tournament-info/${tournament.id}`)}
-            className="inline-flex items-center h-11 px-5 text-sm font-bold tracking-wide text-white hover:bg-white/5 transition-colors"
+            className="inline-flex items-center h-11 px-5 text-sm font-bold tracking-wide text-white hover:bg-white/5 transition-colors rounded-xl"
             style={{ border: "1px solid rgba(201,162,75,0.55)" }}
           >
             Подробнее

@@ -189,7 +189,7 @@ const TournamentLivePage = () => {
           <div className="font-display text-xl mt-4 text-foreground">Привет, <b>{link.myName}</b>!</div>
           <div className="text-sm mt-1 text-muted-foreground">Добро пожаловать на <b>{link.tournamentName}</b></div>
 
-          <div className="mt-5 overflow-hidden" style={{ background: "#15361f", border: "1px solid #c9a24b" }}>
+          <div className="mt-5 overflow-hidden rounded-xl" style={{ background: "#15361f", border: "1px solid #c9a24b" }}>
             {link.flightLabel && (
               <div className="flex items-center justify-between gap-3 px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.12)" }}>
                 <span className="text-sm shrink-0" style={{ color: "#9fc2a8" }}>Группа</span>
@@ -202,7 +202,7 @@ const TournamentLivePage = () => {
             </div>
           </div>
 
-          <div className="mt-3 overflow-hidden bg-card border border-border shadow-none">
+          <div className="mt-3 overflow-hidden bg-card border border-border shadow-none rounded-xl">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <span className="text-sm text-muted-foreground">Handicap Index</span>
               <span className="text-sm font-bold text-foreground">{myHcp.toFixed(1)}</span>
@@ -218,7 +218,7 @@ const TournamentLivePage = () => {
           </div>
 
           {link.marker && (
-            <div className="mt-3 overflow-hidden" style={{ background: "rgba(201,162,75,0.12)", border: "1px solid rgba(201,162,75,0.35)" }}>
+            <div className="mt-3 overflow-hidden rounded-xl" style={{ background: "rgba(201,162,75,0.12)", border: "1px solid rgba(201,162,75,0.35)" }}>
               <div className="px-4 py-3">
                 <div className="text-xs uppercase tracking-wide font-bold" style={{ color: "#a5822f" }}>Вы маркер для</div>
                 <div className="text-base font-bold text-foreground mt-0.5">{link.marker.name}</div>
@@ -231,7 +231,7 @@ const TournamentLivePage = () => {
         <div className="px-5 pb-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}>
           <button
             onClick={confirmIntro}
-            className="w-full h-14 font-bold text-base text-white active:scale-[0.98] transition-transform"
+            className="w-full h-14 rounded-xl font-bold text-base text-white active:scale-[0.98] transition-transform"
             style={{ background: "#15361f" }}
           >
             Подтвердить и продолжить
@@ -305,7 +305,7 @@ const TournamentLivePage = () => {
             <button
               onClick={save}
               disabled={saving}
-              className="w-full h-14 font-bold text-base text-white active:scale-[0.98] transition-transform disabled:opacity-60"
+              className="w-full h-14 rounded-xl font-bold text-base text-white active:scale-[0.98] transition-transform disabled:opacity-60"
               style={{ background: "#15361f" }}
             >
               {saving ? "Сохранение..." : "Сохранить"}

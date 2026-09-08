@@ -60,6 +60,7 @@ export function ScorecardModal({ round, onClose }: Props) {
           zIndex: 51,
           background: "#fffdf7",
           borderTop: "1px solid #c9a24b",
+          borderRadius: "20px 20px 0 0",
           padding: "20px 16px 40px",
           maxHeight: "80dvh",
           overflowY: "auto",
@@ -71,7 +72,7 @@ export function ScorecardModal({ round, onClose }: Props) {
           onClick={onClose}
           style={{ display: "flex", justifyContent: "center", padding: "8px 0 16px", cursor: "pointer" }}
         >
-          <div style={{ width: 36, height: 4, background: "rgba(27,27,22,0.16)" }} />
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(27,27,22,0.16)" }} />
         </div>
 
         {/* Header */}
@@ -90,7 +91,7 @@ export function ScorecardModal({ round, onClose }: Props) {
 
         {/* Scorecard table */}
         {round.scorecard && round.scorecard.length > 0 ? (
-          <div style={{ overflow: "hidden", border: "1px solid rgba(27,27,22,0.14)" }}>
+          <div style={{ overflow: "hidden", border: "1px solid rgba(27,27,22,0.14)", borderRadius: 12 }}>
             {/* Table header */}
             <div
               style={{

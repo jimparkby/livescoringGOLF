@@ -22,7 +22,7 @@ export const HoleGridNav = ({ holes, currentHole, playedHoles, onSelect }: Props
               <button
                 key={h}
                 onClick={() => onSelect(h)}
-                className="font-display flex-1 aspect-square min-w-0 grid place-items-center text-sm font-semibold transition-transform active:scale-95"
+                className="font-display flex-1 aspect-square min-w-0 grid place-items-center text-sm font-semibold rounded-md transition-transform active:scale-95"
                 style={{
                   background: isPlayed ? "#15361f" : "#e9e1cf",
                   color: isPlayed ? "#f3ede1" : "#8a7f68",

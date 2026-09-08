@@ -147,7 +147,7 @@ const TournamentPlayPage = () => {
               Тройник (необязательно)
             </div>
             <div className="space-y-2">
-              <div className="flex items-center gap-2 px-3 py-2 border border-border">
+              <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-xl">
                 <Avatar name={profile.firstName || "Me"} tone="orange" photoUrl={profile.photoUrl} size="sm" />
                 <div className="text-sm font-medium truncate">
                   {`${profile.firstName} ${profile.lastName}`.trim() || "Я"}
@@ -155,7 +155,7 @@ const TournamentPlayPage = () => {
                 <div className="ml-auto text-xs text-muted-foreground">HCP {profile.hcp}</div>
               </div>
               {joinPlayers.map((p) => (
-                <div key={p.id} className="flex items-center gap-2 px-3 py-2 border border-border">
+                <div key={p.id} className="flex items-center gap-2 px-3 py-2 border border-border rounded-xl">
                   <Avatar name={p.name} tone="muted" photoUrl={p.photoUrl} size="sm" />
                   <div className="text-sm font-medium truncate">{p.name}</div>
                   <div className="ml-auto text-xs text-muted-foreground">HCP {p.hcp}</div>
@@ -181,7 +181,7 @@ const TournamentPlayPage = () => {
           <Button
             onClick={handleStart}
             size="lg"
-            className="w-full h-14 text-base font-semibold bg-action hover:bg-action/90 text-action-foreground rounded-none shadow-glow"
+            className="w-full h-14 text-base font-semibold bg-action hover:bg-action/90 text-action-foreground rounded-xl shadow-glow"
           >
             <Flag className="h-5 w-5 mr-2" strokeWidth={2.5} /> Начать · {course.name}
           </Button>
@@ -227,9 +227,9 @@ const TournamentPlayPage = () => {
             )}
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
-            <span className="gm-eyebrow px-2 py-1 border border-border">{fmt.emoji} {fmt.name}</span>
+            <span className="gm-eyebrow px-2.5 py-1 border border-border rounded-full">{fmt.emoji} {fmt.name}</span>
           </div>
-          <div className="mt-4 p-3 border border-border">
+          <div className="mt-4 p-3 border border-border rounded-xl">
             <div className="text-xs font-semibold text-foreground mb-1">{fmt.name} — rules</div>
             <div className="text-xs text-muted-foreground">{fmt.description}</div>
             <div className="text-xs text-action mt-1 font-medium">💡 {fmt.tip}</div>
@@ -237,7 +237,7 @@ const TournamentPlayPage = () => {
         </div>
         {myGroup?.registered && (
           <div className="px-5 pb-4">
-            <div className="p-3 border" style={{ background: "var(--accent-tint)", borderColor: "rgba(21,54,31,0.28)", color: "#15361f" }}>
+            <div className="p-3 border rounded-xl" style={{ background: "var(--accent-tint)", borderColor: "rgba(21,54,31,0.28)", color: "#15361f" }}>
               <span className="text-xs font-semibold">
                 {myGroup.roundId
                   ? `Группа сформирована${myGroup.flightLabel ? ` · ${myGroup.flightLabel}` : ""} — можно начинать`
@@ -250,7 +250,7 @@ const TournamentPlayPage = () => {
           <Button
             onClick={() => setStep("join")}
             size="lg"
-            className="w-full h-14 text-base font-semibold bg-action hover:bg-action/90 text-action-foreground rounded-none shadow-glow"
+            className="w-full h-14 text-base font-semibold bg-action hover:bg-action/90 text-action-foreground rounded-xl shadow-glow"
           >
             <Flag className="h-5 w-5 mr-2" strokeWidth={2.5} /> Start Live Scoring
           </Button>
@@ -353,7 +353,7 @@ const TournamentRoundPlayer = ({
           </div>
           {completedRound.photoUrl ? (
             <div className="w-full">
-              <div className="w-full overflow-hidden border border-border" style={{ aspectRatio: "4/3", maxHeight: 220 }}>
+              <div className="w-full overflow-hidden border border-border rounded-2xl" style={{ aspectRatio: "4/3", maxHeight: 220 }}>
                 <img src={completedRound.photoUrl} alt="Round" className="w-full h-full object-cover" />
               </div>
               <button onClick={() => photoRef.current?.click()} className="flex items-center justify-center gap-2 w-full mt-2 py-2 text-sm font-semibold text-action">
@@ -361,7 +361,7 @@ const TournamentRoundPlayer = ({
               </button>
             </div>
           ) : (
-            <button onClick={() => photoRef.current?.click()} className="w-full flex flex-col items-center justify-center gap-3 py-10 bg-muted/50 border-2 border-dashed border-border">
+            <button onClick={() => photoRef.current?.click()} className="w-full flex flex-col items-center justify-center gap-3 py-10 bg-muted/50 border-2 border-dashed border-border rounded-2xl">
               <Camera className="h-8 w-8 text-action" />
               <div className="text-sm font-semibold text-muted-foreground">Add Round Photo</div>
             </button>
@@ -369,7 +369,7 @@ const TournamentRoundPlayer = ({
           <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
         </div>
         <div className="px-5 pt-4">
-          <button onClick={onExit} className="w-full h-14 font-bold text-base uppercase tracking-wider active:scale-[0.98] transition-transform bg-action text-action-foreground">
+          <button onClick={onExit} className="w-full h-14 rounded-2xl font-bold text-base uppercase tracking-wider active:scale-[0.98] transition-transform bg-action text-action-foreground">
             ГОТОВО
           </button>
         </div>
@@ -522,25 +522,25 @@ const TournamentRoundPlayer = ({
           <span className="text-foreground font-bold text-base tracking-wider">Leaderboard</span>
         )}
 
-        <button onClick={handleFinish} className="h-9 px-4 font-bold text-xs tracking-wider border" style={{ borderColor: "#15361f", color: "#15361f" }}>
+        <button onClick={handleFinish} className="h-9 px-4 rounded-full font-bold text-xs tracking-wider border" style={{ borderColor: "#15361f", color: "#15361f" }}>
           ФИНИШ
         </button>
       </div>
 
       {/* View toggle */}
       <div className="px-5 pb-3">
-        <div className="flex border-b border-border">
+        <div className="flex rounded-full p-1 gap-1 bg-muted">
           <button
             onClick={() => setView("scoring")}
-            className="flex-1 h-9 text-xs font-bold tracking-wider transition-all"
-            style={{ color: view === "scoring" ? "#15361f" : "#8a7f68", borderBottom: view === "scoring" ? "2px solid #15361f" : "2px solid transparent", marginBottom: -1 }}
+            className="flex-1 h-8 rounded-full text-xs font-bold tracking-wider transition-all"
+            style={view === "scoring" ? { background: "#c9a24b", color: "#15361f" } : { color: "#8a7f68" }}
           >
             СЧЁТ
           </button>
           <button
             onClick={() => setView("leaderboard")}
-            className="flex-1 h-9 text-xs font-bold tracking-wider transition-all flex items-center justify-center gap-1.5"
-            style={{ color: view === "leaderboard" ? "#15361f" : "#8a7f68", borderBottom: view === "leaderboard" ? "2px solid #15361f" : "2px solid transparent", marginBottom: -1 }}
+            className="flex-1 h-8 rounded-full text-xs font-bold tracking-wider transition-all flex items-center justify-center gap-1.5"
+            style={view === "leaderboard" ? { background: "#c9a24b", color: "#15361f" } : { color: "#8a7f68" }}
           >
             <Trophy className="h-3 w-3" /> ТАБЛИЦА
           </button>
@@ -553,7 +553,7 @@ const TournamentRoundPlayer = ({
       ) : (
         <div className="flex-1 flex flex-col justify-center px-5 pb-4 gap-4 overflow-y-auto">
           {/* Widget card */}
-          <div className="overflow-hidden bg-card border border-border">
+          <div className="overflow-hidden bg-card border border-border rounded-2xl">
             <div className="gm-eyebrow px-5 pt-4" style={{ color: "#8a7f68" }}>{tournamentName}</div>
             <div className="flex items-baseline gap-4 px-5 pt-1 pb-4">
               <span className="font-display text-foreground font-bold text-4xl tracking-tight">PAR {currentHole.par}</span>
@@ -562,7 +562,7 @@ const TournamentRoundPlayer = ({
             <div className="px-5 pb-4">
               <button
                 onClick={openNextPlayer}
-                className="w-full h-12 font-black text-sm tracking-[0.15em] active:scale-[0.97] transition-transform bg-action text-action-foreground"
+                className="w-full h-12 rounded-full font-black text-sm tracking-[0.15em] active:scale-[0.97] transition-transform bg-action text-action-foreground"
               >
                 ВВЕСТИ СЧЁТ
               </button>
@@ -593,7 +593,7 @@ const TournamentRoundPlayer = ({
                 <button
                   key={captain.id}
                   onClick={() => openSheet(captain, members)}
-                  className="w-full p-4 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform bg-card border border-border"
+                  className="w-full p-4 rounded-2xl flex items-center justify-between gap-3 active:scale-[0.98] transition-transform bg-card border border-border"
                 >
                   <div className="text-left min-w-0">
                     <div className="text-foreground font-bold text-sm">{label}</div>
@@ -602,7 +602,7 @@ const TournamentRoundPlayer = ({
                     </div>
                     <div className="font-display text-xs font-bold mt-0.5" style={{ color: parColor(tp) }}>{parSign(tp)}</div>
                   </div>
-                  <div className="min-w-[72px] h-16 flex flex-col items-center justify-center gap-0.5"
+                  <div className="min-w-[72px] h-16 rounded-xl flex flex-col items-center justify-center gap-0.5"
                     style={has ? { background: "#15361f" } : { background: "#e9e1cf" }}
                   >
                     {has ? (
@@ -633,7 +633,7 @@ const TournamentRoundPlayer = ({
                 <button
                   key={p.id}
                   onClick={() => openSheet(p)}
-                  className="w-full p-4 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform bg-card border border-border"
+                  className="w-full p-4 rounded-2xl flex items-center justify-between gap-3 active:scale-[0.98] transition-transform bg-card border border-border"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <Avatar name={p.name} tone={p.isMe ? "orange" : "muted"} photoUrl={p.photoUrl} />
@@ -641,7 +641,7 @@ const TournamentRoundPlayer = ({
                       <div className="text-foreground font-semibold truncate flex items-center gap-1.5">
                         {p.name.split(" ")[0]}
                         {isFourball && isBestForTeam && has && (
-                          <span className="text-[10px] font-bold px-1 bg-action/20 text-action">★ best</span>
+                          <span className="text-[10px] font-bold px-1 rounded bg-action/20 text-action">★ best</span>
                         )}
                       </div>
                       <div className="text-muted-foreground text-sm">
@@ -654,7 +654,7 @@ const TournamentRoundPlayer = ({
                       </div>
                     </div>
                   </div>
-                  <div className="min-w-[60px] h-14 flex flex-col items-center justify-center"
+                  <div className="min-w-[60px] h-14 rounded-xl flex flex-col items-center justify-center"
                     style={has ? { background: "#15361f" } : { background: "#e9e1cf" }}
                   >
                     {has ? (
@@ -706,8 +706,8 @@ const TournamentRoundPlayer = ({
       {sheetPlayer && (
         <div className="fixed inset-0 z-50 flex items-end animate-in fade-in duration-150">
           <button className="absolute inset-0 bg-black/40" onClick={() => { setSheetPlayer(null); setSheetTeamMembers([]); }} />
-          <div className="relative w-full animate-in slide-in-from-bottom duration-250 bg-card border-t" style={{ borderColor: "#c9a24b", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}>
-            <div className="mx-auto w-10 h-1 mt-3 mb-1 bg-border" />
+          <div className="relative w-full animate-in slide-in-from-bottom duration-250 bg-card border-t rounded-t-3xl" style={{ borderColor: "#c9a24b", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}>
+            <div className="mx-auto w-10 h-1 rounded-full mt-3 mb-1 bg-border" />
             <div className="flex items-center justify-between px-5 py-3 border-b border-border">
               <div className="flex items-center gap-3">
                 <Avatar name={sheetPlayer.name} tone={sheetPlayer.isMe ? "orange" : "muted"} photoUrl={sheetPlayer.photoUrl} />
@@ -721,14 +721,14 @@ const TournamentRoundPlayer = ({
                   <div className="text-muted-foreground text-xs">Лунка {currentHole.number} · Par {currentHole.par}</div>
                 </div>
               </div>
-              <button onClick={() => { setSheetPlayer(null); setSheetTeamMembers([]); }} className="h-9 w-9 grid place-items-center border border-border">
+              <button onClick={() => { setSheetPlayer(null); setSheetTeamMembers([]); }} className="h-9 w-9 rounded-full grid place-items-center border border-border">
                 <X className="h-4 w-4 text-foreground" />
               </button>
             </div>
 
             <div className="px-5 pt-5 pb-2">
               {/* Score counter */}
-              <div className="flex flex-col items-center mb-4 border border-border">
+              <div className="flex flex-col items-center mb-4 border border-border rounded-2xl overflow-hidden">
                 <div className="gm-eyebrow pt-3 pb-1 text-muted-foreground">СЧЁТ</div>
                 <button onClick={() => setHole((h) => ({ ...h, score: h.score + 1 }))} className="w-full h-14 grid place-items-center transition-colors active:bg-black/5" style={{ color: "#15361f" }}>
                   <Plus className="h-7 w-7" strokeWidth={2.5} />
@@ -752,7 +752,7 @@ const TournamentRoundPlayer = ({
                       <button
                         key={p.id}
                         onClick={() => setHole((h) => ({ ...h, madeBy: p.id }))}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 font-semibold text-sm transition-all border-2"
+                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all border-2"
                         style={hole.madeBy === p.id
                           ? { background: "#15361f", borderColor: "#15361f", color: "#f3ede1" }
                           : { background: "transparent", borderColor: "hsl(var(--border))", color: "hsl(var(--muted-foreground))" }
@@ -772,7 +772,7 @@ const TournamentRoundPlayer = ({
 
               <button
                 onClick={submit}
-                className="w-full h-14 font-black text-base uppercase tracking-wider active:scale-[0.98] transition-transform bg-action text-action-foreground"
+                className="w-full h-14 rounded-2xl font-black text-base uppercase tracking-wider active:scale-[0.98] transition-transform bg-action text-action-foreground"
               >
                 СОХРАНИТЬ
               </button>

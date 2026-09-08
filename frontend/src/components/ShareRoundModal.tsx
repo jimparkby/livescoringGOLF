@@ -37,13 +37,13 @@ export const ShareRoundModal = ({ roundId, onClose }: Props) => {
     <div className="fixed inset-0 z-[60] flex items-end animate-in fade-in duration-150">
       <button className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div
-        className="relative w-full animate-in slide-in-from-bottom duration-250 flex flex-col items-center bg-card border-t"
+        className="relative w-full animate-in slide-in-from-bottom duration-250 flex flex-col items-center bg-card border-t rounded-t-3xl"
         style={{ borderColor: "#c9a24b", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}
       >
-        <div className="mx-auto w-10 h-1 mt-3 mb-1 bg-border" />
+        <div className="mx-auto w-10 h-1 rounded-full mt-3 mb-1 bg-border" />
         <div className="flex items-center justify-between w-full px-5 py-3 border-b border-border">
           <div className="font-display font-semibold text-foreground">QR для участников</div>
-          <button onClick={onClose} className="h-9 w-9 grid place-items-center border border-border">
+          <button onClick={onClose} className="h-9 w-9 rounded-full grid place-items-center border border-border">
             <X className="h-4 w-4 text-foreground" />
           </button>
         </div>
@@ -56,12 +56,12 @@ export const ShareRoundModal = ({ roundId, onClose }: Props) => {
             <div className="h-6 w-6 rounded-full border-2 border-action border-t-transparent animate-spin" />
           ) : url ? (
             <>
-              <div className="p-4 bg-white border border-border">
+              <div className="p-4 bg-white border border-border rounded-2xl">
                 <QRCodeSVG value={url} size={200} />
               </div>
               <button
                 onClick={copyLink}
-                className="w-full max-w-xs h-12 font-bold text-sm flex items-center justify-center gap-2 bg-action text-action-foreground"
+                className="w-full max-w-xs h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2 bg-action text-action-foreground"
               >
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 {copied ? "Скопировано" : "Скопировать ссылку"}

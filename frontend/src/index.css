@@ -209,11 +209,10 @@ All colors MUST be HSL.
     --font-display: "Spectral", Georgia, "Times New Roman", serif;
     --font-body: "Public Sans", Arial, Helvetica, sans-serif;
 
-    /* Hairline rules over heavy rounded-SaaS shadows */
-    --radius: 0.125rem;
-    --radius-md: 0.125rem;
-    --radius-xl: 0.125rem;
-    --radius-2xl: 0.125rem;
+    --radius: 0.75rem;
+    --radius-md: 0.625rem;
+    --radius-xl: 0.875rem;
+    --radius-2xl: 1rem;
 
     --shadow-sm: 0 1px 0 0 rgba(27,27,22,0.06);
     --shadow-md: 0 1px 0 0 rgba(27,27,22,0.08);

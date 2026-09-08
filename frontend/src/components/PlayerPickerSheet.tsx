@@ -54,13 +54,13 @@ export const PlayerPickerSheet = ({
     <div className="fixed inset-0 z-50 flex items-end animate-in fade-in duration-150">
       <button className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div
-        className="relative w-full animate-in slide-in-from-bottom duration-250 flex flex-col bg-card border-t"
+        className="relative w-full animate-in slide-in-from-bottom duration-250 flex flex-col bg-card border-t rounded-t-3xl"
         style={{ borderColor: "#c9a24b", maxHeight: "85vh", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}
       >
-        <div className="mx-auto w-10 h-1 mt-3 mb-4 bg-border" />
+        <div className="mx-auto w-10 h-1 rounded-full mt-3 mb-4 bg-border" />
         <div className="flex items-center justify-between px-5 pb-3">
           <div className="font-display font-semibold text-lg text-foreground">Добавить игрока</div>
-          <button onClick={onClose} className="h-8 w-8 grid place-items-center border border-border">
+          <button onClick={onClose} className="h-8 w-8 rounded-full grid place-items-center border border-border">
             <X className="h-4 w-4 text-foreground" />
           </button>
         </div>
@@ -73,7 +73,7 @@ export const PlayerPickerSheet = ({
               placeholder="Имя или @username..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full h-11 pl-10 pr-4 text-sm outline-none bg-background border border-border text-foreground placeholder:text-muted-foreground"
+              className="w-full h-11 pl-10 pr-4 text-sm outline-none bg-background border border-border text-foreground placeholder:text-muted-foreground rounded-xl"
             />
           </div>
         </div>
@@ -103,7 +103,7 @@ export const PlayerPickerSheet = ({
                       photoUrl: u.photo_url ?? undefined,
                     })
                   }
-                  className="w-full flex items-center gap-3 px-3 py-3 mb-1 active:scale-[0.98] transition-transform disabled:opacity-40 hover:bg-muted/50"
+                  className="w-full flex items-center gap-3 px-3 py-3 mb-1 rounded-xl active:scale-[0.98] transition-transform disabled:opacity-40 hover:bg-muted/50"
                 >
                   {u.photo_url ? (
                     <img src={u.photo_url} alt={n} className="h-12 w-12 rounded-full object-cover shrink-0" />

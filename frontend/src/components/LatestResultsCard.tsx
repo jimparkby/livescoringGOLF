@@ -155,7 +155,7 @@ export const LatestResultsCard = () => {
           return (
             <div
               key={r.place}
-              className="flex items-center gap-3 py-2.5 -mx-2 px-2"
+              className="flex items-center gap-3 py-2.5 -mx-2 px-2 rounded-lg"
               style={isLeader ? { background: "rgba(201,162,75,0.1)" } : undefined}
             >
               <div className="font-display w-5 text-center font-bold tabular-nums text-sm shrink-0" style={{ color: isLeader ? "#c9a24b" : "#93a598" }}>

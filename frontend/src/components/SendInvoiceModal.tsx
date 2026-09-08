@@ -51,13 +51,13 @@ export const SendInvoiceModal = ({ registrationId, playerName, initialInvoiceNum
     <div className="fixed inset-0 z-[60] flex items-end animate-in fade-in duration-150">
       <button className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div
-        className="relative w-full animate-in slide-in-from-bottom duration-250 bg-card border-t"
+        className="relative w-full animate-in slide-in-from-bottom duration-250 bg-card border-t rounded-t-3xl"
         style={{ borderColor: "#c9a24b", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}
       >
-        <div className="mx-auto w-10 h-1 mt-3 mb-1 bg-border" />
+        <div className="mx-auto w-10 h-1 rounded-full mt-3 mb-1 bg-border" />
         <div className="flex items-center justify-between w-full px-5 py-3 border-b border-border">
           <div className="font-display font-semibold text-foreground">Счёт на оплату — {playerName}</div>
-          <button onClick={onClose} className="h-9 w-9 grid place-items-center border border-border">
+          <button onClick={onClose} className="h-9 w-9 rounded-full grid place-items-center border border-border">
             <X className="h-4 w-4 text-foreground" />
           </button>
         </div>
@@ -73,7 +73,7 @@ export const SendInvoiceModal = ({ registrationId, playerName, initialInvoiceNum
               value={invoiceNumber}
               onChange={(e) => setInvoiceNumber(e.target.value)}
               placeholder="Например, 7025"
-              className="w-full h-11 px-3 text-sm outline-none bg-background border border-border text-foreground"
+              className="w-full h-11 px-3 text-sm outline-none bg-background border border-border text-foreground rounded-xl"
             />
           </label>
 
@@ -84,7 +84,7 @@ export const SendInvoiceModal = ({ registrationId, playerName, initialInvoiceNum
                 type="date"
                 value={deadlineDate}
                 onChange={(e) => setDeadlineDate(e.target.value)}
-                className="w-full h-11 px-3 text-sm outline-none bg-background border border-border text-foreground"
+                className="w-full h-11 px-3 text-sm outline-none bg-background border border-border text-foreground rounded-xl"
               />
             </label>
             <label className="block">
@@ -93,7 +93,7 @@ export const SendInvoiceModal = ({ registrationId, playerName, initialInvoiceNum
                 type="time"
                 value={deadlineTime}
                 onChange={(e) => setDeadlineTime(e.target.value)}
-                className="w-full h-11 px-3 text-sm outline-none bg-background border border-border text-foreground"
+                className="w-full h-11 px-3 text-sm outline-none bg-background border border-border text-foreground rounded-xl"
               />
             </label>
           </div>
@@ -101,7 +101,7 @@ export const SendInvoiceModal = ({ registrationId, playerName, initialInvoiceNum
           <button
             onClick={send}
             disabled={sending}
-            className="w-full h-12 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-40 bg-action text-action-foreground"
+            className="w-full h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-40 bg-action text-action-foreground"
           >
             <Send className="h-4 w-4" strokeWidth={2.5} />
             {sending ? "Отправляю…" : "Отправить счёт"}

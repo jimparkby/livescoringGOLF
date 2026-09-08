@@ -177,19 +177,19 @@ const LiveScoringPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between px-5" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 14px)", paddingBottom: 10 }}>
         <LiveScoringLogo />
-        <button onClick={() => setShowAddPlayer(true)} className="h-9 w-9 grid place-items-center border border-border" title="Добавить игрока">
+        <button onClick={() => setShowAddPlayer(true)} className="h-9 w-9 rounded-full grid place-items-center border border-border" title="Добавить игрока">
           <UserPlus className="h-4 w-4" style={{ color: INK }} strokeWidth={2.5} />
         </button>
       </div>
 
       {/* Tournament banner */}
-      <div className="mx-5 px-4 py-3 border border-border">
+      <div className="mx-5 px-4 py-3 border border-border rounded-xl">
         <div className="gm-eyebrow" style={{ color: "#8a7f68" }}>{course.name} · {course.club}</div>
         <div className="font-display font-semibold text-lg mt-0.5" style={{ color: INK }}>{fmt.emoji} {fmt.name}</div>
       </div>
 
       {round.completed && (
-        <div className="mx-5 mt-3 px-3 py-2 text-xs text-center font-bold border" style={{ background: "var(--accent-tint)", borderColor: "rgba(21,54,31,0.3)", color: "#15361f" }}>
+        <div className="mx-5 mt-3 px-3 py-2 text-xs text-center font-bold border rounded-xl" style={{ background: "var(--accent-tint)", borderColor: "rgba(21,54,31,0.3)", color: "#15361f" }}>
           Раунд завершён — счёт доступен только для просмотра
         </div>
       )}
@@ -224,7 +224,7 @@ const LiveScoringPage = () => {
                 <button
                   key={captain.id}
                   onClick={() => openSheet(captain, members)}
-                  className="w-full p-4 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform bg-card border border-border"
+                  className="w-full p-4 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform bg-card border border-border rounded-xl"
                 >
                   <div className="text-left min-w-0">
                     <div className="font-semibold text-sm" style={{ color: INK }}>{label}</div>
@@ -233,7 +233,7 @@ const LiveScoringPage = () => {
                     </div>
                     <div className="font-display text-xs font-bold mt-0.5" style={{ color: parColor(tp) }}>{parSign(tp)}</div>
                   </div>
-                  <div className="min-w-[72px] h-16 flex flex-col items-center justify-center gap-0.5"
+                  <div className="min-w-[72px] h-16 rounded-lg flex flex-col items-center justify-center gap-0.5"
                     style={has ? { background: "#15361f" } : { background: "#e9e1cf" }}
                   >
                     {has ? (
@@ -262,7 +262,7 @@ const LiveScoringPage = () => {
                 <button
                   key={p.id}
                   onClick={() => openSheet(p)}
-                  className="w-full p-4 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform bg-card border border-border"
+                  className="w-full p-4 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform bg-card border border-border rounded-xl"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <Avatar name={p.name} tone={p.isMe ? "orange" : "muted"} photoUrl={p.photoUrl} />
@@ -271,7 +271,7 @@ const LiveScoringPage = () => {
                       <div className="text-sm text-muted-foreground">{isStableford ? `${pts} pts` : parSign(tp)}</div>
                     </div>
                   </div>
-                  <div className="min-w-[60px] h-14 flex flex-col items-center justify-center"
+                  <div className="min-w-[60px] h-14 rounded-lg flex flex-col items-center justify-center"
                     style={has ? { background: "#15361f" } : { background: "#e9e1cf" }}
                   >
                     {has ? (
@@ -316,8 +316,8 @@ const LiveScoringPage = () => {
       {sheetPlayer && !round.completed && (
         <div className="fixed inset-0 z-50 flex items-end animate-in fade-in duration-150">
           <button className="absolute inset-0 bg-black/40" onClick={() => { setSheetPlayer(null); setSheetTeamMembers([]); }} />
-          <div className="relative w-full animate-in slide-in-from-bottom duration-250 bg-card border-t" style={{ borderColor: "#c9a24b", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}>
-            <div className="mx-auto w-10 h-1 mt-3 mb-1 bg-border" />
+          <div className="relative w-full animate-in slide-in-from-bottom duration-250 bg-card border-t rounded-t-3xl" style={{ borderColor: "#c9a24b", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}>
+            <div className="mx-auto w-10 h-1 rounded-full mt-3 mb-1 bg-border" />
             <div className="flex items-center justify-between px-5 py-3 border-b border-border">
               <div className="flex items-center gap-3">
                 <Avatar name={sheetPlayer.name} tone={sheetPlayer.isMe ? "orange" : "muted"} photoUrl={sheetPlayer.photoUrl} />
@@ -331,13 +331,13 @@ const LiveScoringPage = () => {
                   <div className="text-xs text-muted-foreground">Лунка {currentHole.number} · Par {currentHole.par}</div>
                 </div>
               </div>
-              <button onClick={() => { setSheetPlayer(null); setSheetTeamMembers([]); }} className="h-9 w-9 grid place-items-center border border-border">
+              <button onClick={() => { setSheetPlayer(null); setSheetTeamMembers([]); }} className="h-9 w-9 rounded-full grid place-items-center border border-border">
                 <X className="h-4 w-4" style={{ color: INK }} />
               </button>
             </div>
 
             <div className="px-5 pt-5 pb-2">
-              <div className="flex flex-col items-center mb-4 border border-border">
+              <div className="flex flex-col items-center mb-4 border border-border rounded-2xl overflow-hidden">
                 <div className="gm-eyebrow pt-3 pb-1" style={{ color: "#8a7f68" }}>Счёт</div>
                 <button onClick={() => setHole((h) => ({ ...h, score: h.score + 1 }))} className="w-full h-14 grid place-items-center transition-colors active:bg-black/5" style={{ color: "#15361f" }}>
                   <Plus className="h-7 w-7" strokeWidth={2.5} />
@@ -361,7 +361,7 @@ const LiveScoringPage = () => {
                         key={p.id}
                         onClick={() => setHole((h) => ({ ...h, madeBy: p.id }))}
                         className={cn(
-                          "flex-1 flex items-center justify-center gap-2 py-3 font-semibold text-sm transition-all border-2",
+                          "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all border-2",
                           hole.madeBy === p.id ? "text-white" : "text-muted-foreground"
                         )}
                         style={hole.madeBy === p.id
@@ -378,7 +378,7 @@ const LiveScoringPage = () => {
 
               <button
                 onClick={submit}
-                className="w-full h-14 font-bold text-base uppercase tracking-wider active:scale-[0.98] transition-transform"
+                className="w-full h-14 rounded-2xl font-bold text-base uppercase tracking-wider active:scale-[0.98] transition-transform"
                 style={{ background: "#c9a24b", color: "#15361f" }}
               >
                 Сохранить
@@ -392,11 +392,11 @@ const LiveScoringPage = () => {
       {showAddPlayer && (
         <div className="fixed inset-0 z-50 flex items-end animate-in fade-in duration-150">
           <button className="absolute inset-0 bg-black/40" onClick={() => setShowAddPlayer(false)} />
-          <div className="relative w-full animate-in slide-in-from-bottom duration-250 bg-card border-t" style={{ borderColor: "#c9a24b", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}>
-            <div className="mx-auto w-10 h-1 mt-3 mb-1 bg-border" />
+          <div className="relative w-full animate-in slide-in-from-bottom duration-250 bg-card border-t rounded-t-3xl" style={{ borderColor: "#c9a24b", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}>
+            <div className="mx-auto w-10 h-1 rounded-full mt-3 mb-1 bg-border" />
             <div className="flex items-center justify-between px-5 py-3 border-b border-border">
               <div className="font-display font-semibold" style={{ color: INK }}>Добавить игрока</div>
-              <button onClick={() => setShowAddPlayer(false)} className="h-9 w-9 grid place-items-center border border-border">
+              <button onClick={() => setShowAddPlayer(false)} className="h-9 w-9 rounded-full grid place-items-center border border-border">
                 <X className="h-4 w-4" style={{ color: INK }} />
               </button>
             </div>
@@ -406,7 +406,7 @@ const LiveScoringPage = () => {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="Имя игрока"
-                className="w-full h-12 px-4 text-sm outline-none border border-border bg-background"
+                className="w-full h-12 px-4 text-sm rounded-xl outline-none border border-border bg-background"
                 style={{ color: INK }}
               />
               <input
@@ -414,13 +414,13 @@ const LiveScoringPage = () => {
                 onChange={(e) => setNewHcp(e.target.value.replace(/[^0-9.]/g, ""))}
                 placeholder="HCP"
                 inputMode="decimal"
-                className="w-full h-12 px-4 text-sm outline-none border border-border bg-background"
+                className="w-full h-12 px-4 text-sm rounded-xl outline-none border border-border bg-background"
                 style={{ color: INK }}
               />
               <button
                 onClick={addPlayer}
                 disabled={!newName.trim()}
-                className="w-full h-14 font-bold text-base uppercase tracking-wider active:scale-[0.98] transition-transform disabled:opacity-40"
+                className="w-full h-14 rounded-2xl font-bold text-base uppercase tracking-wider active:scale-[0.98] transition-transform disabled:opacity-40"
                 style={{ background: "#c9a24b", color: "#15361f" }}
               >
                 Добавить

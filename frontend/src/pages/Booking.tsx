@@ -227,7 +227,7 @@ const BookingPage = () => {
             return (
               <Card key={s.id} className="p-3.5 flex items-center justify-between gap-3 animate-in fade-in duration-300">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-11 w-11 grid place-items-center shrink-0" style={{ background: "var(--accent-tint)" }}>
+                  <div className="h-11 w-11 rounded-xl grid place-items-center shrink-0" style={{ background: "var(--accent-tint)" }}>
                     <Clock className="h-5 w-5" style={{ color: "#15361f" }} />
                   </div>
                   <div className="min-w-0">
@@ -242,7 +242,7 @@ const BookingPage = () => {
                 <button
                   onClick={() => openBooking(s)}
                   disabled={full || s.bookedByMe}
-                  className="h-9 px-4 font-bold text-xs shrink-0 disabled:opacity-50"
+                  className="h-9 px-4 rounded-full font-bold text-xs shrink-0 disabled:opacity-50"
                   style={s.bookedByMe
                     ? { background: "var(--accent-tint)", color: "#15361f" }
                     : { background: "#c9a24b", color: "#15361f" }}
@@ -258,8 +258,8 @@ const BookingPage = () => {
       {bookingSlot && (
         <div className="fixed inset-0 z-50 flex items-end animate-in fade-in duration-150">
           <button className="absolute inset-0 bg-black/40" onClick={() => setBookingSlot(null)} />
-          <div className="relative w-full animate-in slide-in-from-bottom duration-250 bg-card border-t" style={{ borderColor: "#c9a24b", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}>
-            <div className="mx-auto w-10 h-1 mt-3 mb-1 bg-border" />
+          <div className="relative w-full animate-in slide-in-from-bottom duration-250 bg-card border-t rounded-t-3xl" style={{ borderColor: "#c9a24b", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}>
+            <div className="mx-auto w-10 h-1 rounded-full mt-3 mb-1 bg-border" />
             <div className="flex items-center justify-between px-5 py-3 border-b border-border">
               <div>
                 <div className="font-display font-semibold text-foreground">
@@ -267,7 +267,7 @@ const BookingPage = () => {
                 </div>
                 {bookingSlot.trainerName && <div className="text-muted-foreground text-xs">Тренер: {bookingSlot.trainerName}</div>}
               </div>
-              <button onClick={() => setBookingSlot(null)} className="h-9 w-9 grid place-items-center border border-border">
+              <button onClick={() => setBookingSlot(null)} className="h-9 w-9 rounded-full grid place-items-center border border-border">
                 <X className="h-4 w-4 text-foreground" />
               </button>
             </div>
@@ -297,7 +297,7 @@ const BookingPage = () => {
               <button
                 onClick={confirmBooking}
                 disabled={submitting}
-                className="w-full h-14 font-black text-base uppercase tracking-wider active:scale-[0.98] transition-transform disabled:opacity-40 bg-action text-action-foreground"
+                className="w-full h-14 rounded-2xl font-black text-base uppercase tracking-wider active:scale-[0.98] transition-transform disabled:opacity-40 bg-action text-action-foreground"
               >
                 {submitting ? "Записываю…" : "Подтвердить"}
               </button>
