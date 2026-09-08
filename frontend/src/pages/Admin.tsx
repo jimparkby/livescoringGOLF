@@ -93,7 +93,7 @@ const AdminPage = () => {
             key={id}
             onClick={() => setTab(id)}
             className="flex-1 h-9 rounded-full text-xs font-bold tracking-wide transition-all flex items-center justify-center gap-1.5 whitespace-nowrap px-2"
-            style={tab === id ? { background: "#22c55e", color: "#000" } : { color: "hsl(var(--muted-foreground))" }}
+            style={tab === id ? { background: "#c9a24b", color: "#15361f" } : { color: "hsl(var(--muted-foreground))" }}
           >
             <Icon className="h-3.5 w-3.5" /> {label}
           </button>
@@ -193,7 +193,7 @@ const LiveToolsTab = () => {
     <Card className="p-4 shadow-soft flex items-center justify-between gap-3">
       <div className="min-w-0">
         <div className="font-bold text-sm flex items-center gap-1.5">
-          <Sparkles className="h-4 w-4" style={{ color: "#22c55e" }} /> Демо для директоров
+          <Sparkles className="h-4 w-4" style={{ color: "#15361f" }} /> Демо для директоров
         </div>
         <div className="text-xs text-muted-foreground mt-0.5">
           Запускает тестовый раунд с вымышленными игроками — показать live-скоринг, не трогая реальные заявки
@@ -203,7 +203,7 @@ const LiveToolsTab = () => {
         onClick={startDemoTournament}
         disabled={startingDemo}
         className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl font-bold text-sm shrink-0 disabled:opacity-50"
-        style={{ background: "#22c55e", color: "#000" }}
+        style={{ background: "#c9a24b", color: "#15361f" }}
       >
         <PlayCircle className="h-4 w-4" strokeWidth={2.5} /> Начать
       </button>
@@ -222,7 +222,7 @@ const LiveToolsTab = () => {
           <button
             onClick={() => navigate("/create-tournament")}
             className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl font-bold text-sm"
-            style={{ background: "rgba(34,197,94,0.12)", border: "1.5px solid rgba(34,197,94,0.3)", color: "#22c55e" }}
+            style={{ background: "var(--accent-tint)", border: "1px solid rgba(21,54,31,0.3)", color: "#15361f" }}
           >
             <Plus className="h-4 w-4" strokeWidth={2.5} /> Создать турнир
           </button>
@@ -249,8 +249,8 @@ const LiveToolsTab = () => {
                 </div>
                 <div className="mt-2">
                   {isActive && !round?.completed ? (
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e" }}>
-                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#22c55e" }} />
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: "var(--accent-tint)", color: "#15361f" }}>
+                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#15361f" }} />
                       В игре
                     </span>
                   ) : round?.completed ? (
@@ -266,10 +266,10 @@ const LiveToolsTab = () => {
                   onClick={() => round && setShareRoundId(round.id)}
                   disabled={!round}
                   className="h-9 w-9 rounded-full grid place-items-center disabled:opacity-30"
-                  style={{ background: "rgba(34,197,94,0.12)", border: "1.5px solid rgba(34,197,94,0.3)" }}
+                  style={{ background: "var(--accent-tint)", border: "1px solid rgba(21,54,31,0.3)" }}
                   title="QR для участников"
                 >
-                  <QrCode className="h-4 w-4" style={{ color: "#22c55e" }} />
+                  <QrCode className="h-4 w-4" style={{ color: "#15361f" }} />
                 </button>
                 {isActive && (
                   <button
@@ -380,14 +380,14 @@ const ScheduleTab = () => {
         <button
           onClick={() => setSubTab("tee_time")}
           className="flex-1 h-9 rounded-full text-xs font-bold tracking-wide transition-all"
-          style={subTab === "tee_time" ? { background: "#22c55e", color: "#000" } : { color: "hsl(var(--muted-foreground))" }}
+          style={subTab === "tee_time" ? { background: "#c9a24b", color: "#15361f" } : { color: "hsl(var(--muted-foreground))" }}
         >
           Ти-таймы
         </button>
         <button
           onClick={() => setSubTab("training")}
           className="flex-1 h-9 rounded-full text-xs font-bold tracking-wide transition-all"
-          style={subTab === "training" ? { background: "#22c55e", color: "#000" } : { color: "hsl(var(--muted-foreground))" }}
+          style={subTab === "training" ? { background: "#c9a24b", color: "#15361f" } : { color: "hsl(var(--muted-foreground))" }}
         >
           Тренировки
         </button>
@@ -425,7 +425,7 @@ const ScheduleTab = () => {
             onClick={generateTeeTimes}
             disabled={generating}
             className="w-full h-11 rounded-xl font-bold text-sm disabled:opacity-40"
-            style={{ background: "#22c55e", color: "#000" }}
+            style={{ background: "#c9a24b", color: "#15361f" }}
           >
             {generating ? "Создаю…" : "Сгенерировать"}
           </button>
@@ -459,7 +459,7 @@ const ScheduleTab = () => {
             onClick={createTraining}
             disabled={creating}
             className="w-full h-11 rounded-xl font-bold text-sm disabled:opacity-40"
-            style={{ background: "#22c55e", color: "#000" }}
+            style={{ background: "#c9a24b", color: "#15361f" }}
           >
             {creating ? "Создаю…" : "Создать"}
           </button>
@@ -617,7 +617,7 @@ const PhotoImportPanel = ({
           onClick={parse}
           disabled={!tournamentId || parsing}
           className="w-full h-11 rounded-xl font-bold text-sm disabled:opacity-40"
-          style={{ background: "#22c55e", color: "#000" }}
+          style={{ background: "#c9a24b", color: "#15361f" }}
         >
           {parsing ? "Распознаю…" : "Распознать"}
         </button>
@@ -649,7 +649,7 @@ const PhotoImportPanel = ({
             onClick={save}
             disabled={saving}
             className="w-full h-11 rounded-xl font-bold text-sm disabled:opacity-40"
-            style={{ background: "#22c55e", color: "#000" }}
+            style={{ background: "#c9a24b", color: "#15361f" }}
           >
             {saving ? "Сохраняю…" : "Сохранить"}
           </button>

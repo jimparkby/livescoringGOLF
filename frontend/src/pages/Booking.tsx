@@ -183,14 +183,14 @@ const BookingPage = () => {
         <button
           onClick={() => setTab("tee_time")}
           className="flex-1 h-9 rounded-full text-xs font-bold tracking-wide transition-all"
-          style={tab === "tee_time" ? { background: "#22c55e", color: "#000" } : { color: "hsl(var(--muted-foreground))" }}
+          style={tab === "tee_time" ? { background: "#c9a24b", color: "#15361f" } : { color: "hsl(var(--muted-foreground))" }}
         >
           Ти-таймы
         </button>
         <button
           onClick={() => setTab("training")}
           className="flex-1 h-9 rounded-full text-xs font-bold tracking-wide transition-all"
-          style={tab === "training" ? { background: "#22c55e", color: "#000" } : { color: "hsl(var(--muted-foreground))" }}
+          style={tab === "training" ? { background: "#c9a24b", color: "#15361f" } : { color: "hsl(var(--muted-foreground))" }}
         >
           Тренировки
         </button>
@@ -203,7 +203,7 @@ const BookingPage = () => {
             onClick={() => setSelectedDate(d.iso)}
             className="shrink-0 w-14 h-16 rounded-xl flex flex-col items-center justify-center gap-0.5 border-2 transition-all"
             style={selectedDate === d.iso
-              ? { borderColor: "#22c55e", background: "rgba(34,197,94,0.1)" }
+              ? { borderColor: "#15361f", background: "var(--accent-tint)" }
               : { borderColor: "transparent", background: "hsl(var(--muted))" }}
           >
             <div className="text-[9px] font-bold uppercase text-muted-foreground">{d.weekday}</div>
@@ -227,8 +227,8 @@ const BookingPage = () => {
             return (
               <Card key={s.id} className="p-3.5 flex items-center justify-between gap-3 animate-in fade-in duration-300">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-11 w-11 rounded-xl grid place-items-center shrink-0" style={{ background: "rgba(34,197,94,0.12)" }}>
-                    <Clock className="h-5 w-5" style={{ color: "#22c55e" }} />
+                  <div className="h-11 w-11 grid place-items-center shrink-0" style={{ background: "var(--accent-tint)" }}>
+                    <Clock className="h-5 w-5" style={{ color: "#15361f" }} />
                   </div>
                   <div className="min-w-0">
                     <div className="font-bold text-sm">{s.time}</div>
@@ -242,12 +242,10 @@ const BookingPage = () => {
                 <button
                   onClick={() => openBooking(s)}
                   disabled={full || s.bookedByMe}
-                  className={cn(
-                    "h-9 px-4 rounded-full font-bold text-xs shrink-0 disabled:opacity-50",
-                  )}
+                  className="h-9 px-4 font-bold text-xs shrink-0 disabled:opacity-50"
                   style={s.bookedByMe
-                    ? { background: "rgba(34,197,94,0.15)", color: "#22c55e" }
-                    : { background: "#22c55e", color: "#000" }}
+                    ? { background: "var(--accent-tint)", color: "#15361f" }
+                    : { background: "#c9a24b", color: "#15361f" }}
                 >
                   {s.bookedByMe ? "Записан" : full ? "Нет мест" : "Записаться"}
                 </button>
@@ -259,40 +257,38 @@ const BookingPage = () => {
 
       {bookingSlot && (
         <div className="fixed inset-0 z-50 flex items-end animate-in fade-in duration-150">
-          <button className="absolute inset-0 bg-black/70" onClick={() => setBookingSlot(null)} />
-          <div className="relative w-full rounded-t-3xl animate-in slide-in-from-bottom duration-250" style={{ background: "#1a1a1a", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}>
-            <div className="mx-auto w-10 h-1 rounded-full mt-3 mb-1" style={{ background: "rgba(255,255,255,0.15)" }} />
-            <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+          <button className="absolute inset-0 bg-black/40" onClick={() => setBookingSlot(null)} />
+          <div className="relative w-full animate-in slide-in-from-bottom duration-250 bg-card border-t" style={{ borderColor: "#c9a24b", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}>
+            <div className="mx-auto w-10 h-1 mt-3 mb-1 bg-border" />
+            <div className="flex items-center justify-between px-5 py-3 border-b border-border">
               <div>
-                <div className="text-white font-bold">
+                <div className="font-display font-semibold text-foreground">
                   {bookingSlot.type === "tee_time" ? "Ти-тайм" : "Тренировка"} в {bookingSlot.time}
                 </div>
-                {bookingSlot.trainerName && <div className="text-white/40 text-xs">Тренер: {bookingSlot.trainerName}</div>}
+                {bookingSlot.trainerName && <div className="text-muted-foreground text-xs">Тренер: {bookingSlot.trainerName}</div>}
               </div>
-              <button onClick={() => setBookingSlot(null)} className="h-9 w-9 rounded-full grid place-items-center" style={{ background: "rgba(255,255,255,0.1)" }}>
-                <X className="h-4 w-4 text-white" />
+              <button onClick={() => setBookingSlot(null)} className="h-9 w-9 grid place-items-center border border-border">
+                <X className="h-4 w-4 text-foreground" />
               </button>
             </div>
 
             <div className="px-5 pt-5 pb-2 space-y-4">
               {bookingSlot.type === "tee_time" && (
                 <div>
-                  <div className="text-[10px] uppercase tracking-widest font-bold mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>Количество игроков</div>
+                  <div className="gm-eyebrow mb-2 text-muted-foreground">Количество игроков</div>
                   <div className="flex items-center justify-center gap-4">
                     <button
                       onClick={() => setPlayersCount((n) => Math.max(1, n - 1))}
-                      className="h-11 w-11 rounded-full grid place-items-center"
-                      style={{ background: "rgba(255,255,255,0.08)" }}
+                      className="h-11 w-11 rounded-full grid place-items-center border border-border"
                     >
-                      <Minus className="h-4 w-4 text-white" />
+                      <Minus className="h-4 w-4 text-foreground" />
                     </button>
-                    <div className="text-3xl font-black text-white tabular-nums w-10 text-center">{playersCount}</div>
+                    <div className="font-display text-3xl font-bold text-foreground tabular-nums w-10 text-center">{playersCount}</div>
                     <button
                       onClick={() => setPlayersCount((n) => Math.min(bookingSlot.available, n + 1))}
-                      className="h-11 w-11 rounded-full grid place-items-center"
-                      style={{ background: "rgba(255,255,255,0.08)" }}
+                      className="h-11 w-11 rounded-full grid place-items-center border border-border"
                     >
-                      <Plus className="h-4 w-4 text-white" />
+                      <Plus className="h-4 w-4 text-foreground" />
                     </button>
                   </div>
                 </div>
@@ -301,8 +297,7 @@ const BookingPage = () => {
               <button
                 onClick={confirmBooking}
                 disabled={submitting}
-                className="w-full h-14 rounded-2xl font-black text-base uppercase tracking-wider active:scale-[0.98] transition-transform disabled:opacity-40"
-                style={{ background: "#22c55e", color: "#000" }}
+                className="w-full h-14 font-black text-base uppercase tracking-wider active:scale-[0.98] transition-transform disabled:opacity-40 bg-action text-action-foreground"
               >
                 {submitting ? "Записываю…" : "Подтвердить"}
               </button>

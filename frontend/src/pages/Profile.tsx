@@ -229,9 +229,9 @@ const ProfilePage = () => {
             <button
               onClick={() => photoInputRef.current?.click()}
               className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full grid place-items-center shadow-md"
-              style={{ background: "#22c55e" }}
+              style={{ background: "#c9a24b" }}
             >
-              <Camera className="h-3.5 w-3.5 text-black" />
+              <Camera className="h-3.5 w-3.5" style={{ color: "#15361f" }} />
             </button>
             <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
           </div>

@@ -132,7 +132,7 @@ const CreateTournamentPage = () => {
                   <div className="font-bold text-sm flex items-center gap-2">
                     {f.name}
                     {f.team && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e" }}>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: "var(--accent-tint)", color: "#15361f" }}>
                         2×2
                       </span>
                     )}
@@ -154,7 +154,7 @@ const CreateTournamentPage = () => {
         <button
           onClick={() => setStep("players")}
           className="w-full h-14 rounded-xl font-bold text-base"
-          style={{ background: "#22c55e", color: "#000" }}
+          style={{ background: "#c9a24b", color: "#15361f" }}
         >
           Далее →
         </button>
@@ -172,7 +172,7 @@ const CreateTournamentPage = () => {
             <ChevronLeft className="h-5 w-5" strokeWidth={2.5} /> Игроки
           </button>
 
-          <div className="p-3 rounded-xl flex items-center gap-2" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
+          <div className="p-3 rounded-xl flex items-center gap-2" style={{ background: "var(--accent-tint)", border: "1px solid rgba(21,54,31,0.25)" }}>
             <span className="text-lg">{fmt.emoji}</span>
             <span className="text-sm font-semibold text-action">{fmt.name}</span>
             {isTeamFormat && <span className="text-xs text-muted-foreground">— нужно ровно 4 игрока</span>}
@@ -225,7 +225,7 @@ const CreateTournamentPage = () => {
             onClick={() => setStep("setup")}
             disabled={!canNextFromPlayers}
             className="w-full h-14 rounded-xl font-bold text-base disabled:opacity-40"
-            style={{ background: "#22c55e", color: "#000" }}
+            style={{ background: "#c9a24b", color: "#15361f" }}
           >
             Далее →
           </button>
@@ -305,7 +305,7 @@ const CreateTournamentPage = () => {
         <button
           onClick={() => isTeamFormat ? setStep("teams") : handleCreate()}
           className="w-full h-14 rounded-xl font-bold text-base"
-          style={{ background: "#22c55e", color: "#000" }}
+          style={{ background: "#c9a24b", color: "#15361f" }}
         >
           {isTeamFormat ? "Далее → Команды" : `Начать · ${course.name}`}
         </button>
@@ -328,8 +328,8 @@ const CreateTournamentPage = () => {
         {[0, 1].map((teamIdx) => {
           const teamPlayers = players.filter((_, i) => teamAssignment[i] === teamIdx);
           return (
-            <div key={teamIdx} className="rounded-2xl overflow-hidden" style={{ background: "#1a1a1a" }}>
-              <div className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-center" style={{ color: teamIdx === 0 ? "#22c55e" : "#60a5fa", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+            <div key={teamIdx} className="overflow-hidden bg-card border border-border">
+              <div className="gm-eyebrow px-3 py-2 text-center border-b border-border" style={{ color: teamIdx === 0 ? "#15361f" : "#a5822f" }}>
                 {teamIdx === 0 ? "Team A" : "Team B"}
               </div>
               {teamPlayers.map((p) => (
@@ -337,20 +337,20 @@ const CreateTournamentPage = () => {
                   key={p.id}
                   onClick={() => !p.isMe && movePlayer(p.id)}
                   disabled={p.isMe}
-                  className="w-full flex items-center gap-2 px-3 py-3 border-t border-white/5 active:scale-[0.97] transition-transform disabled:opacity-60"
+                  className="w-full flex items-center gap-2 px-3 py-3 border-t border-border active:scale-[0.97] transition-transform disabled:opacity-60"
                 >
                   <Avatar name={p.name} size="sm" tone={p.isMe ? "orange" : "muted"} photoUrl={p.photoUrl} />
                   <div className="text-left min-w-0">
-                    <div className="text-white text-sm font-semibold truncate">{p.name.split(" ")[0]}</div>
-                    <div className="text-white/40 text-[10px]">HCP {p.hcp}</div>
+                    <div className="text-sm font-semibold truncate text-foreground">{p.name.split(" ")[0]}</div>
+                    <div className="text-muted-foreground text-[10px]">HCP {p.hcp}</div>
                   </div>
                   {!p.isMe && (
-                    <div className="ml-auto text-white/30 text-xs">⇄</div>
+                    <div className="ml-auto text-muted-foreground text-xs">⇄</div>
                   )}
                 </button>
               ))}
               {teamPlayers.length < 2 && (
-                <div className="flex items-center justify-center py-4 text-white/20 text-xs">
+                <div className="flex items-center justify-center py-4 text-muted-foreground text-xs">
                   <Users className="h-4 w-4 mr-1" /> пусто
                 </div>
               )}
@@ -363,7 +363,7 @@ const CreateTournamentPage = () => {
         onClick={handleCreate}
         disabled={teamAPlayers.length !== 2 || teamBPlayers.length !== 2}
         className="w-full h-14 rounded-xl font-bold text-base disabled:opacity-40"
-        style={{ background: "#22c55e", color: "#000" }}
+        style={{ background: "#c9a24b", color: "#15361f" }}
       >
         Начать · {course.name}
       </button>

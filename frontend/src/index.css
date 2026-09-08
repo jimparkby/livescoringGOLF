@@ -144,66 +144,81 @@ All colors MUST be HSL.
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-  /* ── Light theme ── */
+  /* ── Light theme — "Country Club Editorial" ── */
   [data-theme="light"] {
-    --background: 0 0% 95%;          /* #f2f3f5 app canvas */
-    --foreground: 0 0% 5%;           /* #0d0f12 near-black text */
+    --background: 40 43% 92%;        /* #f3ede1 cream/ivory canvas */
+    --foreground: 60 10% 10%;        /* #1b1b16 near-black ink */
 
     --card: 0 0% 100%;               /* #ffffff */
-    --card-foreground: 0 0% 5%;
+    --card-foreground: 60 10% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 5%;
+    --popover-foreground: 60 10% 10%;
 
-    --primary: 0 0% 5%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 138 44% 15%;          /* #15361f forest green */
+    --primary-foreground: 40 43% 92%;
 
-    --secondary: 0 0% 93%;           /* #eceef1 */
-    --secondary-foreground: 0 0% 5%;
+    --secondary: 40 22% 88%;         /* warm parchment gray */
+    --secondary-foreground: 60 10% 10%;
 
-    --muted: 0 0% 93%;
-    --muted-foreground: 0 0% 42%;    /* #6b7280 */
+    --muted: 40 20% 89%;
+    --muted-foreground: 41 14% 42%;  /* #8a7f68-ish warm taupe */
 
-    --text-primary: rgba(13, 15, 18, 1);
-    --text-secondary: rgba(13, 15, 18, 0.55);
-    --text-muted: rgba(13, 15, 18, 0.32);
-    --text-faint: rgba(13, 15, 18, 0.25);
-    --text-body: rgba(13, 15, 18, 0.88);
+    --text-primary: rgba(27, 27, 22, 1);
+    --text-secondary: rgba(27, 27, 22, 0.6);
+    --text-muted: rgba(27, 27, 22, 0.4);
+    --text-faint: rgba(27, 27, 22, 0.28);
+    --text-body: rgba(27, 27, 22, 0.88);
 
     --surface-card: #ffffff;
-    --surface-card-alt: #ffffff;
-    --border-hairline: rgba(0, 0, 0, 0.08);
+    --surface-card-alt: #fffdf7;
+    --border-hairline: rgba(27, 27, 22, 0.14);
 
-    /* Brand green (Golf Club Minsk / golfminsk.by) — deep forest green, #1f7a3d */
-    --accent: 140 55% 30%;
-    --accent-foreground: 0 0% 100%;
-    --accent-soft: 140 45% 92%;
-    --accent-tint: rgba(31, 122, 61, 0.1);
-    --accent-tint-border: rgba(31, 122, 61, 0.28);
+    /* Forest green — headers, hero surfaces, "played" states */
+    --accent: 138 44% 15%;
+    --accent-foreground: 40 43% 92%;
+    --accent-soft: 138 30% 92%;
+    --accent-tint: rgba(21, 54, 31, 0.08);
+    --accent-tint-border: rgba(21, 54, 31, 0.28);
 
-    --action: 140 55% 30%;
-    --action-foreground: 0 0% 100%;
-    --action-glow: 140 50% 42%;
+    /* Warm gold — primary call-to-action */
+    --action: 41 54% 54%;            /* #c9a24b */
+    --action-foreground: 138 44% 15%;
+    --action-glow: 41 60% 60%;
 
     --score-eagle: #ca8a04;
-    --score-birdie: #16a34a;
-    --score-par: rgba(13, 15, 18, 0.55);
-    --score-bogey: #ea580c;
-    --score-double: #dc2626;
+    --score-birdie: #1f7a3d;
+    --score-par: rgba(27, 27, 22, 0.55);
+    --score-bogey: #c2540c;
+    --score-double: #b3261e;
 
-    --destructive: 0 72% 50%;        /* #dc2626 */
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 5 65% 42%;        /* #b3261e */
+    --destructive-foreground: 40 43% 92%;
 
-    --success: 140 55% 30%;
-    --warning: 38 90% 45%;
+    --success: 138 44% 15%;
+    --warning: 38 80% 42%;
 
-    --border: 0 0% 89%;              /* #e1e4e8 */
-    --input: 0 0% 93%;
-    --ring: 140 55% 30%;
+    --border: 40 15% 80%;            /* warm hairline */
+    --input: 40 15% 85%;
+    --ring: 138 44% 15%;
 
-    --gradient-hero: linear-gradient(180deg, #ffffff 0%, #eef1f4 100%);
+    --gradient-hero: linear-gradient(180deg, #f3ede1 0%, #ece2cd 100%);
     --gradient-fairway: linear-gradient(135deg, #2c6b3d 0%, #15361f 100%);
-    --gradient-card: linear-gradient(180deg, #ffffff 0%, #f6f7f9 100%);
+    --gradient-card: linear-gradient(180deg, #ffffff 0%, #fffdf7 100%);
+
+    --font-display: "Spectral", Georgia, "Times New Roman", serif;
+    --font-body: "Public Sans", Arial, Helvetica, sans-serif;
+
+    /* Hairline rules over heavy rounded-SaaS shadows */
+    --radius: 0.125rem;
+    --radius-md: 0.125rem;
+    --radius-xl: 0.125rem;
+    --radius-2xl: 0.125rem;
+
+    --shadow-sm: 0 1px 0 0 rgba(27,27,22,0.06);
+    --shadow-md: 0 1px 0 0 rgba(27,27,22,0.08);
+    --shadow-lg: 0 2px 0 0 rgba(27,27,22,0.1);
+    --shadow-glow: 0 6px 20px -6px rgba(201,162,75,0.45);
   }
 }
 
@@ -214,11 +229,14 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: var(--font-body);
     font-feature-settings: "cv11", "ss01";
   }
 
-  h1, h2, h3, h4 {
-    @apply tracking-tight;
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.01em;
   }
 }
 
@@ -239,12 +257,15 @@ All colors MUST be HSL.
   }
 
   .gm-eyebrow {
+    font-family: var(--font-body);
     font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.16em;
     color: var(--text-muted);
     font-weight: 600;
   }
+
+  .font-display { font-family: var(--font-display); }
 }
 
 /* Hide all toast notifications */

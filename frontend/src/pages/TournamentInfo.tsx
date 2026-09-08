@@ -444,7 +444,7 @@ const TournamentInfoPage = () => {
                       <button
                         onClick={() => {}}
                         className="w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
-                        style={{ background: "rgba(34,197,94,0.12)", border: "1.5px solid rgba(34,197,94,0.3)", color: "#22c55e" }}
+                        style={{ background: "var(--accent-tint)", border: "1px solid rgba(21,54,31,0.3)", color: "#15361f" }}
                       >
                         <CreditCard className="h-4 w-4" />
                         Оплатить

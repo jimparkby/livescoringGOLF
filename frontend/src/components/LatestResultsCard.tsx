@@ -145,7 +145,7 @@ export const LatestResultsCard = () => {
         )}
       </div>
 
-      <h3 key={`${data.tournament.id}-name`} className="text-xl font-black leading-tight mb-2 animate-in fade-in duration-300">
+      <h3 key={`${data.tournament.id}-name`} className="font-display text-xl font-semibold leading-tight mb-2 animate-in fade-in duration-300">
         {data.name}
       </h3>
 
@@ -155,10 +155,10 @@ export const LatestResultsCard = () => {
           return (
             <div
               key={r.place}
-              className="flex items-center gap-3 py-2.5 -mx-2 px-2 rounded-lg"
-              style={isLeader ? { background: "rgba(201,162,75,0.08)" } : undefined}
+              className="flex items-center gap-3 py-2.5 -mx-2 px-2"
+              style={isLeader ? { background: "rgba(201,162,75,0.1)" } : undefined}
             >
-              <div className="w-5 text-center font-black tabular-nums text-sm shrink-0" style={{ color: isLeader ? "#c9a24b" : "#93a598" }}>
+              <div className="font-display w-5 text-center font-bold tabular-nums text-sm shrink-0" style={{ color: isLeader ? "#c9a24b" : "#93a598" }}>
                 {r.place}
               </div>
               <div
@@ -170,7 +170,7 @@ export const LatestResultsCard = () => {
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-sm truncate">{r.name}</div>
               </div>
-              <div className="text-lg font-black tabular-nums shrink-0">{r.value}</div>
+              <div className="font-display text-lg font-bold tabular-nums shrink-0">{r.value}</div>
             </div>
           );
         })}

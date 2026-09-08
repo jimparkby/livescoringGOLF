@@ -147,7 +147,7 @@ const TournamentPlayPage = () => {
               Тройник (необязательно)
             </div>
             <div className="space-y-2">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50">
+              <div className="flex items-center gap-2 px-3 py-2 border border-border">
                 <Avatar name={profile.firstName || "Me"} tone="orange" photoUrl={profile.photoUrl} size="sm" />
                 <div className="text-sm font-medium truncate">
                   {`${profile.firstName} ${profile.lastName}`.trim() || "Я"}
@@ -155,7 +155,7 @@ const TournamentPlayPage = () => {
                 <div className="ml-auto text-xs text-muted-foreground">HCP {profile.hcp}</div>
               </div>
               {joinPlayers.map((p) => (
-                <div key={p.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50">
+                <div key={p.id} className="flex items-center gap-2 px-3 py-2 border border-border">
                   <Avatar name={p.name} tone="muted" photoUrl={p.photoUrl} size="sm" />
                   <div className="text-sm font-medium truncate">{p.name}</div>
                   <div className="ml-auto text-xs text-muted-foreground">HCP {p.hcp}</div>
@@ -181,7 +181,7 @@ const TournamentPlayPage = () => {
           <Button
             onClick={handleStart}
             size="lg"
-            className="w-full h-14 text-base font-semibold bg-action hover:bg-action/90 text-action-foreground rounded-xl shadow-glow"
+            className="w-full h-14 text-base font-semibold bg-action hover:bg-action/90 text-action-foreground rounded-none shadow-glow"
           >
             <Flag className="h-5 w-5 mr-2" strokeWidth={2.5} /> Начать · {course.name}
           </Button>
@@ -205,7 +205,7 @@ const TournamentPlayPage = () => {
         <ChevronLeft className="h-5 w-5" strokeWidth={2.5} /> Tournaments
       </button>
 
-      <Card className="overflow-hidden shadow-elevated">
+      <Card className="overflow-hidden shadow-none border border-border">
         <div className="p-5 pb-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
@@ -227,9 +227,9 @@ const TournamentPlayPage = () => {
             )}
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
-            <span className="px-2.5 py-1 rounded-full bg-muted text-xs font-semibold">{fmt.emoji} {fmt.name}</span>
+            <span className="gm-eyebrow px-2 py-1 border border-border">{fmt.emoji} {fmt.name}</span>
           </div>
-          <div className="mt-4 p-3 rounded-xl bg-muted/50">
+          <div className="mt-4 p-3 border border-border">
             <div className="text-xs font-semibold text-foreground mb-1">{fmt.name} — rules</div>
             <div className="text-xs text-muted-foreground">{fmt.description}</div>
             <div className="text-xs text-action mt-1 font-medium">💡 {fmt.tip}</div>
@@ -237,10 +237,12 @@ const TournamentPlayPage = () => {
         </div>
         {myGroup?.registered && (
           <div className="px-5 pb-4">
-            <div className="p-3 rounded-xl bg-action/10 border border-action/20 text-xs font-semibold text-action">
-              {myGroup.roundId
-                ? `Группа сформирована${myGroup.flightLabel ? ` · ${myGroup.flightLabel}` : ""} — можно начинать`
-                : REG_STATUS_LABEL[myGroup.status ?? "pending_review"]}
+            <div className="p-3 border" style={{ background: "var(--accent-tint)", borderColor: "rgba(21,54,31,0.28)", color: "#15361f" }}>
+              <span className="text-xs font-semibold">
+                {myGroup.roundId
+                  ? `Группа сформирована${myGroup.flightLabel ? ` · ${myGroup.flightLabel}` : ""} — можно начинать`
+                  : REG_STATUS_LABEL[myGroup.status ?? "pending_review"]}
+              </span>
             </div>
           </div>
         )}
@@ -248,7 +250,7 @@ const TournamentPlayPage = () => {
           <Button
             onClick={() => setStep("join")}
             size="lg"
-            className="w-full h-14 text-base font-semibold bg-action hover:bg-action/90 text-action-foreground rounded-xl shadow-glow"
+            className="w-full h-14 text-base font-semibold bg-action hover:bg-action/90 text-action-foreground rounded-none shadow-glow"
           >
             <Flag className="h-5 w-5 mr-2" strokeWidth={2.5} /> Start Live Scoring
           </Button>
@@ -269,14 +271,17 @@ const scoreLabel = (score: number, par: number) => {
 };
 const scoreLabelColor = (score: number, par: number) => {
   const d = score - par;
-  if (d <= -2) return "text-yellow-400";
-  if (d === -1) return "text-action";
-  if (d === 0) return "text-primary-foreground";
-  if (d === 1) return "text-orange-400";
-  return "text-red-400";
+  if (d <= -2) return "var(--score-eagle)";
+  if (d === -1) return "var(--score-birdie)";
+  if (d === 0) return "var(--score-par)";
+  if (d === 1) return "var(--score-bogey)";
+  return "var(--score-double)";
 };
+// On the solid forest-green score badges, label text needs to read against a
+// dark fill — only Eagle gets its own (gold) highlight, everything else is cream.
+const scoreLabelColorOnDark = (score: number, par: number) => (score - par <= -2 ? "#c9a24b" : "#f3ede1");
 const parSign = (v: number) => (v === 0 ? "E" : v > 0 ? `+${v}` : `${v}`);
-const parColor = (v: number) => (v < 0 ? "#22c55e" : v === 0 ? "rgba(255,255,255,0.9)" : "#f87171");
+const parColor = (v: number) => (v < 0 ? "var(--score-birdie)" : v === 0 ? "var(--score-par)" : "var(--score-double)");
 
 /* ── Round player ── */
 const TournamentRoundPlayer = ({
@@ -320,7 +325,7 @@ const TournamentRoundPlayer = ({
       return a + (s.score - (h?.par ?? 4));
     }, 0);
     const vpText = cVsPar === 0 ? "E" : cVsPar > 0 ? `+${cVsPar}` : `${cVsPar}`;
-    const vpColor = cVsPar < 0 ? "#22c55e" : cVsPar === 0 ? "rgba(255,255,255,0.8)" : "#f87171";
+    const vpColor = cVsPar < 0 ? "var(--score-birdie)" : cVsPar === 0 ? "var(--score-par)" : "var(--score-double)";
 
     const handlePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -333,38 +338,38 @@ const TournamentRoundPlayer = ({
     };
 
     return (
-      <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#0a0a0a", paddingTop: "max(env(safe-area-inset-top), 32px)", paddingBottom: "max(env(safe-area-inset-bottom), 28px)" }}>
+      <div className="fixed inset-0 z-50 flex flex-col bg-background" style={{ paddingTop: "max(env(safe-area-inset-top), 32px)", paddingBottom: "max(env(safe-area-inset-bottom), 28px)" }}>
         <div className="flex-1 flex flex-col items-center justify-center px-5 gap-6 overflow-y-auto">
           <div className="text-center">
-            <div className="h-16 w-16 rounded-full mx-auto mb-4 grid place-items-center" style={{ background: "rgba(34,197,94,0.15)", border: "2px solid #22c55e" }}>
+            <div className="h-16 w-16 rounded-full mx-auto mb-4 grid place-items-center" style={{ background: "var(--accent-tint)", border: "2px solid hsl(var(--action))" }}>
               <svg width="28" height="22" viewBox="0 0 28 22" fill="none">
-                <path d="M2 11L10 19L26 3" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M2 11L10 19L26 3" stroke="hsl(var(--action))" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <div className="text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: "rgba(255,255,255,0.4)" }}>Round Complete</div>
-            <div className="text-white font-black text-5xl tabular-nums leading-none mt-2">{cTotal}</div>
+            <div className="gm-eyebrow" style={{ color: "var(--text-muted)" }}>Round Complete</div>
+            <div className="font-display text-foreground font-bold text-5xl tabular-nums leading-none mt-2">{cTotal}</div>
             <div className="text-xl font-bold mt-1" style={{ color: vpColor }}>{vpText}</div>
-            <div className="text-sm mt-2" style={{ color: "rgba(255,255,255,0.4)" }}>{tournamentName}</div>
+            <div className="text-sm mt-2" style={{ color: "var(--text-muted)" }}>{tournamentName}</div>
           </div>
           {completedRound.photoUrl ? (
             <div className="w-full">
-              <div className="w-full rounded-2xl overflow-hidden" style={{ aspectRatio: "4/3", maxHeight: 220 }}>
+              <div className="w-full overflow-hidden border border-border" style={{ aspectRatio: "4/3", maxHeight: 220 }}>
                 <img src={completedRound.photoUrl} alt="Round" className="w-full h-full object-cover" />
               </div>
-              <button onClick={() => photoRef.current?.click()} className="flex items-center justify-center gap-2 w-full mt-2 py-2 text-sm font-semibold" style={{ color: "#22c55e" }}>
+              <button onClick={() => photoRef.current?.click()} className="flex items-center justify-center gap-2 w-full mt-2 py-2 text-sm font-semibold text-action">
                 <Camera className="h-4 w-4" /> Replace Photo
               </button>
             </div>
           ) : (
-            <button onClick={() => photoRef.current?.click()} className="w-full rounded-2xl flex flex-col items-center justify-center gap-3 py-10" style={{ background: "rgba(255,255,255,0.04)", border: "2px dashed rgba(255,255,255,0.12)" }}>
-              <Camera className="h-8 w-8" style={{ color: "#22c55e" }} />
-              <div className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.6)" }}>Add Round Photo</div>
+            <button onClick={() => photoRef.current?.click()} className="w-full flex flex-col items-center justify-center gap-3 py-10 bg-muted/50 border-2 border-dashed border-border">
+              <Camera className="h-8 w-8 text-action" />
+              <div className="text-sm font-semibold text-muted-foreground">Add Round Photo</div>
             </button>
           )}
           <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
         </div>
         <div className="px-5 pt-4">
-          <button onClick={onExit} className="w-full h-14 rounded-2xl font-black text-base uppercase tracking-wider active:scale-[0.98] transition-transform" style={{ background: "#22c55e", color: "#000" }}>
+          <button onClick={onExit} className="w-full h-14 font-bold text-base uppercase tracking-wider active:scale-[0.98] transition-transform bg-action text-action-foreground">
             ГОТОВО
           </button>
         </div>
@@ -494,48 +499,48 @@ const TournamentRoundPlayer = ({
     }, 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#0a0a0a" }}>
+    <div className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* Header */}
       <div className="flex items-center justify-between px-5" style={{ paddingTop: 10, paddingBottom: 10 }}>
-        <button onClick={onExit} className="h-9 w-9 rounded-full grid place-items-center" style={{ background: "rgba(255,255,255,0.1)" }}>
-          <X className="h-4 w-4 text-white" strokeWidth={2.5} />
+        <button onClick={onExit} className="h-9 w-9 rounded-full grid place-items-center bg-muted">
+          <X className="h-4 w-4 text-foreground" strokeWidth={2.5} />
         </button>
 
         {view === "scoring" ? (
           <div className="flex items-center gap-3">
             <button onClick={() => setHoleIdx(Math.max(0, holeIdx - 1))} disabled={holeIdx === 0} className="h-9 w-9 grid place-items-center disabled:opacity-20">
-              <ChevronLeft className="h-6 w-6 text-white" strokeWidth={2.5} />
+              <ChevronLeft className="h-6 w-6 text-foreground" strokeWidth={2.5} />
             </button>
-            <span className="text-white font-bold text-base tracking-wider min-w-[90px] text-center">
+            <span className="text-foreground font-bold text-base tracking-wider min-w-[90px] text-center">
               Лунка {currentHole.number}
             </span>
             <button onClick={() => setHoleIdx(Math.min(totalHoles - 1, holeIdx + 1))} disabled={holeIdx === totalHoles - 1} className="h-9 w-9 grid place-items-center disabled:opacity-20">
-              <ChevronRight className="h-6 w-6 text-white" strokeWidth={2.5} />
+              <ChevronRight className="h-6 w-6 text-foreground" strokeWidth={2.5} />
             </button>
           </div>
         ) : (
-          <span className="text-white font-bold text-base tracking-wider">Leaderboard</span>
+          <span className="text-foreground font-bold text-base tracking-wider">Leaderboard</span>
         )}
 
-        <button onClick={handleFinish} className="h-9 px-4 rounded-full font-bold text-xs tracking-wider" style={{ background: "rgba(255,255,255,0.1)", color: "#4ade80" }}>
+        <button onClick={handleFinish} className="h-9 px-4 font-bold text-xs tracking-wider border" style={{ borderColor: "#15361f", color: "#15361f" }}>
           ФИНИШ
         </button>
       </div>
 
       {/* View toggle */}
       <div className="px-5 pb-3">
-        <div className="flex rounded-full p-1 gap-1" style={{ background: "rgba(255,255,255,0.07)" }}>
+        <div className="flex border-b border-border">
           <button
             onClick={() => setView("scoring")}
-            className="flex-1 h-8 rounded-full text-xs font-bold tracking-wider transition-all"
-            style={view === "scoring" ? { background: "#22c55e", color: "#000" } : { color: "rgba(255,255,255,0.5)" }}
+            className="flex-1 h-9 text-xs font-bold tracking-wider transition-all"
+            style={{ color: view === "scoring" ? "#15361f" : "#8a7f68", borderBottom: view === "scoring" ? "2px solid #15361f" : "2px solid transparent", marginBottom: -1 }}
           >
             СЧЁТ
           </button>
           <button
             onClick={() => setView("leaderboard")}
-            className="flex-1 h-8 rounded-full text-xs font-bold tracking-wider transition-all flex items-center justify-center gap-1"
-            style={view === "leaderboard" ? { background: "#22c55e", color: "#000" } : { color: "rgba(255,255,255,0.5)" }}
+            className="flex-1 h-9 text-xs font-bold tracking-wider transition-all flex items-center justify-center gap-1.5"
+            style={{ color: view === "leaderboard" ? "#15361f" : "#8a7f68", borderBottom: view === "leaderboard" ? "2px solid #15361f" : "2px solid transparent", marginBottom: -1 }}
           >
             <Trophy className="h-3 w-3" /> ТАБЛИЦА
           </button>
@@ -548,34 +553,28 @@ const TournamentRoundPlayer = ({
       ) : (
         <div className="flex-1 flex flex-col justify-center px-5 pb-4 gap-4 overflow-y-auto">
           {/* Widget card */}
-          <div className="rounded-3xl overflow-hidden" style={{ background: "#1a1a1a" }}>
-            <div className="flex items-center gap-2 px-5 pt-5 pb-3">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L4 6v6c0 5.5 3.5 10.7 8 12 4.5-1.3 8-6.5 8-12V6L12 2z" stroke="white" strokeWidth="1.8" fill="none" strokeLinejoin="round" />
-              </svg>
-              <span className="text-white/70 font-semibold text-sm tracking-[0.15em] truncate">{tournamentName}</span>
-            </div>
-            <div className="flex items-baseline gap-6 px-5 pb-4">
-              <span className="text-white font-black text-4xl tracking-tight">PAR {currentHole.par}</span>
-              <span className="text-white/50 font-bold text-2xl tracking-tight">HCP {currentHole.hcp}</span>
+          <div className="overflow-hidden bg-card border border-border">
+            <div className="gm-eyebrow px-5 pt-4" style={{ color: "#8a7f68" }}>{tournamentName}</div>
+            <div className="flex items-baseline gap-4 px-5 pt-1 pb-4">
+              <span className="font-display text-foreground font-bold text-4xl tracking-tight">PAR {currentHole.par}</span>
+              <span className="font-display text-muted-foreground font-semibold text-xl tracking-tight">HCP {currentHole.hcp}</span>
             </div>
             <div className="px-5 pb-4">
               <button
                 onClick={openNextPlayer}
-                className="w-full h-12 rounded-full font-black text-sm tracking-[0.15em] active:scale-[0.97] transition-transform"
-                style={{ background: "#22c55e", color: "#000" }}
+                className="w-full h-12 font-black text-sm tracking-[0.15em] active:scale-[0.97] transition-transform bg-action text-action-foreground"
               >
                 ВВЕСТИ СЧЁТ
               </button>
             </div>
-            <div className="flex items-center justify-between px-5 py-3" style={{ background: "rgba(255,255,255,0.05)", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+            <div className="flex items-center justify-between px-5 py-3 bg-muted/50 border-t border-border">
               <div>
-                <div className="text-white/80 text-sm font-semibold">{course.club}</div>
-                <div className="text-white/40 text-xs">{course.name} · {currentHole.meters[mePlayer?.tee ?? "yellow"]} m</div>
+                <div className="text-foreground/80 text-sm font-semibold">{course.club}</div>
+                <div className="text-muted-foreground text-xs">{course.name} · {currentHole.meters[mePlayer?.tee ?? "yellow"]} m</div>
               </div>
               <div className="flex items-center gap-2">
-                <Flag className="h-5 w-5" style={{ color: "#22c55e" }} />
-                <span className="text-white font-black text-2xl tabular-nums">{currentHole.number}</span>
+                <Flag className="h-5 w-5" style={{ color: "#15361f" }} />
+                <span className="font-display text-foreground font-bold text-2xl tabular-nums">{currentHole.number}</span>
               </div>
             </div>
           </div>
@@ -594,34 +593,30 @@ const TournamentRoundPlayer = ({
                 <button
                   key={captain.id}
                   onClick={() => openSheet(captain, members)}
-                  className="w-full rounded-2xl p-4 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform"
-                  style={{ background: "#1a1a1a" }}
+                  className="w-full p-4 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform bg-card border border-border"
                 >
                   <div className="text-left min-w-0">
-                    <div className="text-white font-bold text-sm">{label}</div>
-                    <div className="text-white/50 text-xs mt-0.5">
+                    <div className="text-foreground font-bold text-sm">{label}</div>
+                    <div className="text-muted-foreground text-xs mt-0.5">
                       {members.map((p) => p.name.split(" ")[0]).join(" & ")}
                     </div>
-                    <div className="text-white/40 text-xs mt-0.5" style={{ color: parColor(tp) }}>{parSign(tp)}</div>
+                    <div className="font-display text-xs font-bold mt-0.5" style={{ color: parColor(tp) }}>{parSign(tp)}</div>
                   </div>
-                  <div className="min-w-[72px] h-16 rounded-xl flex flex-col items-center justify-center gap-0.5"
-                    style={has
-                      ? { background: "rgba(34,197,94,0.15)", border: "2px solid #22c55e" }
-                      : { background: "rgba(255,255,255,0.07)", border: "2px solid rgba(255,255,255,0.1)" }
-                    }
+                  <div className="min-w-[72px] h-16 flex flex-col items-center justify-center gap-0.5"
+                    style={has ? { background: "#15361f" } : { background: "#e9e1cf" }}
                   >
                     {has ? (
                       <>
-                        <div className="text-white font-black text-2xl tabular-nums leading-none">{has.score}</div>
-                        <div className={cn("text-[10px] font-bold", scoreLabelColor(has.score, currentHole.par))}>
+                        <div className="font-display font-bold text-2xl tabular-nums leading-none" style={{ color: "#f3ede1" }}>{has.score}</div>
+                        <div className="text-[10px] font-bold" style={{ color: scoreLabelColorOnDark(has.score, currentHole.par) }}>
                           {scoreLabel(has.score, currentHole.par)}
                         </div>
                         {madeByPlayer && (
-                          <div className="text-[9px] text-white/40 leading-none">{madeByPlayer.name.split(" ")[0]}</div>
+                          <div className="text-[9px] leading-none" style={{ color: "rgba(243,237,225,0.7)" }}>{madeByPlayer.name.split(" ")[0]}</div>
                         )}
                       </>
                     ) : (
-                      <div className="text-white/25 text-2xl font-light">—</div>
+                      <div className="text-2xl font-light" style={{ color: "#8a7f68" }}>—</div>
                     )}
                   </div>
                 </button>
@@ -638,48 +633,44 @@ const TournamentRoundPlayer = ({
                 <button
                   key={p.id}
                   onClick={() => openSheet(p)}
-                  className="w-full rounded-2xl p-4 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform"
-                  style={{ background: "#1a1a1a" }}
+                  className="w-full p-4 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform bg-card border border-border"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <Avatar name={p.name} tone={p.isMe ? "orange" : "muted"} photoUrl={p.photoUrl} />
                     <div className="text-left min-w-0">
-                      <div className="text-white font-semibold truncate flex items-center gap-1.5">
+                      <div className="text-foreground font-semibold truncate flex items-center gap-1.5">
                         {p.name.split(" ")[0]}
                         {isFourball && isBestForTeam && has && (
-                          <span className="text-[10px] font-bold px-1 rounded" style={{ background: "rgba(34,197,94,0.2)", color: "#22c55e" }}>★ best</span>
+                          <span className="text-[10px] font-bold px-1 bg-action/20 text-action">★ best</span>
                         )}
                       </div>
-                      <div className="text-white/50 text-sm">
+                      <div className="text-muted-foreground text-sm">
                         {isStableford ? `${pts} pts` : parSign(tp)}
                         {isFourball && (
-                          <span className="text-white/30 text-xs ml-1">
+                          <span className="text-muted-foreground/70 text-xs ml-1">
                             {teamAIds.includes(p.id) ? "Team A" : "Team B"}
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
-                  <div className="min-w-[60px] h-14 rounded-xl flex flex-col items-center justify-center"
-                    style={has
-                      ? { background: "rgba(34,197,94,0.15)", border: "2px solid #22c55e" }
-                      : { background: "rgba(255,255,255,0.07)", border: "2px solid rgba(255,255,255,0.1)" }
-                    }
+                  <div className="min-w-[60px] h-14 flex flex-col items-center justify-center"
+                    style={has ? { background: "#15361f" } : { background: "#e9e1cf" }}
                   >
                     {has ? (
                       <>
-                        <div className="text-white font-black text-2xl tabular-nums leading-none">{has.score}</div>
-                        <div className={cn("text-[10px] font-bold mt-0.5", scoreLabelColor(has.score, currentHole.par))}>
+                        <div className="font-display font-bold text-2xl tabular-nums leading-none" style={{ color: "#f3ede1" }}>{has.score}</div>
+                        <div className="text-[10px] font-bold mt-0.5" style={{ color: scoreLabelColorOnDark(has.score, currentHole.par) }}>
                           {scoreLabel(has.score, currentHole.par)}
                         </div>
                         {isStableford && (
-                          <div className="text-[9px] font-bold" style={{ color: "#22c55e" }}>
+                          <div className="text-[9px] font-bold" style={{ color: "#c9a24b" }}>
                             +{stablefordPoints(has.score, currentHole.par)}pts
                           </div>
                         )}
                       </>
                     ) : (
-                      <div className="text-white/25 text-2xl font-light">—</div>
+                      <div className="text-muted-foreground text-2xl font-light">—</div>
                     )}
                   </div>
                 </button>
@@ -702,7 +693,7 @@ const TournamentRoundPlayer = ({
                   style={{
                     width: i === holeIdx ? 20 : 8,
                     height: 8,
-                    background: i === holeIdx ? "#22c55e" : scored ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.12)",
+                    background: i === holeIdx ? "hsl(var(--action))" : scored ? "hsl(var(--muted-foreground) / 0.5)" : "hsl(var(--border))",
                   }}
                 />
               );
@@ -714,40 +705,40 @@ const TournamentRoundPlayer = ({
       {/* Score Sheet */}
       {sheetPlayer && (
         <div className="fixed inset-0 z-50 flex items-end animate-in fade-in duration-150">
-          <button className="absolute inset-0 bg-black/70" onClick={() => { setSheetPlayer(null); setSheetTeamMembers([]); }} />
-          <div className="relative w-full rounded-t-3xl animate-in slide-in-from-bottom duration-250" style={{ background: "#1a1a1a", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}>
-            <div className="mx-auto w-10 h-1 rounded-full mt-3 mb-1" style={{ background: "rgba(255,255,255,0.15)" }} />
-            <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+          <button className="absolute inset-0 bg-black/40" onClick={() => { setSheetPlayer(null); setSheetTeamMembers([]); }} />
+          <div className="relative w-full animate-in slide-in-from-bottom duration-250 bg-card border-t" style={{ borderColor: "#c9a24b", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}>
+            <div className="mx-auto w-10 h-1 mt-3 mb-1 bg-border" />
+            <div className="flex items-center justify-between px-5 py-3 border-b border-border">
               <div className="flex items-center gap-3">
                 <Avatar name={sheetPlayer.name} tone={sheetPlayer.isMe ? "orange" : "muted"} photoUrl={sheetPlayer.photoUrl} />
                 <div>
-                  <div className="text-white font-bold">
+                  <div className="text-foreground font-bold">
                     {isScramble
                       ? sheetTeamMembers.map((p) => p.name.split(" ")[0]).join(" & ")
                       : sheetPlayer.name.split(" ")[0]
                     }
                   </div>
-                  <div className="text-white/40 text-xs">Лунка {currentHole.number} · Par {currentHole.par}</div>
+                  <div className="text-muted-foreground text-xs">Лунка {currentHole.number} · Par {currentHole.par}</div>
                 </div>
               </div>
-              <button onClick={() => { setSheetPlayer(null); setSheetTeamMembers([]); }} className="h-9 w-9 rounded-full grid place-items-center" style={{ background: "rgba(255,255,255,0.1)" }}>
-                <X className="h-4 w-4 text-white" />
+              <button onClick={() => { setSheetPlayer(null); setSheetTeamMembers([]); }} className="h-9 w-9 grid place-items-center border border-border">
+                <X className="h-4 w-4 text-foreground" />
               </button>
             </div>
 
             <div className="px-5 pt-5 pb-2">
               {/* Score counter */}
-              <div className="rounded-2xl flex flex-col items-center mb-4" style={{ background: "rgba(255,255,255,0.06)" }}>
-                <div className="text-[10px] font-bold uppercase tracking-widest pt-3 pb-1" style={{ color: "rgba(255,255,255,0.4)" }}>СЧЁТ</div>
-                <button onClick={() => setHole((h) => ({ ...h, score: h.score + 1 }))} className="w-full h-14 grid place-items-center rounded-xl transition-colors active:bg-white/10" style={{ color: "#22c55e" }}>
+              <div className="flex flex-col items-center mb-4 border border-border">
+                <div className="gm-eyebrow pt-3 pb-1 text-muted-foreground">СЧЁТ</div>
+                <button onClick={() => setHole((h) => ({ ...h, score: h.score + 1 }))} className="w-full h-14 grid place-items-center transition-colors active:bg-black/5" style={{ color: "#15361f" }}>
                   <Plus className="h-7 w-7" strokeWidth={2.5} />
                 </button>
-                <div className="text-4xl font-black tabular-nums text-white py-0.5">{hole.score}</div>
-                <div className={cn("text-[11px] font-bold mb-0.5", scoreLabelColor(hole.score, currentHole.par))}>
+                <div className="font-display text-4xl font-bold tabular-nums text-foreground py-0.5">{hole.score}</div>
+                <div className="text-[11px] font-bold mb-0.5" style={{ color: scoreLabelColor(hole.score, currentHole.par) }}>
                   {scoreLabel(hole.score, currentHole.par)}
-                  {isStableford && <span className="text-white/40 ml-1">· {stablefordPoints(hole.score, currentHole.par)} pts</span>}
+                  {isStableford && <span className="text-muted-foreground ml-1">· {stablefordPoints(hole.score, currentHole.par)} pts</span>}
                 </div>
-                <button onClick={() => setHole((h) => ({ ...h, score: Math.max(1, h.score - 1) }))} className="w-full h-14 grid place-items-center rounded-xl transition-colors active:bg-white/10" style={{ color: "#22c55e" }}>
+                <button onClick={() => setHole((h) => ({ ...h, score: Math.max(1, h.score - 1) }))} className="w-full h-14 grid place-items-center transition-colors active:bg-black/5" style={{ color: "#15361f" }}>
                   <span className="text-3xl leading-none font-bold">−</span>
                 </button>
               </div>
@@ -755,16 +746,16 @@ const TournamentRoundPlayer = ({
               {/* Scramble: "Чей мяч?" selector */}
               {isScramble && sheetTeamMembers.length > 0 && (
                 <div className="mb-4">
-                  <div className="text-[10px] uppercase tracking-widest font-bold mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>Чей мяч?</div>
+                  <div className="gm-eyebrow mb-2 text-muted-foreground">Чей мяч?</div>
                   <div className="flex gap-2">
                     {sheetTeamMembers.map((p) => (
                       <button
                         key={p.id}
                         onClick={() => setHole((h) => ({ ...h, madeBy: p.id }))}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all"
+                        className="flex-1 flex items-center justify-center gap-2 py-3 font-semibold text-sm transition-all border-2"
                         style={hole.madeBy === p.id
-                          ? { background: "rgba(34,197,94,0.2)", border: "2px solid #22c55e", color: "#22c55e" }
-                          : { background: "rgba(255,255,255,0.05)", border: "2px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)" }
+                          ? { background: "#15361f", borderColor: "#15361f", color: "#f3ede1" }
+                          : { background: "transparent", borderColor: "hsl(var(--border))", color: "hsl(var(--muted-foreground))" }
                         }
                       >
                         {p.photoUrl ? (
@@ -781,8 +772,7 @@ const TournamentRoundPlayer = ({
 
               <button
                 onClick={submit}
-                className="w-full h-14 rounded-2xl font-black text-base uppercase tracking-wider active:scale-[0.98] transition-transform"
-                style={{ background: "#22c55e", color: "#000" }}
+                className="w-full h-14 font-black text-base uppercase tracking-wider active:scale-[0.98] transition-transform bg-action text-action-foreground"
               >
                 СОХРАНИТЬ
               </button>

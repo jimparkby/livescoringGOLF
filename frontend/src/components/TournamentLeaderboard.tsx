@@ -7,7 +7,7 @@ import { useGolf, type Player } from "@/store/golfStore";
 import { cn } from "@/lib/utils";
 
 const parSign = (v: number) => (v === 0 ? "E" : v > 0 ? `+${v}` : `${v}`);
-const parColor = (v: number) => (v < 0 ? "#22c55e" : v === 0 ? "rgba(255,255,255,0.9)" : "#f87171");
+const parColor = (v: number) => (v < 0 ? "var(--score-birdie)" : v === 0 ? "#1b1b16" : "var(--score-double)");
 
 /* ── Leaderboard ── */
 export const TournamentLeaderboard = ({
@@ -76,18 +76,18 @@ export const TournamentLeaderboard = ({
     const statusPlayer = diff > 0 ? p1.name.split(" ")[0] : diff < 0 ? p2.name.split(" ")[0] : null;
     return (
       <div className="flex-1 overflow-y-auto px-5 pb-4 pt-2 space-y-3">
-        <div className="rounded-2xl p-4 text-center" style={{ background: "#1a1a1a" }}>
-          <div className="text-white/40 text-xs uppercase tracking-wider mb-1">Match status (net)</div>
-          <div className="text-white font-black text-3xl">{statusPlayer ? `${statusPlayer} ${statusText}` : "AS"}</div>
-          <div className="text-white/40 text-xs mt-1">{p1Wins + p2Wins} holes played</div>
+        <div className="p-4 text-center bg-card border border-border">
+          <div className="gm-eyebrow mb-1" style={{ color: "#8a7f68" }}>Match status (net)</div>
+          <div className="font-display font-bold text-3xl" style={{ color: "#1b1b16" }}>{statusPlayer ? `${statusPlayer} ${statusText}` : "AS"}</div>
+          <div className="text-xs mt-1 text-muted-foreground">{p1Wins + p2Wins} holes played</div>
           {strokeDiff > 0 && receiver && (
-            <div className="text-white/30 text-[11px] mt-1">
+            <div className="text-[11px] mt-1 text-muted-foreground">
               {(receiver === p1.id ? p1 : p2).name.split(" ")[0]} receives {strokeDiff} strokes (CH {ch1} vs {ch2})
             </div>
           )}
         </div>
-        <div className="rounded-2xl overflow-hidden" style={{ background: "#1a1a1a" }}>
-          <div className="grid px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider" style={{ gridTemplateColumns: "1fr auto auto 1fr", color: "rgba(255,255,255,0.4)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <div className="overflow-hidden bg-card border border-border">
+          <div className="grid px-4 py-2.5 gm-eyebrow" style={{ gridTemplateColumns: "1fr auto auto 1fr", color: "#8a7f68", borderBottom: "1px solid hsl(var(--border))" }}>
             <div>{p1.name.split(" ")[0]}</div>
             <div className="w-8 text-center">#</div>
             <div className="w-8 text-center">Par</div>
@@ -100,14 +100,14 @@ export const TournamentLeaderboard = ({
             const dot1 = strokesFor(p1.id, h) > 0;
             const dot2 = strokesFor(p2.id, h) > 0;
             return (
-              <div key={h.number} className="grid items-center px-4 py-2 border-t border-white/5" style={{ gridTemplateColumns: "1fr auto auto 1fr" }}>
-                <div className={cn("font-black text-lg tabular-nums flex items-center gap-1", r === "p1" ? "text-action" : "text-white/50")}>
-                  {s1?.score ?? "—"}{dot1 && <span className="text-[10px] text-white/30">•</span>}
+              <div key={h.number} className="grid items-center px-4 py-2 border-t border-border" style={{ gridTemplateColumns: "1fr auto auto 1fr" }}>
+                <div className={cn("font-display font-bold text-lg tabular-nums flex items-center gap-1", r === "p1" ? "text-action" : "text-muted-foreground")}>
+                  {s1?.score ?? "—"}{dot1 && <span className="text-[10px] text-muted-foreground">•</span>}
                 </div>
-                <div className="w-8 text-center text-white/40 text-xs font-bold">{h.number}</div>
-                <div className="w-8 text-center text-white/25 text-xs">{h.par}</div>
-                <div className={cn("font-black text-lg tabular-nums text-right flex items-center justify-end gap-1", r === "p2" ? "text-action" : "text-white/50")}>
-                  {dot2 && <span className="text-[10px] text-white/30">•</span>}{s2?.score ?? "—"}
+                <div className="w-8 text-center text-xs font-bold text-muted-foreground">{h.number}</div>
+                <div className="w-8 text-center text-xs text-muted-foreground/70">{h.par}</div>
+                <div className={cn("font-display font-bold text-lg tabular-nums text-right flex items-center justify-end gap-1", r === "p2" ? "text-action" : "text-muted-foreground")}>
+                  {dot2 && <span className="text-[10px] text-muted-foreground">•</span>}{s2?.score ?? "—"}
                 </div>
               </div>
             );
@@ -184,28 +184,28 @@ export const TournamentLeaderboard = ({
 
     return (
       <div className="flex-1 overflow-y-auto px-5 pb-4 pt-2">
-        <div className="rounded-2xl overflow-hidden" style={{ background: "#1a1a1a" }}>
-          <div className="grid px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider" style={{ gridTemplateColumns: "2rem 1fr auto auto", color: "rgba(255,255,255,0.4)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <div className="overflow-hidden bg-card border border-border">
+          <div className="grid px-4 py-2.5 gm-eyebrow" style={{ gridTemplateColumns: "2rem 1fr auto auto", color: "#8a7f68", borderBottom: "1px solid hsl(var(--border))" }}>
             <div>#</div><div>Команда</div>
-            <div className="w-12 text-center">{isStableford ? "Net Pts" : "Net"}</div>
+            <div className="w-14 text-center">{isStableford ? "Net Pts" : "Net"}</div>
             <div className="w-12 text-center">Score</div>
           </div>
           {sorted.map((e, i) => (
-            <div key={e.name} className="grid items-center px-4 py-3 border-t border-white/5" style={{ gridTemplateColumns: "2rem 1fr auto auto" }}>
-              <div className="text-sm font-black" style={{ color: i === 0 ? "#22c55e" : "rgba(255,255,255,0.3)" }}>
-                {["🥇", "🥈"][i] ?? i + 1}
+            <div key={e.name} className="grid items-center px-4 py-3 border-t border-border" style={{ gridTemplateColumns: "2rem 1fr auto auto" }}>
+              <div className="font-display text-sm font-bold" style={{ color: i === 0 ? "#c9a24b" : "#8a7f68" }}>
+                {i + 1}
               </div>
               <div>
-                <div className="text-white font-bold text-sm">{e.name}</div>
-                <div className="text-white/40 text-xs">
+                <div className="font-semibold text-sm" style={{ color: "#1b1b16" }}>{e.name}</div>
+                <div className="text-xs text-muted-foreground">
                   {activeRound.players.filter((p) => e.playerIds.includes(p.id)).map((p) => p.name.split(" ")[0]).join(" & ")}
                   {" · "}gross {isStableford ? e.points : parSign(e.vsPar)}
                 </div>
               </div>
-              <div className="w-12 text-center font-black text-base tabular-nums" style={{ color: isStableford ? "#fff" : parColor(e.netVsPar) }}>
+              <div className="font-display w-14 text-center font-bold text-base tabular-nums" style={{ color: isStableford ? "#1b1b16" : parColor(e.netVsPar) }}>
                 {isStableford ? e.netPoints : parSign(e.netVsPar)}
               </div>
-              <div className="w-12 text-center text-white/60 font-bold text-sm tabular-nums">{e.total || "—"}</div>
+              <div className="font-display w-12 text-center text-muted-foreground font-semibold text-sm tabular-nums">{e.total || "—"}</div>
             </div>
           ))}
         </div>
@@ -221,39 +221,38 @@ export const TournamentLeaderboard = ({
   const sorted = [...entries].sort((a, b) =>
     isStableford ? b.netPoints - a.netPoints : a.netVsPar - b.netVsPar || a.total - b.total
   );
-  const medals = ["🥇", "🥈", "🥉"];
 
   return (
     <div className="flex-1 overflow-y-auto px-5 pb-4 pt-2">
-      <div className="rounded-2xl overflow-hidden" style={{ background: "#1a1a1a" }}>
-        <div className="grid px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider" style={{ gridTemplateColumns: "2rem 1fr auto auto", color: "rgba(255,255,255,0.4)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+      <div className="overflow-hidden bg-card border border-border">
+        <div className="grid px-4 py-2.5 gm-eyebrow" style={{ gridTemplateColumns: "2rem 1fr auto auto", color: "#8a7f68", borderBottom: "1px solid hsl(var(--border))" }}>
           <div>#</div><div>Игрок</div>
-          <div className="w-12 text-center">{isStableford ? "Net Pts" : "Net"}</div>
+          <div className="w-14 text-center">{isStableford ? "Net Pts" : "Net"}</div>
           <div className="w-12 text-center">Score</div>
         </div>
         {sorted.map((e, i) => (
-          <div key={e.player.id} className="grid items-center px-4 py-3 border-t border-white/5" style={{ gridTemplateColumns: "2rem 1fr auto auto" }}>
-            <div className="text-sm font-black" style={{ color: i < 3 ? "#22c55e" : "rgba(255,255,255,0.3)" }}>
-              {medals[i] ?? i + 1}
+          <div key={e.player.id} className="grid items-center px-4 py-3 border-t border-border" style={{ gridTemplateColumns: "2rem 1fr auto auto" }}>
+            <div className="font-display text-sm font-bold" style={{ color: i === 0 ? "#c9a24b" : "#8a7f68" }}>
+              {i + 1}
             </div>
             <div className="flex items-center gap-2 min-w-0">
               <Avatar name={e.player.name} size="sm" tone={e.player.isMe ? "orange" : "muted"} photoUrl={e.player.photoUrl} />
               <div className="min-w-0">
-                <div className="text-white font-semibold text-sm truncate">{e.player.name.split(" ")[0]} <span className="text-white/40 font-normal">[{e.player.hcp}]</span></div>
-                <div className="text-white/40 text-xs">{e.holesPlayed} holes · gross {isStableford ? e.points : parSign(e.vsPar)}</div>
+                <div className="font-semibold text-sm truncate" style={{ color: "#1b1b16" }}>{e.player.name.split(" ")[0]} <span className="text-muted-foreground font-normal">[{e.player.hcp}]</span></div>
+                <div className="text-xs text-muted-foreground">{e.holesPlayed} holes · gross {isStableford ? e.points : parSign(e.vsPar)}</div>
               </div>
             </div>
-            <div className="w-12 text-center">
+            <div className="w-14 text-center">
               {isStableford
-                ? <span className="text-white font-black text-base tabular-nums">{e.netPoints}</span>
-                : <span className="font-black text-base tabular-nums" style={{ color: parColor(e.netVsPar) }}>{parSign(e.netVsPar)}</span>
+                ? <span className="font-display font-bold text-base tabular-nums" style={{ color: "#1b1b16" }}>{e.netPoints}</span>
+                : <span className="font-display font-bold text-base tabular-nums" style={{ color: parColor(e.netVsPar) }}>{parSign(e.netVsPar)}</span>
               }
             </div>
-            <div className="w-12 text-center text-white/60 font-bold text-sm tabular-nums">{e.total || "—"}</div>
+            <div className="font-display w-12 text-center text-muted-foreground font-semibold text-sm tabular-nums">{e.total || "—"}</div>
           </div>
         ))}
         {sorted.length === 0 && (
-          <div className="py-8 text-center text-white/30 text-sm">Enter scores to see leaderboard</div>
+          <div className="py-8 text-center text-muted-foreground text-sm">Enter scores to see leaderboard</div>
         )}
       </div>
     </div>

@@ -12,8 +12,7 @@ import { toast } from "sonner";
 import { HoleGridNav } from "@/components/HoleGridNav";
 import { LiveScoringLogo } from "@/components/LiveScoringLogo";
 
-const CUPRUM = "Cuprum, Arial, Helvetica, sans-serif";
-const INK = "#222430";
+const INK = "#1b1b16";
 
 const scoreLabel = (score: number, par: number) => {
   const d = score - par;
@@ -25,12 +24,15 @@ const scoreLabel = (score: number, par: number) => {
 };
 const scoreLabelColor = (score: number, par: number) => {
   const d = score - par;
-  if (d <= -2) return "#ca8a04";
-  if (d === -1) return "#21835b";
+  if (d <= -2) return "var(--score-eagle)";
+  if (d === -1) return "var(--score-birdie)";
   if (d === 0) return INK;
-  if (d === 1) return "#ea580c";
-  return "#d80027";
+  if (d === 1) return "var(--score-bogey)";
+  return "var(--score-double)";
 };
+// On the solid forest-green score badges, only Eagle gets its own (gold)
+// highlight — everything else needs to read as plain cream against the fill.
+const scoreLabelColorOnDark = (score: number, par: number) => (score - par <= -2 ? "#c9a24b" : "#f3ede1");
 
 const LiveScoringPage = () => {
   const { code } = useParams<{ code: string }>();
@@ -62,18 +64,18 @@ const LiveScoringPage = () => {
 
   if (notFound) {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center" style={{ background: "#f7f7f7", fontFamily: CUPRUM }}>
+      <div className="fixed inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center bg-background">
         <div className="text-4xl mb-2">⛳</div>
-        <div className="font-bold text-lg" style={{ color: INK }}>Ссылка недействительна</div>
-        <div className="text-sm" style={{ color: "#8a8a8a" }}>Раунд не найден или QR устарел</div>
+        <div className="font-display font-semibold text-lg" style={{ color: INK }}>Ссылка недействительна</div>
+        <div className="text-sm text-muted-foreground">Раунд не найден или QR устарел</div>
       </div>
     );
   }
 
   if (!round) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center" style={{ background: "#f7f7f7" }}>
-        <div className="h-8 w-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "#21835b", borderTopColor: "transparent" }} />
+      <div className="fixed inset-0 flex items-center justify-center bg-background">
+        <div className="h-8 w-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "#15361f", borderTopColor: "transparent" }} />
       </div>
     );
   }
@@ -86,7 +88,7 @@ const LiveScoringPage = () => {
 
   if (!course) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center px-6 text-center" style={{ background: "#f7f7f7", color: "#8a8a8a" }}>
+      <div className="fixed inset-0 flex items-center justify-center px-6 text-center bg-background text-muted-foreground">
         Поле не найдено
       </div>
     );
@@ -123,7 +125,7 @@ const LiveScoringPage = () => {
       return a + stablefordPoints(s.score, h?.par ?? 4);
     }, 0);
   const parSign = (v: number) => (v === 0 ? "E" : v > 0 ? `+${v}` : `${v}`);
-  const parColor = (v: number) => (v < 0 ? "#21835b" : v === 0 ? INK : "#d80027");
+  const parColor = (v: number) => (v < 0 ? "var(--score-birdie)" : v === 0 ? INK : "var(--score-double)");
 
   const openSheet = (p: Player, teamMembers: Player[] = []) => {
     const existing = round.scores[p.id]?.find((x) => x.hole === currentHole.number);
@@ -171,23 +173,23 @@ const LiveScoringPage = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#f7f7f7", fontFamily: CUPRUM }}>
+    <div className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* Header */}
       <div className="flex items-center justify-between px-5" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 14px)", paddingBottom: 10 }}>
         <LiveScoringLogo />
-        <button onClick={() => setShowAddPlayer(true)} className="h-9 w-9 rounded-full grid place-items-center border" style={{ borderColor: "#d9d9d9" }} title="Добавить игрока">
+        <button onClick={() => setShowAddPlayer(true)} className="h-9 w-9 grid place-items-center border border-border" title="Добавить игрока">
           <UserPlus className="h-4 w-4" style={{ color: INK }} strokeWidth={2.5} />
         </button>
       </div>
 
       {/* Tournament banner */}
-      <div className="px-5 py-3 text-center" style={{ background: "#e2e2e2" }}>
-        <div className="font-bold text-lg tracking-wide" style={{ color: INK }}>{fmt.emoji} {fmt.name}</div>
-        <div className="text-xs uppercase tracking-wide mt-0.5" style={{ color: "#8a8a8a" }}>{course.name} · {course.club}</div>
+      <div className="mx-5 px-4 py-3 border border-border">
+        <div className="gm-eyebrow" style={{ color: "#8a7f68" }}>{course.name} · {course.club}</div>
+        <div className="font-display font-semibold text-lg mt-0.5" style={{ color: INK }}>{fmt.emoji} {fmt.name}</div>
       </div>
 
       {round.completed && (
-        <div className="mx-5 mt-3 px-3 py-2 rounded-xl text-xs text-center font-bold" style={{ background: "#e8f3ee", color: "#21835b" }}>
+        <div className="mx-5 mt-3 px-3 py-2 text-xs text-center font-bold border" style={{ background: "var(--accent-tint)", borderColor: "rgba(21,54,31,0.3)", color: "#15361f" }}>
           Раунд завершён — счёт доступен только для просмотра
         </div>
       )}
@@ -222,31 +224,30 @@ const LiveScoringPage = () => {
                 <button
                   key={captain.id}
                   onClick={() => openSheet(captain, members)}
-                  className="w-full rounded-xl p-4 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform border"
-                  style={{ background: "#ffffff", borderColor: "#e5e5e5" }}
+                  className="w-full p-4 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform bg-card border border-border"
                 >
                   <div className="text-left min-w-0">
-                    <div className="font-bold text-sm" style={{ color: INK }}>{label}</div>
-                    <div className="text-xs mt-0.5" style={{ color: "#8a8a8a" }}>
+                    <div className="font-semibold text-sm" style={{ color: INK }}>{label}</div>
+                    <div className="text-xs mt-0.5 text-muted-foreground">
                       {members.map((p) => p.name.split(" ")[0]).join(" & ")}
                     </div>
-                    <div className="text-xs font-bold mt-0.5" style={{ color: parColor(tp) }}>{parSign(tp)}</div>
+                    <div className="font-display text-xs font-bold mt-0.5" style={{ color: parColor(tp) }}>{parSign(tp)}</div>
                   </div>
-                  <div className="min-w-[72px] h-16 rounded-lg flex flex-col items-center justify-center gap-0.5"
-                    style={has ? { background: "#21835b" } : { background: "#e5e5e5" }}
+                  <div className="min-w-[72px] h-16 flex flex-col items-center justify-center gap-0.5"
+                    style={has ? { background: "#15361f" } : { background: "#e9e1cf" }}
                   >
                     {has ? (
                       <>
-                        <div className="font-black text-2xl tabular-nums leading-none" style={{ color: "#f7f7f7" }}>{has.score}</div>
-                        <div className="text-[10px] font-bold" style={{ color: "#f7f7f7" }}>
+                        <div className="font-display font-bold text-2xl tabular-nums leading-none" style={{ color: "#f3ede1" }}>{has.score}</div>
+                        <div className="text-[10px] font-bold" style={{ color: scoreLabelColorOnDark(has.score, currentHole.par) }}>
                           {scoreLabel(has.score, currentHole.par)}
                         </div>
                         {madeByPlayer && (
-                          <div className="text-[9px] leading-none" style={{ color: "rgba(247,247,247,0.7)" }}>{madeByPlayer.name.split(" ")[0]}</div>
+                          <div className="text-[9px] leading-none" style={{ color: "rgba(243,237,225,0.7)" }}>{madeByPlayer.name.split(" ")[0]}</div>
                         )}
                       </>
                     ) : (
-                      <div className="text-2xl font-light" style={{ color: "#8a8a8a" }}>—</div>
+                      <div className="text-2xl font-light" style={{ color: "#8a7f68" }}>—</div>
                     )}
                   </div>
                 </button>
@@ -261,28 +262,27 @@ const LiveScoringPage = () => {
                 <button
                   key={p.id}
                   onClick={() => openSheet(p)}
-                  className="w-full rounded-xl p-4 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform border"
-                  style={{ background: "#ffffff", borderColor: "#e5e5e5" }}
+                  className="w-full p-4 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform bg-card border border-border"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <Avatar name={p.name} tone={p.isMe ? "orange" : "muted"} photoUrl={p.photoUrl} />
                     <div className="text-left min-w-0">
                       <div className="font-semibold truncate" style={{ color: INK }}>{p.name.split(" ")[0]}</div>
-                      <div className="text-sm" style={{ color: "#8a8a8a" }}>{isStableford ? `${pts} pts` : parSign(tp)}</div>
+                      <div className="text-sm text-muted-foreground">{isStableford ? `${pts} pts` : parSign(tp)}</div>
                     </div>
                   </div>
-                  <div className="min-w-[60px] h-14 rounded-lg flex flex-col items-center justify-center"
-                    style={has ? { background: "#21835b" } : { background: "#e5e5e5" }}
+                  <div className="min-w-[60px] h-14 flex flex-col items-center justify-center"
+                    style={has ? { background: "#15361f" } : { background: "#e9e1cf" }}
                   >
                     {has ? (
                       <>
-                        <div className="font-black text-2xl tabular-nums leading-none" style={{ color: "#f7f7f7" }}>{has.score}</div>
-                        <div className="text-[10px] font-bold mt-0.5" style={{ color: "#f7f7f7" }}>
+                        <div className="font-display font-bold text-2xl tabular-nums leading-none" style={{ color: "#f3ede1" }}>{has.score}</div>
+                        <div className="text-[10px] font-bold mt-0.5" style={{ color: "#f3ede1" }}>
                           {scoreLabel(has.score, currentHole.par)}
                         </div>
                       </>
                     ) : (
-                      <div className="text-2xl font-light" style={{ color: "#8a8a8a" }}>—</div>
+                      <div className="text-2xl font-light" style={{ color: "#8a7f68" }}>—</div>
                     )}
                   </div>
                 </button>
@@ -293,11 +293,11 @@ const LiveScoringPage = () => {
       )}
 
       {/* Bottom nav */}
-      <div className="flex shrink-0" style={{ background: "#ffffff", borderTop: "1px solid #e5e5e5", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+      <div className="flex shrink-0 bg-card border-t border-border" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
         <button
           onClick={() => setView("scoring")}
           className="flex-1 h-16 flex flex-col items-center justify-center gap-1 text-[11px] font-bold uppercase tracking-wide"
-          style={{ color: view === "scoring" ? "#21835b" : "#8a8a8a" }}
+          style={{ color: view === "scoring" ? "#15361f" : "#8a7f68", borderTop: view === "scoring" ? "2px solid #15361f" : "2px solid transparent" }}
         >
           <span className="text-xl leading-none">🧮</span>
           Счёт
@@ -305,7 +305,7 @@ const LiveScoringPage = () => {
         <button
           onClick={() => setView("leaderboard")}
           className="flex-1 h-16 flex flex-col items-center justify-center gap-1 text-[11px] font-bold uppercase tracking-wide"
-          style={{ color: view === "leaderboard" ? "#21835b" : "#8a8a8a" }}
+          style={{ color: view === "leaderboard" ? "#15361f" : "#8a7f68", borderTop: view === "leaderboard" ? "2px solid #15361f" : "2px solid transparent" }}
         >
           <span className="text-xl leading-none">🏆</span>
           Таблица
@@ -316,9 +316,9 @@ const LiveScoringPage = () => {
       {sheetPlayer && !round.completed && (
         <div className="fixed inset-0 z-50 flex items-end animate-in fade-in duration-150">
           <button className="absolute inset-0 bg-black/40" onClick={() => { setSheetPlayer(null); setSheetTeamMembers([]); }} />
-          <div className="relative w-full rounded-t-3xl animate-in slide-in-from-bottom duration-250" style={{ background: "#ffffff", paddingBottom: "max(env(safe-area-inset-bottom), 24px)", fontFamily: CUPRUM }}>
-            <div className="mx-auto w-10 h-1 rounded-full mt-3 mb-1" style={{ background: "#e5e5e5" }} />
-            <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "#e5e5e5" }}>
+          <div className="relative w-full animate-in slide-in-from-bottom duration-250 bg-card border-t" style={{ borderColor: "#c9a24b", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}>
+            <div className="mx-auto w-10 h-1 mt-3 mb-1 bg-border" />
+            <div className="flex items-center justify-between px-5 py-3 border-b border-border">
               <div className="flex items-center gap-3">
                 <Avatar name={sheetPlayer.name} tone={sheetPlayer.isMe ? "orange" : "muted"} photoUrl={sheetPlayer.photoUrl} />
                 <div>
@@ -328,42 +328,45 @@ const LiveScoringPage = () => {
                       : sheetPlayer.name.split(" ")[0]
                     }
                   </div>
-                  <div className="text-xs" style={{ color: "#8a8a8a" }}>Лунка {currentHole.number} · Par {currentHole.par}</div>
+                  <div className="text-xs text-muted-foreground">Лунка {currentHole.number} · Par {currentHole.par}</div>
                 </div>
               </div>
-              <button onClick={() => { setSheetPlayer(null); setSheetTeamMembers([]); }} className="h-9 w-9 rounded-full grid place-items-center border" style={{ borderColor: "#e5e5e5" }}>
+              <button onClick={() => { setSheetPlayer(null); setSheetTeamMembers([]); }} className="h-9 w-9 grid place-items-center border border-border">
                 <X className="h-4 w-4" style={{ color: INK }} />
               </button>
             </div>
 
             <div className="px-5 pt-5 pb-2">
-              <div className="rounded-2xl flex flex-col items-center mb-4" style={{ background: "#f7f7f7" }}>
-                <div className="text-[10px] font-bold uppercase tracking-widest pt-3 pb-1" style={{ color: "#8a8a8a" }}>Счёт</div>
-                <button onClick={() => setHole((h) => ({ ...h, score: h.score + 1 }))} className="w-full h-14 grid place-items-center rounded-xl transition-colors active:bg-black/5" style={{ color: "#21835b" }}>
+              <div className="flex flex-col items-center mb-4 border border-border">
+                <div className="gm-eyebrow pt-3 pb-1" style={{ color: "#8a7f68" }}>Счёт</div>
+                <button onClick={() => setHole((h) => ({ ...h, score: h.score + 1 }))} className="w-full h-14 grid place-items-center transition-colors active:bg-black/5" style={{ color: "#15361f" }}>
                   <Plus className="h-7 w-7" strokeWidth={2.5} />
                 </button>
-                <div className="text-4xl font-black tabular-nums py-0.5" style={{ color: INK }}>{hole.score}</div>
+                <div className="font-display text-4xl font-bold tabular-nums py-0.5" style={{ color: INK }}>{hole.score}</div>
                 <div className="text-[11px] font-bold mb-0.5" style={{ color: scoreLabelColor(hole.score, currentHole.par) }}>
                   {scoreLabel(hole.score, currentHole.par)}
-                  {isStableford && <span className="ml-1" style={{ color: "#8a8a8a" }}>· {stablefordPoints(hole.score, currentHole.par)} pts</span>}
+                  {isStableford && <span className="ml-1 text-muted-foreground">· {stablefordPoints(hole.score, currentHole.par)} pts</span>}
                 </div>
-                <button onClick={() => setHole((h) => ({ ...h, score: Math.max(1, h.score - 1) }))} className="w-full h-14 grid place-items-center rounded-xl transition-colors active:bg-black/5" style={{ color: "#21835b" }}>
+                <button onClick={() => setHole((h) => ({ ...h, score: Math.max(1, h.score - 1) }))} className="w-full h-14 grid place-items-center transition-colors active:bg-black/5" style={{ color: "#15361f" }}>
                   <span className="text-3xl leading-none font-bold">−</span>
                 </button>
               </div>
 
               {isScramble && sheetTeamMembers.length > 0 && (
                 <div className="mb-4">
-                  <div className="text-[10px] uppercase tracking-widest font-bold mb-2" style={{ color: "#8a8a8a" }}>Чей мяч?</div>
+                  <div className="gm-eyebrow mb-2" style={{ color: "#8a7f68" }}>Чей мяч?</div>
                   <div className="flex gap-2">
                     {sheetTeamMembers.map((p) => (
                       <button
                         key={p.id}
                         onClick={() => setHole((h) => ({ ...h, madeBy: p.id }))}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all border-2"
+                        className={cn(
+                          "flex-1 flex items-center justify-center gap-2 py-3 font-semibold text-sm transition-all border-2",
+                          hole.madeBy === p.id ? "text-white" : "text-muted-foreground"
+                        )}
                         style={hole.madeBy === p.id
-                          ? { background: "#e8f3ee", borderColor: "#21835b", color: "#21835b" }
-                          : { background: "#f7f7f7", borderColor: "#e5e5e5", color: "#8a8a8a" }
+                          ? { background: "#15361f", borderColor: "#15361f" }
+                          : { background: "transparent", borderColor: "hsl(var(--border))" }
                         }
                       >
                         {p.name.split(" ")[0]}
@@ -375,8 +378,8 @@ const LiveScoringPage = () => {
 
               <button
                 onClick={submit}
-                className="w-full h-14 rounded-2xl font-black text-base uppercase tracking-wider active:scale-[0.98] transition-transform"
-                style={{ background: "#21835b", color: "#f7f7f7" }}
+                className="w-full h-14 font-bold text-base uppercase tracking-wider active:scale-[0.98] transition-transform"
+                style={{ background: "#c9a24b", color: "#15361f" }}
               >
                 Сохранить
               </button>
@@ -389,11 +392,11 @@ const LiveScoringPage = () => {
       {showAddPlayer && (
         <div className="fixed inset-0 z-50 flex items-end animate-in fade-in duration-150">
           <button className="absolute inset-0 bg-black/40" onClick={() => setShowAddPlayer(false)} />
-          <div className="relative w-full rounded-t-3xl animate-in slide-in-from-bottom duration-250" style={{ background: "#ffffff", paddingBottom: "max(env(safe-area-inset-bottom), 24px)", fontFamily: CUPRUM }}>
-            <div className="mx-auto w-10 h-1 rounded-full mt-3 mb-1" style={{ background: "#e5e5e5" }} />
-            <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "#e5e5e5" }}>
-              <div className="font-bold" style={{ color: INK }}>Добавить игрока</div>
-              <button onClick={() => setShowAddPlayer(false)} className="h-9 w-9 rounded-full grid place-items-center border" style={{ borderColor: "#e5e5e5" }}>
+          <div className="relative w-full animate-in slide-in-from-bottom duration-250 bg-card border-t" style={{ borderColor: "#c9a24b", paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}>
+            <div className="mx-auto w-10 h-1 mt-3 mb-1 bg-border" />
+            <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+              <div className="font-display font-semibold" style={{ color: INK }}>Добавить игрока</div>
+              <button onClick={() => setShowAddPlayer(false)} className="h-9 w-9 grid place-items-center border border-border">
                 <X className="h-4 w-4" style={{ color: INK }} />
               </button>
             </div>
@@ -403,22 +406,22 @@ const LiveScoringPage = () => {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="Имя игрока"
-                className="w-full h-12 rounded-xl px-4 text-sm outline-none border"
-                style={{ background: "#f7f7f7", borderColor: "#e5e5e5", color: INK }}
+                className="w-full h-12 px-4 text-sm outline-none border border-border bg-background"
+                style={{ color: INK }}
               />
               <input
                 value={newHcp}
                 onChange={(e) => setNewHcp(e.target.value.replace(/[^0-9.]/g, ""))}
                 placeholder="HCP"
                 inputMode="decimal"
-                className="w-full h-12 rounded-xl px-4 text-sm outline-none border"
-                style={{ background: "#f7f7f7", borderColor: "#e5e5e5", color: INK }}
+                className="w-full h-12 px-4 text-sm outline-none border border-border bg-background"
+                style={{ color: INK }}
               />
               <button
                 onClick={addPlayer}
                 disabled={!newName.trim()}
-                className="w-full h-14 rounded-2xl font-black text-base uppercase tracking-wider active:scale-[0.98] transition-transform disabled:opacity-40"
-                style={{ background: "#21835b", color: "#f7f7f7" }}
+                className="w-full h-14 font-bold text-base uppercase tracking-wider active:scale-[0.98] transition-transform disabled:opacity-40"
+                style={{ background: "#c9a24b", color: "#15361f" }}
               >
                 Добавить
               </button>

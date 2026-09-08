@@ -45,35 +45,27 @@ export const NextTournamentHero = () => {
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl p-6 sm:p-8"
-      style={{ background: "linear-gradient(115deg, #0e2416 0%, #1c4a2b 55%, #2c6b3d 100%)" }}
+      className="relative p-6 sm:p-8"
+      style={{ background: "#15361f", border: "1px solid #c9a24b" }}
     >
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: `radial-gradient(420px circle at 82% 15%, ${glow}40, transparent 70%)` }}
-      />
-
       <div className="relative space-y-4">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center h-6 px-2.5 rounded-full text-[11px] font-bold text-white" style={{ background: "rgba(255,255,255,0.12)" }}>
+          <span className="gm-eyebrow inline-flex items-center px-2 py-1" style={{ color: "#e9d9ad", border: "1px solid rgba(201,162,75,0.55)" }}>
             {daysUntil === 0 ? "Сегодня" : daysUntil === 1 ? "Завтра" : `Через ${daysUntil} дн.`}
           </span>
-          <span
-            className="inline-flex items-center h-6 px-2.5 rounded-full text-[11px] font-bold uppercase tracking-wide"
-            style={{ background: `${glow}26`, border: `1px solid ${glow}80`, color: glow }}
-          >
+          <span className="gm-eyebrow inline-flex items-center px-2 py-1" style={{ color: "#15361f", background: glow }}>
             {TIER_LABELS[tournament.tier]}
           </span>
         </div>
 
         <div>
-          <div className="text-[10px] uppercase tracking-[0.25em] text-white/50 font-semibold mb-1">
+          <div className="gm-eyebrow mb-1" style={{ color: "#9fb6a3" }}>
             Следующий турнир
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight">{tournament.name}</h2>
+          <h2 className="font-display text-2xl sm:text-3xl font-semibold text-white leading-tight">{tournament.name}</h2>
         </div>
 
-        <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-white/70">
+        <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm" style={{ color: "#c8d3c9" }}>
           <span className="flex items-center gap-1.5">
             <CalendarDays className="h-3.5 w-3.5" /> {tournament.date} {tournament.month} · {tournament.day}
           </span>
@@ -89,17 +81,18 @@ export const NextTournamentHero = () => {
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2 pt-1">
+        <div className="flex flex-wrap gap-2.5 pt-1">
           <button
             onClick={() => navigate(`/tournament-info/${tournament.id}`)}
-            className="inline-flex items-center gap-1.5 h-11 px-5 rounded-xl font-bold text-sm"
-            style={{ background: "#c9a24b", color: "#0d1f14" }}
+            className="inline-flex items-center gap-1.5 h-11 px-5 text-sm font-bold tracking-wide"
+            style={{ background: "#c9a24b", color: "#15361f" }}
           >
             Записаться <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
           </button>
           <button
             onClick={() => navigate(`/tournament-info/${tournament.id}`)}
-            className="inline-flex items-center h-11 px-5 rounded-xl font-bold text-sm text-white/85 border border-white/25 hover:bg-white/5 transition-colors"
+            className="inline-flex items-center h-11 px-5 text-sm font-bold tracking-wide text-white hover:bg-white/5 transition-colors"
+            style={{ border: "1px solid rgba(201,162,75,0.55)" }}
           >
             Подробнее
           </button>

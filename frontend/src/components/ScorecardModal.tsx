@@ -8,11 +8,11 @@ interface Props {
 
 function scoreColor(score: number, par: number): string {
   const diff = score - par;
-  if (diff <= -2) return "#a78bfa"; // eagle+
-  if (diff === -1) return "#22c55e"; // birdie
-  if (diff === 0)  return "#e5e7eb"; // par
-  if (diff === 1)  return "#fb923c"; // bogey
-  return "#f87171";                  // double+
+  if (diff <= -2) return "#ca8a04"; // eagle+
+  if (diff === -1) return "#1f7a3d"; // birdie
+  if (diff === 0)  return "#1b1b16"; // par
+  if (diff === 1)  return "#c2540c"; // bogey
+  return "#b3261e";                  // double+
 }
 
 export function ScorecardModal({ round, onClose }: Props) {
@@ -46,8 +46,7 @@ export function ScorecardModal({ round, onClose }: Props) {
         onClick={onClose}
         style={{
           position: "fixed", inset: 0, zIndex: 50,
-          background: "rgba(0,0,0,0.6)",
-          backdropFilter: "blur(4px)",
+          background: "rgba(27,27,22,0.4)",
         }}
       />
 
@@ -59,11 +58,12 @@ export function ScorecardModal({ round, onClose }: Props) {
           position: "fixed",
           bottom: 0, left: 0, right: 0,
           zIndex: 51,
-          background: "#111",
-          borderRadius: "20px 20px 0 0",
+          background: "#fffdf7",
+          borderTop: "1px solid #c9a24b",
           padding: "20px 16px 40px",
           maxHeight: "80dvh",
           overflowY: "auto",
+          fontFamily: "var(--font-body)",
         }}
       >
         {/* Handle — tap or swipe down to close */}
@@ -71,37 +71,36 @@ export function ScorecardModal({ round, onClose }: Props) {
           onClick={onClose}
           style={{ display: "flex", justifyContent: "center", padding: "8px 0 16px", cursor: "pointer" }}
         >
-          <div style={{ width: 36, height: 4, borderRadius: 2, background: "#444" }} />
+          <div style={{ width: 36, height: 4, background: "rgba(27,27,22,0.16)" }} />
         </div>
 
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 17 }}>{round.playerName}</div>
-            <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>{round.courseName ?? "Round"}</div>
+            <div style={{ fontWeight: 700, fontSize: 17, color: "#1b1b16" }}>{round.playerName}</div>
+            <div style={{ fontSize: 13, color: "#8a7f68", marginTop: 2 }}>{round.courseName ?? "Round"}</div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 28, fontWeight: 800, color: diff <= 0 ? "#22c55e" : "#f87171" }}>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 700, color: diff <= 0 ? "#1f7a3d" : "#b3261e" }}>
               {diffLabel}
             </div>
-            <div style={{ fontSize: 11, color: "#666" }}>{round.holesPlayed} holes</div>
+            <div style={{ fontSize: 11, color: "#8a7f68" }}>{round.holesPlayed} holes</div>
           </div>
         </div>
 
         {/* Scorecard table */}
         {round.scorecard && round.scorecard.length > 0 ? (
-          <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid #222" }}>
+          <div style={{ overflow: "hidden", border: "1px solid rgba(27,27,22,0.14)" }}>
             {/* Table header */}
             <div
               style={{
                 display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
-                background: "#1a1a1a",
                 padding: "8px 16px",
                 fontSize: 11,
                 fontWeight: 700,
-                color: "#666",
+                color: "#8a7f68",
                 textTransform: "uppercase",
-                letterSpacing: "0.1em",
+                letterSpacing: "0.14em",
               }}
             >
               <span>Hole</span>
@@ -109,23 +108,23 @@ export function ScorecardModal({ round, onClose }: Props) {
               <span style={{ textAlign: "right" }}>Score</span>
             </div>
 
-            {round.scorecard.map((h, i) => (
+            {round.scorecard.map((h) => (
               <div
                 key={h.hole}
                 style={{
                   display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
                   padding: "10px 16px",
-                  borderTop: "1px solid #1e1e1e",
-                  background: i % 2 === 0 ? "#111" : "#131313",
+                  borderTop: "1px solid rgba(27,27,22,0.1)",
                   alignItems: "center",
                 }}
               >
-                <span style={{ fontSize: 14, fontWeight: 600 }}>{h.hole}</span>
-                <span style={{ fontSize: 14, color: "#888", textAlign: "center" }}>{h.par}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b16" }}>{h.hole}</span>
+                <span style={{ fontSize: 14, color: "#8a7f68", textAlign: "center" }}>{h.par}</span>
                 <span
                   style={{
+                    fontFamily: "var(--font-display)",
                     fontSize: 15,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     color: scoreColor(h.score, h.par),
                     textAlign: "right",
                   }}
@@ -140,19 +139,19 @@ export function ScorecardModal({ round, onClose }: Props) {
               style={{
                 display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
                 padding: "12px 16px",
-                borderTop: "1px solid #333",
-                background: "#1a1a1a",
+                borderTop: "1px solid rgba(27,27,22,0.14)",
+                background: "rgba(27,27,22,0.03)",
               }}
             >
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#888" }}>Total</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#888", textAlign: "center" }}>{totalPar}</span>
-              <span style={{ fontSize: 16, fontWeight: 800, color: diff <= 0 ? "#22c55e" : "#f87171", textAlign: "right" }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#8a7f68" }}>Total</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#8a7f68", textAlign: "center" }}>{totalPar}</span>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 700, color: diff <= 0 ? "#1f7a3d" : "#b3261e", textAlign: "right" }}>
                 {totalScore}
               </span>
             </div>
           </div>
         ) : (
-          <div style={{ textAlign: "center", color: "#555", padding: "32px 0", fontSize: 14 }}>
+          <div style={{ textAlign: "center", color: "#8a7f68", padding: "32px 0", fontSize: 14 }}>
             No scores entered yet
           </div>
         )}

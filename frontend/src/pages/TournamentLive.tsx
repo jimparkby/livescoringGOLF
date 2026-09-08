@@ -60,13 +60,13 @@ const Stepper = ({ label, value, onChange }: { label: string; value: number; onC
       >
         <Minus className="h-5 w-5 text-foreground" strokeWidth={2.5} />
       </button>
-      <div className="text-5xl font-black tabular-nums w-16 text-center text-foreground">{value}</div>
+      <div className="font-display text-5xl font-bold tabular-nums w-16 text-center text-foreground">{value}</div>
       <button
         onClick={() => onChange(Math.min(15, value + 1))}
         className="h-11 w-11 rounded-full grid place-items-center active:scale-95 transition-transform"
-        style={{ background: "rgba(44,107,61,0.12)" }}
+        style={{ background: "var(--accent-tint)" }}
       >
-        <Plus className="h-5 w-5" style={{ color: "#2c6b3d" }} strokeWidth={2.5} />
+        <Plus className="h-5 w-5" style={{ color: "#15361f" }} strokeWidth={2.5} />
       </button>
     </div>
   </div>
@@ -186,10 +186,10 @@ const TournamentLivePage = () => {
         <Header />
 
         <div className="flex-1 min-w-0 overflow-y-auto px-5 py-2">
-          <div className="text-xl mt-4 text-foreground">Привет, <b>{link.myName}</b>!</div>
+          <div className="font-display text-xl mt-4 text-foreground">Привет, <b>{link.myName}</b>!</div>
           <div className="text-sm mt-1 text-muted-foreground">Добро пожаловать на <b>{link.tournamentName}</b></div>
 
-          <div className="rounded-xl mt-5 overflow-hidden" style={{ background: "#15361f" }}>
+          <div className="mt-5 overflow-hidden" style={{ background: "#15361f", border: "1px solid #c9a24b" }}>
             {link.flightLabel && (
               <div className="flex items-center justify-between gap-3 px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.12)" }}>
                 <span className="text-sm shrink-0" style={{ color: "#9fc2a8" }}>Группа</span>
@@ -202,7 +202,7 @@ const TournamentLivePage = () => {
             </div>
           </div>
 
-          <div className="rounded-xl mt-3 overflow-hidden bg-card border border-border shadow-soft">
+          <div className="mt-3 overflow-hidden bg-card border border-border shadow-none">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <span className="text-sm text-muted-foreground">Handicap Index</span>
               <span className="text-sm font-bold text-foreground">{myHcp.toFixed(1)}</span>
@@ -218,7 +218,7 @@ const TournamentLivePage = () => {
           </div>
 
           {link.marker && (
-            <div className="rounded-xl mt-3 overflow-hidden" style={{ background: "rgba(201,162,75,0.12)", border: "1px solid rgba(201,162,75,0.35)" }}>
+            <div className="mt-3 overflow-hidden" style={{ background: "rgba(201,162,75,0.12)", border: "1px solid rgba(201,162,75,0.35)" }}>
               <div className="px-4 py-3">
                 <div className="text-xs uppercase tracking-wide font-bold" style={{ color: "#a5822f" }}>Вы маркер для</div>
                 <div className="text-base font-bold text-foreground mt-0.5">{link.marker.name}</div>
@@ -231,7 +231,7 @@ const TournamentLivePage = () => {
         <div className="px-5 pb-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}>
           <button
             onClick={confirmIntro}
-            className="w-full h-14 rounded-xl font-bold text-base text-white active:scale-[0.98] transition-transform"
+            className="w-full h-14 font-bold text-base text-white active:scale-[0.98] transition-transform"
             style={{ background: "#15361f" }}
           >
             Подтвердить и продолжить
@@ -246,14 +246,13 @@ const TournamentLivePage = () => {
       <Header />
 
       <div className="px-5 py-3 text-center border-b border-border">
-        <div className="font-bold text-lg tracking-wide truncate text-foreground">{link.tournamentName}</div>
+        <div className="font-display font-semibold text-lg tracking-wide truncate text-foreground">{link.tournamentName}</div>
         {link.flightLabel && <div className="text-xs uppercase tracking-wide mt-0.5 text-muted-foreground">{link.flightLabel}</div>}
       </div>
 
       {view === "scoring" && (
         <div className="px-5 pt-3 pb-1">
           <HoleGridNav
-            variant="brand"
             holes={playHoles.map((h) => h.number)}
             currentHole={currentHole.number}
             playedHoles={playedHoles}
@@ -306,7 +305,7 @@ const TournamentLivePage = () => {
             <button
               onClick={save}
               disabled={saving}
-              className="w-full h-14 rounded-xl font-bold text-base text-white active:scale-[0.98] transition-transform disabled:opacity-60"
+              className="w-full h-14 font-bold text-base text-white active:scale-[0.98] transition-transform disabled:opacity-60"
               style={{ background: "#15361f" }}
             >
               {saving ? "Сохранение..." : "Сохранить"}

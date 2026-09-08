@@ -42,7 +42,7 @@ export const TournamentLiveLeaderboard = ({
 
   if (flights.length === 0) {
     return (
-      <Card className="p-6 text-center shadow-soft">
+      <Card className="p-6 text-center shadow-none">
         <div className="text-4xl mb-3">⛳</div>
         <div className="text-sm font-semibold text-foreground mb-1">Live-scoring ещё не начался</div>
         <div className="text-xs text-muted-foreground">
@@ -55,21 +55,21 @@ export const TournamentLiveLeaderboard = ({
   return (
     <div className="space-y-4">
       {flights.map((flight) => (
-        <Card key={flight.key} className="overflow-hidden shadow-soft">
+        <Card key={flight.key} className="overflow-hidden shadow-none">
           <div className="px-4 py-3 bg-muted/50 border-b border-border">
-            <div className="font-bold text-sm text-foreground">{flight.label}</div>
+            <div className="font-display font-semibold text-sm text-foreground">{flight.label}</div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/30 border-b border-border">
                 <tr>
-                  <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground w-12">Pos</th>
-                  <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground">Игрок</th>
-                  <th className="text-right px-3 py-2 text-xs font-semibold text-muted-foreground w-20">
+                  <th className="text-left px-3 py-2 gm-eyebrow w-12">Pos</th>
+                  <th className="text-left px-3 py-2 gm-eyebrow">Игрок</th>
+                  <th className="text-right px-3 py-2 gm-eyebrow w-20">
                     {isStableford ? "Total Pts" : "Net"}
                   </th>
-                  <th className="text-right px-3 py-2 text-xs font-semibold text-muted-foreground w-16">Thru</th>
-                  <th className="text-right px-3 py-2 text-xs font-semibold text-muted-foreground w-20">
+                  <th className="text-right px-3 py-2 gm-eyebrow w-16">Thru</th>
+                  <th className="text-right px-3 py-2 gm-eyebrow w-20">
                     {isStableford ? "Today Pts" : "Today"}
                   </th>
                 </tr>
@@ -113,13 +113,13 @@ export const TournamentLiveLeaderboard = ({
                             ))}
                           </span>
                         </td>
-                        <td className="px-3 py-2.5 text-right font-bold text-foreground tabular-nums">
+                        <td className="font-display px-3 py-2.5 text-right font-bold text-foreground tabular-nums">
                           {isStableford ? e.totalPoints : parSign(e.totalNetVsPar)}
                         </td>
                         <td className="px-3 py-2.5 text-right text-muted-foreground tabular-nums">
                           {e.thru > 0 ? `${e.thru}${!e.todayCompleted && e.thru < e.totalHoles ? "*" : ""}` : "—"}
                         </td>
-                        <td className="px-3 py-2.5 text-right font-semibold text-foreground tabular-nums">
+                        <td className="font-display px-3 py-2.5 text-right font-semibold text-foreground tabular-nums">
                           {isStableford ? e.todayPoints : parSign(e.todayNetVsPar)}
                         </td>
                       </tr>
