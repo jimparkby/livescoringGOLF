@@ -6,13 +6,9 @@ import { useGolf } from "@/store/golfStore";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { isTelegramMiniApp } from "@/lib/telegram";
 
-// Desktop keeps the full site (tournaments, course map) alongside the
-// everyday-round/booking features. The Telegram mini app is where Round and
-// Booking actually live day-to-day, so its bottom tab bar shows those
-// instead of the site's own tournaments/course.
+// Round and Booking are Telegram mini-app-only features (see miniAppNavLinks
+// below) — the desktop/site top nav only shows the site's own pages.
 const navLinks = [
-  { to: "/round", label: "Round", icon: Flag },
-  { to: "/booking", label: "Booking", icon: CalendarDays },
   { to: "/", label: "Tournaments", icon: Trophy, end: true },
   { to: "/statistics", label: "Statistics", icon: BarChart3 },
   { to: "/course", label: "Course", icon: MapPin },

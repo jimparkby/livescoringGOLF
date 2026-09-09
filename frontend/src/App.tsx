@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import AppLayout from "@/components/AppLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { isTelegramMiniApp } from "@/lib/telegram";
 import DemoPage from "./pages/Demo";
 import LiveScoringPage from "./pages/LiveScoring";
 import TournamentLivePage from "./pages/TournamentLive";
@@ -49,7 +50,10 @@ function AppRoutes() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        <Route path="/" element={<TournamentsPage />} />
+        {/* The bot's "Open" button always launches at "/" — inside the mini
+            app that should land on the everyday-round Play screen, not the
+            site's Tournaments page. */}
+        <Route path="/" element={isTelegramMiniApp() ? <Navigate to="/round" replace /> : <TournamentsPage />} />
         <Route path="/tournaments" element={<TournamentsPage />} />
         <Route path="/tournament-info/:id" element={<TournamentInfoPage />} />
         <Route path="/statistics" element={<StatisticsPage />} />

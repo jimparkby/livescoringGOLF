@@ -104,7 +104,9 @@ const HomeScreen = ({
   const casualRounds = rounds.filter((r) => r.completed && !r.tournamentId).slice(0, 5);
 
   const perfStats = (() => {
-    const completed = rounds.filter((r) => r.completed);
+    // Mini-app home stats are scoped to everyday rounds started here, not
+    // tournament rounds (those are tracked in the site's own Statistics).
+    const completed = rounds.filter((r) => r.completed && !r.tournamentId);
     if (completed.length === 0) return null;
     let totalHoles = 0, girCount = 0, fairwayCount = 0, totalPutts = 0;
     completed.forEach((r) => {
