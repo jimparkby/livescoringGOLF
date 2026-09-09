@@ -1,17 +1,35 @@
 import { type Round, type HolesMode } from "@/store/golfStore";
 import { getAllCourses, type Hole } from "@/lib/courses";
 
-// Rounds played → how many best differentials to average
-const DIFF_USE_COUNT: Record<number, number> = {
-  3: 1, 4: 1, 5: 1,
-  6: 2, 7: 2, 8: 2,
-  9: 3, 10: 3, 11: 3,
-  12: 4, 13: 4, 14: 4,
-  15: 5, 16: 5,
-  17: 6,
-  18: 7,
-  19: 8, 20: 8,
+// WHS Rule 5.2a: for a scoring record with fewer than 20 scores, this table
+// gives how many of the lowest Score Differentials to average, plus a net
+// adjustment applied to that average (new/short records skew a bit low
+// since early scores tend to run above true ability). A record of 20 or
+// more always uses the best 8 of the most recent 20, no adjustment.
+const HCP_TABLE: Record<number, { count: number; adjustment: number }> = {
+  3: { count: 1, adjustment: -2.0 },
+  4: { count: 1, adjustment: -1.0 },
+  5: { count: 1, adjustment: 0 },
+  6: { count: 2, adjustment: -1.0 },
+  7: { count: 2, adjustment: 0 },
+  8: { count: 2, adjustment: 0 },
+  9: { count: 3, adjustment: 0 },
+  10: { count: 3, adjustment: 0 },
+  11: { count: 3, adjustment: 0 },
+  12: { count: 4, adjustment: 0 },
+  13: { count: 4, adjustment: 0 },
+  14: { count: 4, adjustment: 0 },
+  15: { count: 5, adjustment: 0 },
+  16: { count: 5, adjustment: 0 },
+  17: { count: 6, adjustment: 0 },
+  18: { count: 6, adjustment: 0 },
+  19: { count: 7, adjustment: 0 },
 };
+
+function useCountAndAdjustment(scoresInRecord: number): { count: number; adjustment: number } {
+  if (scoresInRecord >= 20) return { count: 8, adjustment: 0 };
+  return HCP_TABLE[scoresInRecord] ?? { count: 0, adjustment: 0 };
+}
 
 export type ScoreDifferential = {
   roundId: string;
@@ -49,21 +67,24 @@ export function calcDifferential(adjustedGross: number, courseRating: number, sl
   return Math.round(((adjustedGross - courseRating) * (113 / slope)) * 10) / 10;
 }
 
-// Handicap Index: average of all best differentials (up to 8) × 0.96 (WHS adjustment factor), capped at 54.0
+// Handicap Index (WHS Rule 5.1): average of the best Score Differentials out
+// of the most recent 20 scores (fewer if the record is shorter, per
+// HCP_TABLE), plus that bracket's net adjustment, rounded to the nearest 0.1
+// and capped at 54.0. `diffs` must be newest-first, matching getDifferentials.
 export function calcHandicapIndex(diffs: number[]): number | null {
   const n = diffs.length;
   if (n < 3) return null;
-  // Always use all available differentials (up to 8)
-  const useCount = Math.min(n, 8);
-  const sorted = [...diffs].sort((a, b) => a - b);
-  const best = sorted.slice(0, useCount);
+  const pool = diffs.slice(0, 20);
+  const { count, adjustment } = useCountAndAdjustment(pool.length);
+  if (count === 0) return null;
+  const best = [...pool].sort((a, b) => a - b).slice(0, count);
   const avg = best.reduce((s, d) => s + d, 0) / best.length;
-  return Math.min(54.0, Math.round(avg * 0.96 * 10) / 10);
+  return Math.min(54.0, Math.round((avg + adjustment) * 10) / 10);
 }
 
-// How many differentials are used in calculation (all up to 8)
+// How many differentials are used in the calculation, per HCP_TABLE
 export function diffUseCount(totalRounds: number): number {
-  return Math.min(totalRounds, 8);
+  return useCountAndAdjustment(Math.min(totalRounds, 20)).count;
 }
 
 // Rounds to go before first HCP calculation
@@ -120,12 +141,14 @@ export function getDifferentials(
     };
   });
 
-  // Mark the best N differentials as "used" (all up to 8)
+  // Mark the best differentials as "used", scoped to the most recent 20
+  // scores (result is newest-first, same order as `rounds`/`completed`).
   const n = result.length;
   if (n >= 3) {
-    const useCount = Math.min(n, 8);
-    const sortedByDiff = [...result].sort((a, b) => a.differential - b.differential);
-    const usedIds = new Set(sortedByDiff.slice(0, useCount).map((x) => x.roundId));
+    const pool = result.slice(0, 20);
+    const { count } = useCountAndAdjustment(pool.length);
+    const sortedByDiff = [...pool].sort((a, b) => a.differential - b.differential);
+    const usedIds = new Set(sortedByDiff.slice(0, count).map((x) => x.roundId));
     result.forEach((r) => { r.isUsed = usedIds.has(r.roundId); });
   }
 
