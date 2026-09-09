@@ -15,6 +15,7 @@ import TournamentInfoPage from "./pages/TournamentInfo";
 import TournamentPlayPage from "./pages/TournamentPlay";
 import CreateTournamentPage from "./pages/CreateTournament";
 import StatisticsPage from "./pages/Statistics";
+import RoundStatisticsPage from "./pages/RoundStatistics";
 import ProfilePage from "./pages/Profile";
 import CoursePage from "./pages/Course";
 import AdminPage from "./pages/Admin";
@@ -56,7 +57,10 @@ function AppRoutes() {
         <Route path="/" element={isTelegramMiniApp() ? <Navigate to="/round" replace /> : <TournamentsPage />} />
         <Route path="/tournaments" element={<TournamentsPage />} />
         <Route path="/tournament-info/:id" element={<TournamentInfoPage />} />
-        <Route path="/statistics" element={<StatisticsPage />} />
+        {/* The site's "/statistics" is the club-wide tournament rating page;
+            inside the mini app that same nav item shows personal stats from
+            rounds actually played there instead. */}
+        <Route path="/statistics" element={isTelegramMiniApp() ? <RequireAuth><RoundStatisticsPage /></RequireAuth> : <StatisticsPage />} />
         <Route path="/course" element={<CoursePage />} />
 
         <Route path="/tournament/:id" element={<RequireAuth><TournamentPlayPage /></RequireAuth>} />
