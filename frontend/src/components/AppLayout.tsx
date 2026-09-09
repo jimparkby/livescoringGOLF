@@ -4,11 +4,12 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useGolf } from "@/store/golfStore";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { isTelegramMiniApp } from "@/lib/telegram";
 
 // Desktop keeps the full site (tournaments, course map) alongside the
-// everyday-round/booking features. The Telegram mini app is mobile-only, so
-// its bottom tab bar (mobileNavLinks below) drops tournaments/course —
-// they're already on the site — in favor of Round and Booking.
+// everyday-round/booking features. The Telegram mini app is where Round and
+// Booking actually live day-to-day, so its bottom tab bar shows those
+// instead of the site's own tournaments/course.
 const navLinks = [
   { to: "/round", label: "Round", icon: Flag },
   { to: "/booking", label: "Booking", icon: CalendarDays },
@@ -17,16 +18,29 @@ const navLinks = [
   { to: "/course", label: "Course", icon: MapPin },
 ];
 
-const mobileNavLinks = [
+// Bottom tab bar only, at mobile widths. Gated on actually running inside
+// Telegram (not just a narrow viewport) so a phone browser hitting the
+// plain site doesn't get bot-only features like Booking — it gets the
+// site's own public pages instead.
+type MobileNavLink = { to: string; label: string; icon: typeof Flag; end?: boolean };
+
+const miniAppNavLinks: MobileNavLink[] = [
   { to: "/round", label: "Раунд", icon: Flag },
   { to: "/booking", label: "Букинг", icon: CalendarDays },
   { to: "/statistics", label: "Статистика", icon: BarChart3 },
+];
+
+const siteMobileNavLinks: MobileNavLink[] = [
+  { to: "/", label: "Турниры", icon: Trophy, end: true },
+  { to: "/statistics", label: "Статистика", icon: BarChart3 },
+  { to: "/course", label: "Поле", icon: MapPin },
 ];
 
 const AppLayout = () => {
   const { userId, signOut } = useAuth();
   const { profile } = useGolf();
   const { isAdmin } = useIsAdmin();
+  const mobileNavLinks = isTelegramMiniApp() ? miniAppNavLinks : siteMobileNavLinks;
 
   const name = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "Player";
   const initials = (profile.firstName?.[0] ?? "") + (profile.lastName?.[0] ?? "");
@@ -135,10 +149,11 @@ const AppLayout = () => {
         className="md:hidden fixed bottom-0 inset-x-0 z-30 grid grid-cols-4 bg-white"
         style={{ borderTop: "1px solid rgba(13,31,20,0.08)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        {mobileNavLinks.map(({ to, label, icon: Icon }) => (
+        {mobileNavLinks.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
+            end={end}
             className={({ isActive }) =>
               cn("flex flex-col items-center gap-1 pt-2 pb-2.5", isActive ? "" : "")
             }

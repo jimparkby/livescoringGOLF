@@ -3,8 +3,34 @@ import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
 import { db } from '../db.js'
 import { getBotUsername } from '../bot.js'
+import { findOrCreateUserByTelegram } from '../services/telegramAccount.js'
+import { verifyTelegramWebAppInitData } from '../utils/telegramWebApp.js'
 
 const router = Router()
+
+// ── POST /api/auth/telegram-webapp ──────────────────────────────────────────
+// Opened as a Telegram Mini App (via the bot's web_app button/menu button),
+// the frontend already carries a signed Telegram identity in
+// window.Telegram.WebApp.initData — no separate /start deep link needed.
+// Verifies that signature server-side, then finds/creates the account the
+// same way the /start?auth_ flow does, so a user has exactly one account
+// whether they log in from the site or the mini app.
+router.post('/telegram-webapp', async (req, res, next) => {
+  try {
+    const tgUser = verifyTelegramWebAppInitData(req.body?.initData, process.env.TELEGRAM_BOT_TOKEN)
+    if (!tgUser?.id) return res.status(401).json({ error: 'invalid_init_data' })
+
+    const user = await findOrCreateUserByTelegram({
+      telegramId: tgUser.id,
+      firstName: tgUser.first_name || '',
+      lastName: tgUser.last_name || '',
+      username: tgUser.username || null,
+    })
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '365d' })
+    res.json({ jwt: token })
+  } catch (err) { next(err) }
+})
 
 // ── POST /api/auth/telegram-code ────────────────────────────────────────────
 // Login/sign-up is Telegram-only: the Auth page calls this (no session yet),

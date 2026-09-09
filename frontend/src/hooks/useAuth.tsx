@@ -85,6 +85,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
+    // Opened as a Telegram Mini App: initData carries a signed Telegram
+    // identity, so log in with it directly instead of sending the user
+    // through the site's "Войти через Telegram" deep-link flow — that flow
+    // is for the plain website, and inside Telegram it's redundant (you're
+    // already there) and was leaving mini-app rounds/bookings tied to no
+    // account. Wins over any stale localStorage token from a different device.
+    const tgWebApp = (window as unknown as { Telegram?: { WebApp?: { initData?: string } } }).Telegram?.WebApp
+    if (tgWebApp?.initData) {
+      const timeout = setTimeout(() => setLoading(false), 8000)
+      fetch(`${BASE}/api/auth/telegram-webapp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: tgWebApp.initData }),
+      })
+        .then(res => res.ok ? res.json() : Promise.reject())
+        .then((data: { jwt: string }) => signIn(data.jwt))
+        .catch(() => { localStorage.removeItem('golf_jwt'); setUserId(null) })
+        .finally(() => { clearTimeout(timeout); setLoading(false) })
+      return
+    }
+
     const token = localStorage.getItem('golf_jwt')
     if (!token) {
       setLoading(false)

@@ -3,40 +3,9 @@ import { createRequire } from 'module'
 import https from 'https'
 import { db } from './db.js'
 import { parseScorecardPhoto } from './services/scoreParser.js'
+import { findOrCreateUserByTelegram } from './services/telegramAccount.js'
 
 const require = createRequire(import.meta.url)
-
-const normalizeName = (name) => (name || '').trim().toUpperCase()
-
-// Find a member in the HDID whitelist by name — gates account creation for
-// people signing in with Telegram for the first time (see /start's auth_
-// handler below). Mirrors the matching that used to live in routes/auth.js
-// before login moved to Telegram-only.
-async function findHDIDMember(firstName, lastName) {
-  const normFirst = normalizeName(firstName)
-  const normLast = normalizeName(lastName)
-  if (!normFirst || !normLast) return null
-
-  try {
-    const { rows: exactMatch } = await db.query(
-      `SELECT * FROM hdid_members WHERE UPPER(first_name) = $1 AND UPPER(last_name) = $2`,
-      [normFirst, normLast]
-    )
-    if (exactMatch.length > 0) return exactMatch[0]
-
-    const { rows: fuzzyMatch } = await db.query(
-      `SELECT *, similarity(UPPER(first_name), $1) + similarity(UPPER(last_name), $2) as score
-       FROM hdid_members
-       WHERE similarity(UPPER(first_name), $1) > 0.6 AND similarity(UPPER(last_name), $2) > 0.6
-       ORDER BY score DESC LIMIT 1`,
-      [normFirst, normLast]
-    )
-    return fuzzyMatch.length > 0 ? fuzzyMatch[0] : null
-  } catch (err) {
-    console.warn('[bot] HDID fuzzy matching unavailable, exact match only:', err.message)
-    return null
-  }
-}
 
 function createProxyAgent() {
   const proxyUrl = process.env.TELEGRAM_PROXY_URL
@@ -193,27 +162,7 @@ if (!token) {
           return
         }
 
-        let { rows: [user] } = await db.query('SELECT id FROM users WHERE telegram_id = $1', [telegramId])
-
-        if (!user) {
-          const { rows: [nameMatch] } = await db.query(
-            `SELECT id FROM users WHERE telegram_id IS NULL AND UPPER(first_name) = UPPER($1) AND UPPER(last_name) = UPPER($2) LIMIT 1`,
-            [tgFirstName, tgLastName]
-          )
-          if (nameMatch) {
-            user = nameMatch
-            await db.query('UPDATE users SET telegram_id = $1, username = COALESCE($2, username) WHERE id = $3', [telegramId, tgUsername, user.id])
-          }
-        }
-
-        if (!user) {
-          const hdidMember = await findHDIDMember(tgFirstName, tgLastName)
-          const { rows: [newUser] } = await db.query(
-            `INSERT INTO users (telegram_id, username, first_name, last_name, hcp) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-            [telegramId, tgUsername, tgFirstName, tgLastName, hdidMember?.hcp ?? 36.0]
-          )
-          user = newUser
-        }
+        const user = await findOrCreateUserByTelegram({ telegramId, firstName: tgFirstName, lastName: tgLastName, username: tgUsername })
 
         await db.query('UPDATE telegram_auth_codes SET user_id = $1 WHERE code = $2', [user.id, code])
         await bot.sendMessage(msg.chat.id, '✅ Вход выполнен! Возвращайтесь в приложение — вы уже авторизованы.')
