@@ -18,6 +18,7 @@ import ProfilePage from "./pages/Profile";
 import CoursePage from "./pages/Course";
 import AdminPage from "./pages/Admin";
 import BookingPage from "./pages/Booking";
+import RoundPage from "./pages/Round";
 import TournamentRegistrationsPage from "./pages/TournamentRegistrations";
 import NotFound from "./pages/NotFound";
 
@@ -59,6 +60,7 @@ function AppRoutes() {
         <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
         <Route path="/admin" element={<RequireAuth><AdminPage /></RequireAuth>} />
         <Route path="/booking" element={<RequireAuth><BookingPage /></RequireAuth>} />
+        <Route path="/round" element={<RequireAuth><RoundPage /></RequireAuth>} />
         <Route path="/tournament-registrations/:id" element={<RequireAuth><TournamentRegistrationsPage /></RequireAuth>} />
       </Route>
       <Route path="*" element={<NotFound />} />

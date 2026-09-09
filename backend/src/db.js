@@ -275,6 +275,16 @@ async function runMigrations() {
     { name: 'tournament_reg_invoice_number', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS invoice_number TEXT` },
     { name: 'tournament_reg_payment_deadline', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS payment_deadline TEXT` },
     { name: 'tournament_reg_invoice_sent_at', query: `ALTER TABLE tournament_registrations ADD COLUMN IF NOT EXISTS invoice_sent_at TIMESTAMPTZ` },
+    // Tee-time slots: which tee the group starts from and how many holes it
+    // plays, set when the admin generates the day's slots (see
+    // routes/admin.js POST /schedule/tee-times/generate).
+    { name: 'booking_slot_start_hole', query: `ALTER TABLE booking_slots ADD COLUMN IF NOT EXISTS start_hole INTEGER` },
+    { name: 'booking_slot_holes_count', query: `ALTER TABLE booking_slots ADD COLUMN IF NOT EXISTS holes_count INTEGER DEFAULT 18` },
+    // Training slots: lesson format, coach tier and starting price — shown on
+    // the booking page's coach picker (see routes/admin.js POST /schedule/trainings).
+    { name: 'booking_slot_training_type', query: `ALTER TABLE booking_slots ADD COLUMN IF NOT EXISTS training_type TEXT` },
+    { name: 'booking_slot_trainer_tier', query: `ALTER TABLE booking_slots ADD COLUMN IF NOT EXISTS trainer_tier TEXT` },
+    { name: 'booking_slot_price_from', query: `ALTER TABLE booking_slots ADD COLUMN IF NOT EXISTS price_from NUMERIC` },
   ]
 
   for (const migration of migrations) {

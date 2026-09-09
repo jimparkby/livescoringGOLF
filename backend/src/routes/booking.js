@@ -20,6 +20,7 @@ async function loadSlot(slotId, requesterId) {
   const { rows: [s] } = await db.query(
     `SELECT s.id, s.type, to_char(s.date, 'YYYY-MM-DD') AS date, to_char(s.time, 'HH24:MI') AS time,
             s.duration_minutes, s.capacity, s.trainer_name, s.notes,
+            s.start_hole, s.holes_count, s.training_type, s.trainer_tier, s.price_from,
             COALESCE(SUM(b.players_count), 0) AS booked,
             BOOL_OR(b.user_id = $2) AS booked_by_me
      FROM booking_slots s
@@ -38,6 +39,11 @@ async function loadSlot(slotId, requesterId) {
     capacity: s.capacity,
     trainerName: s.trainer_name,
     notes: s.notes,
+    startHole: s.start_hole,
+    holesCount: s.holes_count,
+    trainingType: s.training_type,
+    trainerTier: s.trainer_tier,
+    priceFrom: s.price_from,
     available: Math.max(0, s.capacity - Number(s.booked)),
     bookedByMe: s.booked_by_me,
   }
@@ -55,6 +61,7 @@ router.get('/slots', async (req, res, next) => {
     const { rows: slots } = await db.query(
       `SELECT s.id, s.type, to_char(s.date, 'YYYY-MM-DD') AS date, to_char(s.time, 'HH24:MI') AS time,
               s.duration_minutes, s.capacity, s.trainer_name, s.notes,
+              s.start_hole, s.holes_count, s.training_type, s.trainer_tier, s.price_from,
               COALESCE(SUM(b.players_count), 0) AS booked,
               BOOL_OR(b.user_id = $3) AS booked_by_me
        FROM booking_slots s
@@ -74,6 +81,11 @@ router.get('/slots', async (req, res, next) => {
       capacity: s.capacity,
       trainerName: s.trainer_name,
       notes: s.notes,
+      startHole: s.start_hole,
+      holesCount: s.holes_count,
+      trainingType: s.training_type,
+      trainerTier: s.trainer_tier,
+      priceFrom: s.price_from,
       available: Math.max(0, s.capacity - Number(s.booked)),
       bookedByMe: s.booked_by_me,
     })))

@@ -223,7 +223,8 @@ router.get('/schedule/slots', async (req, res, next) => {
 
     const { rows: slots } = await db.query(
       `SELECT id, type, to_char(date, 'YYYY-MM-DD') AS date, to_char(time, 'HH24:MI') AS time,
-              duration_minutes, capacity, trainer_name, notes
+              duration_minutes, capacity, trainer_name, notes,
+              start_hole, holes_count, training_type, trainer_tier, price_from
        FROM booking_slots WHERE type = $1 AND date = $2 ORDER BY time ASC`,
       [type, date]
     )
@@ -246,6 +247,11 @@ router.get('/schedule/slots', async (req, res, next) => {
       capacity: s.capacity,
       trainerName: s.trainer_name,
       notes: s.notes,
+      startHole: s.start_hole,
+      holesCount: s.holes_count,
+      trainingType: s.training_type,
+      trainerTier: s.trainer_tier,
+      priceFrom: s.price_from,
       bookings: bookings
         .filter((b) => b.slot_id === s.id)
         .map((b) => ({
@@ -258,12 +264,14 @@ router.get('/schedule/slots', async (req, res, next) => {
 
 router.post('/schedule/tee-times/generate', async (req, res, next) => {
   try {
-    const { date, startTime, endTime, intervalMinutes, capacity } = req.body
+    const { date, startTime, endTime, intervalMinutes, capacity, startHole, holesCount } = req.body
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '') || !/^\d{2}:\d{2}$/.test(startTime || '') || !/^\d{2}:\d{2}$/.test(endTime || '')) {
       return res.status(400).json({ error: 'date, startTime, endTime (HH:MM) required' })
     }
     const interval = Math.max(5, parseInt(intervalMinutes, 10) || 10)
     const slotCapacity = Math.max(1, parseInt(capacity, 10) || 4)
+    const slotStartHole = [1, 10].includes(parseInt(startHole, 10)) ? parseInt(startHole, 10) : 1
+    const slotHolesCount = parseInt(holesCount, 10) === 9 ? 9 : 18
 
     const [startH, startM] = startTime.split(':').map(Number)
     const [endH, endM] = endTime.split(':').map(Number)
@@ -279,9 +287,9 @@ router.post('/schedule/tee-times/generate', async (req, res, next) => {
       const mm = String(m % 60).padStart(2, '0')
       try {
         await db.query(
-          `INSERT INTO booking_slots (type, date, time, duration_minutes, capacity)
-           VALUES ('tee_time', $1, $2, $3, $4)`,
-          [date, `${hh}:${mm}`, interval, slotCapacity]
+          `INSERT INTO booking_slots (type, date, time, duration_minutes, capacity, start_hole, holes_count)
+           VALUES ('tee_time', $1, $2, $3, $4, $5, $6)`,
+          [date, `${hh}:${mm}`, interval, slotCapacity, slotStartHole, slotHolesCount]
         )
         created++
       } catch (err) {
@@ -295,14 +303,14 @@ router.post('/schedule/tee-times/generate', async (req, res, next) => {
 
 router.post('/schedule/trainings', async (req, res, next) => {
   try {
-    const { date, time, durationMinutes, trainerName, capacity, notes } = req.body
+    const { date, time, durationMinutes, trainerName, capacity, notes, trainingType, trainerTier, priceFrom } = req.body
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '') || !/^\d{2}:\d{2}$/.test(time || '') || !String(trainerName || '').trim()) {
       return res.status(400).json({ error: 'date, time (HH:MM) and trainerName required' })
     }
 
     const { rows: [slot] } = await db.query(
-      `INSERT INTO booking_slots (type, date, time, duration_minutes, capacity, trainer_name, notes)
-       VALUES ('training', $1, $2, $3, $4, $5, $6)
+      `INSERT INTO booking_slots (type, date, time, duration_minutes, capacity, trainer_name, notes, training_type, trainer_tier, price_from)
+       VALUES ('training', $1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING id`,
       [
         date, time,
@@ -310,6 +318,9 @@ router.post('/schedule/trainings', async (req, res, next) => {
         Math.max(1, parseInt(capacity, 10) || 1),
         String(trainerName).trim(),
         notes ? String(notes).trim() : null,
+        ['individual', 'on_course'].includes(trainingType) ? trainingType : 'individual',
+        trainerTier === 'pro' ? 'pro' : 'coach',
+        priceFrom ? Number(priceFrom) : null,
       ]
     )
 

@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
+import { Avatar } from "@/components/PlayerAvatar";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { ChevronLeft, Clock, User, Minus, Plus, X } from "lucide-react";
+import { ChevronLeft, Clock, Minus, Plus, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type SlotType = "tee_time" | "training";
+type TrainingType = "individual" | "on_course";
+type TrainerTier = "coach" | "pro";
 
 type Slot = {
   id: number;
@@ -17,6 +20,11 @@ type Slot = {
   capacity: number;
   trainerName: string | null;
   notes: string | null;
+  startHole: number | null;
+  holesCount: number | null;
+  trainingType: TrainingType | null;
+  trainerTier: TrainerTier | null;
+  priceFrom: number | null;
   available: number;
   bookedByMe: boolean;
 };
@@ -31,6 +39,14 @@ type MyBooking = {
   trainerName: string | null;
   notes: string | null;
   playersCount: number;
+};
+
+type Coach = {
+  name: string;
+  tier: TrainerTier | null;
+  priceFrom: number | null;
+  notes: string | null;
+  slots: Slot[];
 };
 
 const DAYS_AHEAD = 14;
@@ -63,6 +79,14 @@ const BookingPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [leavingBookingIds, setLeavingBookingIds] = useState<Set<number>>(new Set());
 
+  // Tee-time filters
+  const [startHole, setStartHole] = useState<1 | 10>(1);
+  const [holesCount, setHolesCount] = useState<9 | 18>(18);
+
+  // Training filters
+  const [trainingFormat, setTrainingFormat] = useState<TrainingType>("individual");
+  const [selectedCoach, setSelectedCoach] = useState<string | null>(null);
+
   const loadSlots = () => {
     setSlots(null);
     api
@@ -77,6 +101,41 @@ const BookingPage = () => {
 
   useEffect(loadSlots, [tab, selectedDate]);
   useEffect(loadMyBookings, []);
+
+  // Tee-time slots matching the selected start hole / holes count. A slot
+  // with no value set (generated before this filter existed) matches any
+  // selection rather than disappearing.
+  const teeSlots = useMemo(() => {
+    if (!slots) return null;
+    return slots.filter(
+      (s) =>
+        (s.startHole == null || s.startHole === startHole) &&
+        (s.holesCount == null || s.holesCount === holesCount)
+    );
+  }, [slots, startHole, holesCount]);
+
+  // Training slots grouped into coaches, one card per trainer name.
+  const coaches = useMemo<Coach[]>(() => {
+    if (!slots) return [];
+    const byName = new Map<string, Coach>();
+    slots
+      .filter((s) => s.trainingType == null || s.trainingType === trainingFormat)
+      .forEach((s) => {
+        const name = s.trainerName ?? "Тренер";
+        const entry = byName.get(name) ?? { name, tier: s.trainerTier, priceFrom: s.priceFrom, notes: s.notes, slots: [] };
+        entry.slots.push(s);
+        if (s.priceFrom != null && (entry.priceFrom == null || s.priceFrom < entry.priceFrom)) entry.priceFrom = s.priceFrom;
+        byName.set(name, entry);
+      });
+    return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [slots, trainingFormat]);
+
+  useEffect(() => {
+    if (coaches.length === 0) { setSelectedCoach(null); return; }
+    if (!coaches.find((c) => c.name === selectedCoach)) setSelectedCoach(coaches[0].name);
+  }, [coaches]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const activeCoach = coaches.find((c) => c.name === selectedCoach) ?? null;
 
   const openBooking = (slot: Slot) => {
     setPlayersCount(1);
@@ -144,10 +203,12 @@ const BookingPage = () => {
     }, EXIT_MS);
   };
 
+  const timeSlots = tab === "tee_time" ? teeSlots : activeCoach?.slots ?? [];
+
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
-      <button onClick={() => navigate("/")} className="flex items-center gap-1 text-action font-bold text-lg">
-        <ChevronLeft className="h-5 w-5" strokeWidth={2.5} /> Записаться
+      <button onClick={() => navigate("/round")} className="flex items-center gap-1 text-action font-bold text-lg">
+        <ChevronLeft className="h-5 w-5" strokeWidth={2.5} /> Букинг
       </button>
 
       {myBookings.length > 0 && (
@@ -196,6 +257,99 @@ const BookingPage = () => {
         </button>
       </div>
 
+      {tab === "tee_time" ? (
+        <Card className="p-4 space-y-3">
+          <div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2">Старт</div>
+            <div className="flex gap-2">
+              {([1, 10] as const).map((h) => (
+                <button
+                  key={h}
+                  onClick={() => setStartHole(h)}
+                  className="flex-1 h-10 rounded-xl text-xs font-bold transition-all"
+                  style={startHole === h ? { background: "#15361f", color: "#f3ede1" } : { background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}
+                >
+                  С {h}-й лунки
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2">Лунки</div>
+            <div className="flex gap-1 p-1 rounded-xl bg-muted">
+              {([18, 9] as const).map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setHolesCount(n)}
+                  className="flex-1 h-9 rounded-lg text-xs font-bold transition-all"
+                  style={holesCount === n ? { background: "#c9a24b", color: "#15361f" } : { color: "hsl(var(--muted-foreground))" }}
+                >
+                  {n} лунок
+                </button>
+              ))}
+            </div>
+          </div>
+        </Card>
+      ) : (
+        <Card className="p-4 space-y-3">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">Формат</div>
+          <div className="flex gap-1 p-1 rounded-xl bg-muted">
+            <button
+              onClick={() => setTrainingFormat("individual")}
+              className="flex-1 h-9 rounded-lg text-xs font-bold transition-all"
+              style={trainingFormat === "individual" ? { background: "#c9a24b", color: "#15361f" } : { color: "hsl(var(--muted-foreground))" }}
+            >
+              Индивидуальная
+            </button>
+            <button
+              onClick={() => setTrainingFormat("on_course")}
+              className="flex-1 h-9 rounded-lg text-xs font-bold transition-all"
+              style={trainingFormat === "on_course" ? { background: "#c9a24b", color: "#15361f" } : { color: "hsl(var(--muted-foreground))" }}
+            >
+              Игра с тренером
+            </button>
+          </div>
+
+          {slots !== null && coaches.length > 0 && (
+            <div className="space-y-2 pt-1">
+              {coaches.map((c) => {
+                const active = c.name === selectedCoach;
+                return (
+                  <button
+                    key={c.name}
+                    onClick={() => setSelectedCoach(c.name)}
+                    className={cn(
+                      "w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left",
+                    )}
+                    style={active ? { borderColor: "#15361f" } : { borderColor: "hsl(var(--border))" }}
+                  >
+                    <Avatar name={c.name} tone={active ? "orange" : "muted"} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <div className="font-bold text-sm truncate">{c.name}</div>
+                        {c.tier === "pro" && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{ background: "#15361f", color: "#f3ede1" }}>ПРО</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {c.tier === "pro" ? "Про" : "Тренер"}
+                        {c.notes ? ` · ${c.notes}` : ""}
+                        {c.priceFrom ? ` · от ${c.priceFrom} BYN` : ""}
+                      </div>
+                    </div>
+                    {active && (
+                      <div className="h-6 w-6 rounded-full grid place-items-center shrink-0" style={{ background: "#15361f" }}>
+                        <Check className="h-3.5 w-3.5" style={{ color: "#f3ede1" }} />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+      )}
+
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
         {days.map((d) => (
           <button
@@ -216,13 +370,15 @@ const BookingPage = () => {
         <div className="flex justify-center py-10">
           <div className="h-6 w-6 rounded-full border-2 border-action border-t-transparent animate-spin" />
         </div>
-      ) : slots.length === 0 ? (
+      ) : tab === "training" && coaches.length === 0 ? (
+        <Card className="p-8 text-center text-sm text-muted-foreground">На этот день нет запланированных тренировок</Card>
+      ) : timeSlots.length === 0 ? (
         <Card className="p-8 text-center text-sm text-muted-foreground">
-          {tab === "tee_time" ? "На этот день нет открытых ти-таймов" : "На этот день нет запланированных тренировок"}
+          {tab === "tee_time" ? "На этот день нет открытых ти-таймов с такими параметрами" : "У этого тренера нет свободного времени в этот день"}
         </Card>
       ) : (
         <div className="space-y-2">
-          {slots.map((s) => {
+          {timeSlots.map((s) => {
             const full = s.available <= 0 && !s.bookedByMe;
             return (
               <Card key={s.id} className="p-3.5 flex items-center justify-between gap-3 animate-in fade-in duration-300">
@@ -233,9 +389,7 @@ const BookingPage = () => {
                   <div className="min-w-0">
                     <div className="font-bold text-sm">{s.time}</div>
                     <div className="text-xs text-muted-foreground truncate">
-                      {s.type === "training"
-                        ? <span className="flex items-center gap-1"><User className="h-3 w-3" /> {s.trainerName}</span>
-                        : `${s.available} из ${s.capacity} мест`}
+                      {s.type === "training" ? (s.notes ?? "Индивидуальная тренировка") : `${s.available} из ${s.capacity} мест`}
                     </div>
                   </div>
                 </div>
@@ -265,7 +419,13 @@ const BookingPage = () => {
                 <div className="font-display font-semibold text-foreground">
                   {bookingSlot.type === "tee_time" ? "Ти-тайм" : "Тренировка"} в {bookingSlot.time}
                 </div>
-                {bookingSlot.trainerName && <div className="text-muted-foreground text-xs">Тренер: {bookingSlot.trainerName}</div>}
+                {bookingSlot.type === "tee_time" ? (
+                  <div className="text-muted-foreground text-xs">
+                    Старт с {bookingSlot.startHole ?? 1}-й лунки · {bookingSlot.holesCount ?? 18} лунок
+                  </div>
+                ) : bookingSlot.trainerName && (
+                  <div className="text-muted-foreground text-xs">Тренер: {bookingSlot.trainerName}</div>
+                )}
               </div>
               <button onClick={() => setBookingSlot(null)} className="h-9 w-9 rounded-full grid place-items-center border border-border">
                 <X className="h-4 w-4 text-foreground" />
