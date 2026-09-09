@@ -123,6 +123,17 @@ if (!token) {
     }
   }
 
+  // Persistent "Open" button next to the message field (visible in every
+  // chat with the bot, no /start needed) — launches the mini app in place.
+  bot.setChatMenuButton({
+    menu_button: {
+      type: 'web_app',
+      text: 'Открыть',
+      web_app: { url: webAppUrl },
+    },
+  }).then(() => console.log('[bot] Menu button set to web_app:', webAppUrl))
+    .catch((err) => console.error('[bot] setChatMenuButton failed:', err.message))
+
   // ── /start ────────────────────────────────────────────────────────────────
   bot.onText(/\/start(?:\s+(\S+))?/, async (msg, match) => {
     console.log('[bot] /start from', msg.from?.id)
@@ -227,7 +238,7 @@ if (!token) {
         parse_mode: 'HTML',
         reply_markup: {
           inline_keyboard: [
-            [{ text: '⛳ Открыть GolfMinsk Live', url: webAppUrl }],
+            [{ text: '⛳ Открыть GolfMinsk Live', web_app: { url: webAppUrl } }],
           ],
         },
       })
@@ -294,7 +305,7 @@ if (!token) {
         message_id: statusMsg.message_id,
         reply_markup: {
           inline_keyboard: [[
-            { text: '✅ Подтвердить счёт', url: `${webAppUrl}?confirm=${sc.id}` },
+            { text: '✅ Подтвердить счёт', web_app: { url: `${webAppUrl}?confirm=${sc.id}` } },
           ]],
         },
       })

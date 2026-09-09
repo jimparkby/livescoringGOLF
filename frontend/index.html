@@ -35,6 +35,10 @@
          there's no dark-then-light flash on first paint. */
       html, body, #root { background: #f3ede1; }
     </style>
+
+    <!-- Telegram Mini App bridge: no-ops outside Telegram, so the same build
+         still works as a plain website. -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
   </head>
 
   <body>
