@@ -43,7 +43,17 @@ const AppLayout = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header className="sticky top-0 z-30" style={{ background: "#0d1f14" }}>
+      <header
+        className="sticky top-0 z-30"
+        style={{
+          background: "#0d1f14",
+          // Device notch (env, needs viewport-fit=cover) plus Telegram's own
+          // floating close/menu controls in fullscreen mode (--tg-content-
+          // safe-area-inset-top, kept live by telegram-web-app.js) — without
+          // this the header sits underneath both in fullscreen.
+          paddingTop: "calc(env(safe-area-inset-top, 0px) + var(--tg-content-safe-area-inset-top, 0px))",
+        }}
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-6">
           <NavLink to="/" className="flex items-center gap-2 shrink-0">
             <Trophy className="h-5 w-5" style={{ color: "#c9a24b" }} strokeWidth={2} />
