@@ -5,6 +5,7 @@ import { bot } from '../bot.js'
 import { parseParticipantsPhoto, parseTournamentResultsPhoto } from '../services/adminPhotoParser.js'
 import { calculateAndSavePredictions } from '../services/predictionsCalculator.js'
 import { recalculatePredictionsForUpcomingTournaments } from '../services/winProbabilityAI.js'
+import { DEFAULT_LESSON_PRICE } from '../lib/lessonPricing.js'
 
 const router = Router()
 
@@ -315,13 +316,6 @@ router.get('/trainers', async (_req, res, next) => {
 async function loadTrainer(trainerId) {
   const { rows: [t] } = await db.query('SELECT id, name, role FROM trainers WHERE id = $1', [trainerId])
   return t ?? null
-}
-
-// Matches the club's published lesson pricing: golf pros charge more than
-// coaches, and a full on-course playthrough more than a range lesson.
-const DEFAULT_LESSON_PRICE = {
-  individual: { trainer: 145, golf_pro: 175 },
-  on_course: { trainer: 260, golf_pro: 310 },
 }
 
 router.post('/schedule/trainings', async (req, res, next) => {

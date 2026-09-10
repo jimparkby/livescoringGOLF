@@ -344,5 +344,8 @@ async function runMigrations() {
   }
 }
 
-// Run migrations in background without blocking
-runMigrations().catch(err => console.error('[db] Migrations failed:', err))
+// Run migrations in background without blocking server startup, but expose
+// the promise so anything that depends on the schema being ready (e.g. the
+// slot auto-generator, which inserts into tables migrations just created)
+// can await it instead of racing it.
+export const migrationsReady = runMigrations().catch(err => console.error('[db] Migrations failed:', err))
