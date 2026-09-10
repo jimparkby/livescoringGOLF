@@ -44,7 +44,7 @@ const scoreLabel = (score: number, par: number) => {
 };
 
 const Header = () => (
-  <Link to="/" className="flex items-center gap-2 px-5 h-14 shrink-0" style={{ background: "#0d1f14", paddingTop: "env(safe-area-inset-top, 0px)" }}>
+  <Link to="/" className="flex items-center gap-2 px-5 h-14 shrink-0" style={{ background: "#0d1f14", paddingTop: "calc(env(safe-area-inset-top, 0px) + var(--tg-content-safe-area-inset-top, 0px))" }}>
     <Trophy className="h-5 w-5" style={{ color: "#c9a24b" }} strokeWidth={2} />
     <span className="font-black tracking-wider text-sm text-white">GOLF CLUB MINSK</span>
   </Link>

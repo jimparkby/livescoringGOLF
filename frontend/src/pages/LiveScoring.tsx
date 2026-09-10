@@ -175,7 +175,7 @@ const LiveScoringPage = () => {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between px-5" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 14px)", paddingBottom: 10 }}>
+      <div className="flex items-center justify-between px-5" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + var(--tg-content-safe-area-inset-top, 0px) + 14px)", paddingBottom: 10 }}>
         <LiveScoringLogo />
         <button onClick={() => setShowAddPlayer(true)} className="h-9 w-9 rounded-full grid place-items-center border border-border" title="Добавить игрока">
           <UserPlus className="h-4 w-4" style={{ color: INK }} strokeWidth={2.5} />

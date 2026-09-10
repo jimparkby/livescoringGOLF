@@ -338,7 +338,7 @@ const TournamentRoundPlayer = ({
     };
 
     return (
-      <div className="fixed inset-0 z-50 flex flex-col bg-background" style={{ paddingTop: "max(env(safe-area-inset-top), 32px)", paddingBottom: "max(env(safe-area-inset-bottom), 28px)" }}>
+      <div className="fixed inset-0 z-50 flex flex-col bg-background" style={{ paddingTop: "calc(max(env(safe-area-inset-top, 0px), 32px) + var(--tg-content-safe-area-inset-top, 0px))", paddingBottom: "max(env(safe-area-inset-bottom), 28px)" }}>
         <div className="flex-1 flex flex-col items-center justify-center px-5 gap-6 overflow-y-auto">
           <div className="text-center">
             <div className="h-16 w-16 rounded-full mx-auto mb-4 grid place-items-center" style={{ background: "var(--accent-tint)", border: "2px solid hsl(var(--action))" }}>
@@ -501,7 +501,7 @@ const TournamentRoundPlayer = ({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between px-5" style={{ paddingTop: 10, paddingBottom: 10 }}>
+      <div className="flex items-center justify-between px-5" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + var(--tg-content-safe-area-inset-top, 0px) + 10px)", paddingBottom: 10 }}>
         <button onClick={onExit} className="h-9 w-9 rounded-full grid place-items-center bg-muted">
           <X className="h-4 w-4 text-foreground" strokeWidth={2.5} />
         </button>
