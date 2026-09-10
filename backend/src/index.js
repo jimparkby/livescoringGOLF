@@ -80,7 +80,15 @@ if (!distPath) {
 
 if (distPath) {
   app.use(express.static(distPath))
-  app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')))
+  // Telegram's in-app browser caches the mini app's entry HTML aggressively,
+  // so a fresh deploy (e.g. an auth fix) can silently keep serving a stale
+  // bundle to phones that already have it cached — force revalidation on
+  // every open. The hashed JS/CSS files index.html references are safe to
+  // let express.static cache normally since their filenames change per build.
+  app.get('*', (_req, res) => {
+    res.set('Cache-Control', 'no-store, must-revalidate')
+    res.sendFile(path.join(distPath, 'index.html'))
+  })
 } else {
   app.get('*', (_req, res) => res.json({ status: 'api-only' }))
 }
