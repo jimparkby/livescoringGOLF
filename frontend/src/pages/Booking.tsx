@@ -25,6 +25,8 @@ type Slot = {
   trainingType: TrainingType | null;
   trainerTier: TrainerTier | null;
   priceFrom: number | null;
+  trainerPhotoUrl: string | null;
+  trainerBio: string | null;
   available: number;
   bookedByMe: boolean;
 };
@@ -46,6 +48,8 @@ type Coach = {
   tier: TrainerTier | null;
   priceFrom: number | null;
   notes: string | null;
+  photoUrl: string | null;
+  bio: string | null;
   slots: Slot[];
 };
 
@@ -122,7 +126,7 @@ const BookingPage = () => {
       .filter((s) => s.trainingType == null || s.trainingType === trainingFormat)
       .forEach((s) => {
         const name = s.trainerName ?? "Тренер";
-        const entry = byName.get(name) ?? { name, tier: s.trainerTier, priceFrom: s.priceFrom, notes: s.notes, slots: [] };
+        const entry = byName.get(name) ?? { name, tier: s.trainerTier, priceFrom: s.priceFrom, notes: s.notes, photoUrl: s.trainerPhotoUrl, bio: s.trainerBio, slots: [] };
         entry.slots.push(s);
         if (s.priceFrom != null && (entry.priceFrom == null || s.priceFrom < entry.priceFrom)) entry.priceFrom = s.priceFrom;
         byName.set(name, entry);
@@ -323,7 +327,7 @@ const BookingPage = () => {
                     )}
                     style={active ? { borderColor: "#15361f" } : { borderColor: "hsl(var(--border))" }}
                   >
-                    <Avatar name={c.name} tone={active ? "orange" : "muted"} />
+                    <Avatar name={c.name} tone={active ? "orange" : "muted"} photoUrl={c.photoUrl ?? undefined} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         <div className="font-bold text-sm truncate">{c.name}</div>
@@ -332,7 +336,7 @@ const BookingPage = () => {
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground truncate">
-                        {c.tier === "pro" ? "Про" : "Тренер"}
+                        {(c.bio?.split("\n")[0] ?? (c.tier === "pro" ? "Golf Pro" : "Тренер"))}
                         {c.notes ? ` · ${c.notes}` : ""}
                         {c.priceFrom ? ` · от ${c.priceFrom} BYN` : ""}
                       </div>

@@ -285,6 +285,53 @@ async function runMigrations() {
     { name: 'booking_slot_training_type', query: `ALTER TABLE booking_slots ADD COLUMN IF NOT EXISTS training_type TEXT` },
     { name: 'booking_slot_trainer_tier', query: `ALTER TABLE booking_slots ADD COLUMN IF NOT EXISTS trainer_tier TEXT` },
     { name: 'booking_slot_price_from', query: `ALTER TABLE booking_slots ADD COLUMN IF NOT EXISTS price_from NUMERIC` },
+    // Named trainer roster (photo + bio shown on the booking page's coach
+    // picker) instead of admin free-typing a name per slot — see
+    // routes/admin.js GET/POST /trainers and POST /schedule/trainings.
+    { name: 'trainers', query: `CREATE TABLE IF NOT EXISTS trainers (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      role TEXT NOT NULL DEFAULT 'trainer',
+      photo_url TEXT,
+      bio TEXT,
+      active BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )` },
+    { name: 'booking_slot_trainer_id', query: `ALTER TABLE booking_slots ADD COLUMN IF NOT EXISTS trainer_id INTEGER REFERENCES trainers(id) ON DELETE SET NULL` },
+    // Seed the club's real coaching staff (name/role/bio) so admin picks a
+    // trainer instead of typing one — ON CONFLICT (name) DO NOTHING makes
+    // this safe to re-run and to leave alone once an admin edits a row.
+    { name: 'seed_trainers', query: `
+      INSERT INTO trainers (name, role, photo_url, bio) VALUES
+      ('Денис Чирков', 'golf_pro', '/images/trainers/chirkov-denis.webp', 'В гольфе с 2003 года.
+Тренерский стаж — с 2006 года (более 20 лет).
+В статусе профессионального игрока Казахстана — с 2011 года.
+Сертификация по программе PGA of Europe под руководством Джона Хеггарти в 2012 году.
+Диплом БГУФК по специальности «тренер-преподаватель».
+Участник и призёр международных соревнований в статусе профессионала: European Challenge Tour, Kazakhstan Open, Russian Open, Korean Cup, Uzbekistan Open и многих других.'),
+      ('Илья Бурлаков', 'golf_pro', '/images/trainers/burlakov-ilya.webp', 'Тренерский стаж: 12 лет.
+Профессиональный статус: в статусе профессионала с 2012 года.
+В гольфе с 1999 года. Победитель и призёр всероссийских соревнований, член сборной команды России. Участник профессиональных турниров в Европе.
+Образование: выпускник кафедры гольфа Российского государственного университета физической культуры, спорта, молодёжи и туризма. Проходил обучение в European Tour Performance Institute (Дубай).'),
+      ('Николай Марцинкевич', 'golf_pro', '/images/trainers/martsinkevich-nikolay.webp', 'В гольфе с 2018 года.
+Тренерский стаж — более 5 лет.
+Играющий профессионал категории «В» (ТВ), член ПГА России.
+Главный тренер детско-юношеской школы гольфа гольф-клуба «Минск».
+Победитель международных турниров.'),
+      ('Владимир Головач', 'trainer', '/images/trainers/golovach-vladimir.webp', 'В гольфе с 2010 года.
+Сертифицированный тренер по детской программе SNAG-гольф.
+Диплом БГУФК по специальности «тренер-преподаватель».
+Тренер детско-юношеской школы гольфа.
+Тренерский стаж — более 10 лет.'),
+      ('Андрей Ярук', 'trainer', '/images/trainers/yaruk-andrey.webp', 'В гольфе с 2013 года.
+Играющий профессионал категории «В» (ТВ), член ПГА России.
+Тренер детско-юношеской школы гольф-клуба «Минск».
+Победитель международных и республиканских турниров.'),
+      ('Александр Максимчик', 'trainer', '/images/trainers/maksimchik-aleksandr.webp', 'В гольфе с 2014 года. Победитель и призёр международных и республиканских турниров.
+Тренерский стаж: 12 лет.
+Образование: Американская ассоциация профессиональных тренеров по гольфу (PGTAA), квалификация — Master Teaching Professional.')
+      ON CONFLICT (name) DO NOTHING
+    ` },
   ]
 
   for (const migration of migrations) {

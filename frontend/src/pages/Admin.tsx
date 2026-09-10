@@ -32,6 +32,8 @@ type RegistrationSummary = {
 
 type LiveEntry = { tournament: CustomTournament; round: Round | null; isActive: boolean };
 
+type Trainer = { id: number; name: string; role: "trainer" | "golf_pro"; photoUrl: string | null; bio: string | null };
+
 type ScheduleSlotType = "tee_time" | "training";
 type ScheduleSlot = {
   id: number;
@@ -316,15 +318,21 @@ const ScheduleTab = () => {
   const [holesCount, setHolesCount] = useState<"18" | "9">("18");
   const [generating, setGenerating] = useState(false);
 
+  const [trainers, setTrainers] = useState<Trainer[] | null>(null);
+  const [trainerId, setTrainerId] = useState("");
+  const [trainingType, setTrainingType] = useState<"individual" | "on_course">("individual");
+  const [priceFrom, setPriceFrom] = useState("");
+
   const [trainingTime, setTrainingTime] = useState("10:00");
-  const [duration, setDuration] = useState("60");
-  const [trainerName, setTrainerName] = useState("");
+  const [duration, setDuration] = useState("50");
   const [trainingCapacity, setTrainingCapacity] = useState("1");
   const [notes, setNotes] = useState("");
-  const [trainingType, setTrainingType] = useState<"individual" | "on_course">("individual");
-  const [trainerTier, setTrainerTier] = useState<"coach" | "pro">("coach");
-  const [priceFrom, setPriceFrom] = useState("");
   const [creating, setCreating] = useState(false);
+
+  const [trainingStart, setTrainingStart] = useState("08:00");
+  const [trainingEnd, setTrainingEnd] = useState("18:00");
+  const [trainingInterval, setTrainingInterval] = useState("30");
+  const [generatingTraining, setGeneratingTraining] = useState(false);
 
   const loadSlots = () => {
     setSlots(null);
@@ -335,6 +343,20 @@ const ScheduleTab = () => {
   };
 
   useEffect(loadSlots, [subTab, date]);
+
+  useEffect(() => {
+    api.get<Trainer[]>("/api/admin/trainers").then((list) => {
+      setTrainers(list);
+      setTrainerId((id) => id || (list[0]?.id ? String(list[0].id) : ""));
+    }).catch(() => setTrainers([]));
+  }, []);
+
+  // Golf pros charge more, and an on-course playthrough runs longer than a
+  // range lesson — keep the duration/price fields in sync with the picker
+  // instead of making the admin retype the club's own price list each time.
+  useEffect(() => {
+    setDuration(trainingType === "on_course" ? "120" : "50");
+  }, [trainingType]);
 
   const generateTeeTimes = async () => {
     setGenerating(true);
@@ -353,24 +375,40 @@ const ScheduleTab = () => {
   };
 
   const createTraining = async () => {
-    if (!trainerName.trim()) { toast.error("Укажите тренера"); return; }
+    if (!trainerId) { toast.error("Выберите тренера"); return; }
     setCreating(true);
     try {
       await api.post("/api/admin/schedule/trainings", {
         date, time: trainingTime, durationMinutes: Number(duration),
-        trainerName: trainerName.trim(), capacity: Number(trainingCapacity),
+        trainerId: Number(trainerId), capacity: Number(trainingCapacity),
         notes: notes.trim() || undefined,
-        trainingType, trainerTier, priceFrom: priceFrom ? Number(priceFrom) : undefined,
+        trainingType, priceFrom: priceFrom ? Number(priceFrom) : undefined,
       });
       toast.success("Тренировка создана");
-      setTrainerName("");
       setNotes("");
-      setPriceFrom("");
       loadSlots();
     } catch {
       toast.error("Ошибка создания тренировки");
     } finally {
       setCreating(false);
+    }
+  };
+
+  const generateTrainings = async () => {
+    if (!trainerId) { toast.error("Выберите тренера"); return; }
+    setGeneratingTraining(true);
+    try {
+      const data = await api.post<{ created: number }>("/api/admin/schedule/trainings/generate", {
+        date, trainerId: Number(trainerId), startTime: trainingStart, endTime: trainingEnd,
+        intervalMinutes: Number(trainingInterval), durationMinutes: Number(duration),
+        trainingType, priceFrom: priceFrom ? Number(priceFrom) : undefined,
+      });
+      toast.success(`Создано слотов: ${data.created}`);
+      loadSlots();
+    } catch {
+      toast.error("Ошибка создания слотов");
+    } finally {
+      setGeneratingTraining(false);
     }
   };
 
@@ -459,20 +497,20 @@ const ScheduleTab = () => {
         </Card>
       ) : (
         <Card className="p-4 space-y-3">
-          <div className="font-bold text-sm">Создать тренировку</div>
-          <div className="grid grid-cols-2 gap-2">
-            <label className="text-xs text-muted-foreground">
-              Время
-              <input type="time" value={trainingTime} onChange={(e) => setTrainingTime(e.target.value)} className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm" />
-            </label>
-            <label className="text-xs text-muted-foreground">
-              Длительность, мин
-              <input type="number" min={10} value={duration} onChange={(e) => setDuration(e.target.value)} className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm" />
-            </label>
-          </div>
+          <div className="font-bold text-sm">Тренировки</div>
           <label className="text-xs text-muted-foreground block">
             Тренер
-            <input value={trainerName} onChange={(e) => setTrainerName(e.target.value)} placeholder="Имя тренера" className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm" />
+            <select value={trainerId} onChange={(e) => setTrainerId(e.target.value)} className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm">
+              {trainers === null ? (
+                <option>Загрузка…</option>
+              ) : trainers.length === 0 ? (
+                <option>Нет тренеров</option>
+              ) : (
+                trainers.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name} · {t.role === "golf_pro" ? "Golf Pro" : "Тренер"}</option>
+                ))
+              )}
+            </select>
           </label>
           <div className="grid grid-cols-2 gap-2">
             <label className="text-xs text-muted-foreground">
@@ -483,35 +521,65 @@ const ScheduleTab = () => {
               </select>
             </label>
             <label className="text-xs text-muted-foreground">
-              Уровень тренера
-              <select value={trainerTier} onChange={(e) => setTrainerTier(e.target.value as "coach" | "pro")} className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm">
-                <option value="coach">Тренер</option>
-                <option value="pro">Про</option>
-              </select>
-            </label>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <label className="text-xs text-muted-foreground">
-              Мест
-              <input type="number" min={1} value={trainingCapacity} onChange={(e) => setTrainingCapacity(e.target.value)} className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm" />
-            </label>
-            <label className="text-xs text-muted-foreground">
-              Цена от, BYN (необязательно)
-              <input type="number" min={0} value={priceFrom} onChange={(e) => setPriceFrom(e.target.value)} className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm" />
+              Длительность, мин
+              <input type="number" min={10} value={duration} onChange={(e) => setDuration(e.target.value)} className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm" />
             </label>
           </div>
           <label className="text-xs text-muted-foreground block">
-            Заметка / специализация (необязательно)
-            <input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Например: постановка удара" className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm" />
+            Цена, BYN (по умолчанию — как в прайсе клуба)
+            <input type="number" min={0} value={priceFrom} onChange={(e) => setPriceFrom(e.target.value)} placeholder={trainingType === "on_course" ? "260 / 310" : "145 / 175"} className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm" />
           </label>
-          <button
-            onClick={createTraining}
-            disabled={creating}
-            className="w-full h-11 rounded-xl font-bold text-sm disabled:opacity-40"
-            style={{ background: "#c9a24b", color: "#15361f" }}
-          >
-            {creating ? "Создаю…" : "Создать"}
-          </button>
+
+          <div className="pt-2 border-t border-border space-y-2">
+            <div className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Сгенерировать на день</div>
+            <div className="grid grid-cols-3 gap-2">
+              <label className="text-xs text-muted-foreground">
+                С
+                <input type="time" value={trainingStart} onChange={(e) => setTrainingStart(e.target.value)} className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm" />
+              </label>
+              <label className="text-xs text-muted-foreground">
+                До
+                <input type="time" value={trainingEnd} onChange={(e) => setTrainingEnd(e.target.value)} className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm" />
+              </label>
+              <label className="text-xs text-muted-foreground">
+                Шаг, мин
+                <input type="number" min={10} value={trainingInterval} onChange={(e) => setTrainingInterval(e.target.value)} className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm" />
+              </label>
+            </div>
+            <button
+              onClick={generateTrainings}
+              disabled={generatingTraining}
+              className="w-full h-11 rounded-xl font-bold text-sm disabled:opacity-40"
+              style={{ background: "#c9a24b", color: "#15361f" }}
+            >
+              {generatingTraining ? "Создаю…" : "Сгенерировать слоты"}
+            </button>
+          </div>
+
+          <div className="pt-2 border-t border-border space-y-2">
+            <div className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Добавить один слот</div>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="text-xs text-muted-foreground">
+                Время
+                <input type="time" value={trainingTime} onChange={(e) => setTrainingTime(e.target.value)} className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm" />
+              </label>
+              <label className="text-xs text-muted-foreground">
+                Мест
+                <input type="number" min={1} value={trainingCapacity} onChange={(e) => setTrainingCapacity(e.target.value)} className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm" />
+              </label>
+            </div>
+            <label className="text-xs text-muted-foreground block">
+              Заметка / специализация (необязательно)
+              <input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Например: постановка удара" className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm" />
+            </label>
+            <button
+              onClick={createTraining}
+              disabled={creating}
+              className="w-full h-11 rounded-xl font-bold text-sm disabled:opacity-40 border border-border"
+            >
+              {creating ? "Создаю…" : "Добавить слот"}
+            </button>
+          </div>
         </Card>
       )}
 

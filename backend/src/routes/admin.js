@@ -301,30 +301,106 @@ router.post('/schedule/tee-times/generate', async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
+// ── Trainers ─────────────────────────────────────────────────────────────
+
+router.get('/trainers', async (_req, res, next) => {
+  try {
+    const { rows } = await db.query(
+      `SELECT id, name, role, photo_url, bio, active FROM trainers WHERE active ORDER BY role, name`
+    )
+    res.json(rows.map((t) => ({ id: t.id, name: t.name, role: t.role, photoUrl: t.photo_url, bio: t.bio })))
+  } catch (err) { next(err) }
+})
+
+async function loadTrainer(trainerId) {
+  const { rows: [t] } = await db.query('SELECT id, name, role FROM trainers WHERE id = $1', [trainerId])
+  return t ?? null
+}
+
+// Matches the club's published lesson pricing: golf pros charge more than
+// coaches, and a full on-course playthrough more than a range lesson.
+const DEFAULT_LESSON_PRICE = {
+  individual: { trainer: 145, golf_pro: 175 },
+  on_course: { trainer: 260, golf_pro: 310 },
+}
+
 router.post('/schedule/trainings', async (req, res, next) => {
   try {
-    const { date, time, durationMinutes, trainerName, capacity, notes, trainingType, trainerTier, priceFrom } = req.body
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '') || !/^\d{2}:\d{2}$/.test(time || '') || !String(trainerName || '').trim()) {
-      return res.status(400).json({ error: 'date, time (HH:MM) and trainerName required' })
+    const { date, time, durationMinutes, trainerId, capacity, notes, trainingType, priceFrom } = req.body
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '') || !/^\d{2}:\d{2}$/.test(time || '') || !trainerId) {
+      return res.status(400).json({ error: 'date, time (HH:MM) and trainerId required' })
     }
+    const trainer = await loadTrainer(parseInt(trainerId, 10))
+    if (!trainer) return res.status(400).json({ error: 'Trainer not found' })
+
+    const format = ['individual', 'on_course'].includes(trainingType) ? trainingType : 'individual'
+    const tier = trainer.role === 'golf_pro' ? 'pro' : 'coach'
+    const price = priceFrom ? Number(priceFrom) : DEFAULT_LESSON_PRICE[format][trainer.role] ?? null
 
     const { rows: [slot] } = await db.query(
-      `INSERT INTO booking_slots (type, date, time, duration_minutes, capacity, trainer_name, notes, training_type, trainer_tier, price_from)
-       VALUES ('training', $1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO booking_slots (type, date, time, duration_minutes, capacity, trainer_id, trainer_name, notes, training_type, trainer_tier, price_from)
+       VALUES ('training', $1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id`,
       [
         date, time,
-        Math.max(10, parseInt(durationMinutes, 10) || 60),
+        Math.max(10, parseInt(durationMinutes, 10) || (format === 'on_course' ? 120 : 50)),
         Math.max(1, parseInt(capacity, 10) || 1),
-        String(trainerName).trim(),
+        trainer.id,
+        trainer.name,
         notes ? String(notes).trim() : null,
-        ['individual', 'on_course'].includes(trainingType) ? trainingType : 'individual',
-        trainerTier === 'pro' ? 'pro' : 'coach',
-        priceFrom ? Number(priceFrom) : null,
+        format,
+        tier,
+        price,
       ]
     )
 
     res.json({ id: slot.id })
+  } catch (err) { next(err) }
+})
+
+// Bulk-create one training slot per interval across a time range, same idea
+// as /schedule/tee-times/generate — saves clicking "add" once per half hour
+// when opening up a trainer's whole day.
+router.post('/schedule/trainings/generate', async (req, res, next) => {
+  try {
+    const { date, trainerId, startTime, endTime, intervalMinutes, durationMinutes, trainingType, priceFrom } = req.body
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '') || !/^\d{2}:\d{2}$/.test(startTime || '') || !/^\d{2}:\d{2}$/.test(endTime || '') || !trainerId) {
+      return res.status(400).json({ error: 'date, trainerId, startTime, endTime (HH:MM) required' })
+    }
+    const trainer = await loadTrainer(parseInt(trainerId, 10))
+    if (!trainer) return res.status(400).json({ error: 'Trainer not found' })
+
+    const format = ['individual', 'on_course'].includes(trainingType) ? trainingType : 'individual'
+    const tier = trainer.role === 'golf_pro' ? 'pro' : 'coach'
+    const price = priceFrom ? Number(priceFrom) : DEFAULT_LESSON_PRICE[format][trainer.role] ?? null
+    const duration = Math.max(10, parseInt(durationMinutes, 10) || (format === 'on_course' ? 120 : 50))
+    const interval = Math.max(10, parseInt(intervalMinutes, 10) || 30)
+
+    const [startH, startM] = startTime.split(':').map(Number)
+    const [endH, endM] = endTime.split(':').map(Number)
+    const startMinutes = startH * 60 + startM
+    const endMinutes = endH * 60 + endM
+    if (endMinutes <= startMinutes) {
+      return res.status(400).json({ error: 'endTime must be after startTime' })
+    }
+
+    let created = 0
+    for (let m = startMinutes; m + duration <= endMinutes; m += interval) {
+      const hh = String(Math.floor(m / 60)).padStart(2, '0')
+      const mm = String(m % 60).padStart(2, '0')
+      try {
+        await db.query(
+          `INSERT INTO booking_slots (type, date, time, duration_minutes, capacity, trainer_id, trainer_name, training_type, trainer_tier, price_from)
+           VALUES ('training', $1, $2, $3, 1, $4, $5, $6, $7, $8)`,
+          [date, `${hh}:${mm}`, duration, trainer.id, trainer.name, format, tier, price]
+        )
+        created++
+      } catch (err) {
+        console.error('[admin] training slot insert failed:', err.message)
+      }
+    }
+
+    res.json({ created })
   } catch (err) { next(err) }
 })
 
