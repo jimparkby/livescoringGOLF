@@ -303,14 +303,64 @@ router.post('/schedule/tee-times/generate', async (req, res, next) => {
 })
 
 // ── Trainers ─────────────────────────────────────────────────────────────
+// Full CRUD so the roster seeded from the migration (see db.js) is just a
+// starting point — admins can add/edit/retire trainers from Расписание
+// without a developer touching the database.
 
-router.get('/trainers', async (_req, res, next) => {
+router.get('/trainers', async (req, res, next) => {
   try {
     const { rows } = await db.query(
-      `SELECT id, name, role, photo_url, bio, active FROM trainers WHERE active ORDER BY role, name`
+      `SELECT id, name, role, photo_url, bio, active FROM trainers
+       ${req.query.all ? '' : 'WHERE active'}
+       ORDER BY active DESC, role, name`
     )
-    res.json(rows.map((t) => ({ id: t.id, name: t.name, role: t.role, photoUrl: t.photo_url, bio: t.bio })))
+    res.json(rows.map((t) => ({ id: t.id, name: t.name, role: t.role, photoUrl: t.photo_url, bio: t.bio, active: t.active })))
   } catch (err) { next(err) }
+})
+
+router.post('/trainers', async (req, res, next) => {
+  try {
+    const { name, role, photoUrl, bio } = req.body
+    if (!String(name || '').trim()) return res.status(400).json({ error: 'name required' })
+    const { rows: [t] } = await db.query(
+      `INSERT INTO trainers (name, role, photo_url, bio) VALUES ($1, $2, $3, $4) RETURNING id`,
+      [String(name).trim(), role === 'golf_pro' ? 'golf_pro' : 'trainer', photoUrl?.trim() || null, bio?.trim() || null]
+    )
+    res.json({ id: t.id })
+  } catch (err) {
+    if (err.code === '23505') return res.status(400).json({ error: 'Тренер с таким именем уже есть' })
+    next(err)
+  }
+})
+
+router.put('/trainers/:id', async (req, res, next) => {
+  try {
+    const { name, role, photoUrl, bio, active } = req.body
+    const { rows: [t] } = await db.query(
+      `UPDATE trainers SET
+         name = COALESCE($2, name),
+         role = COALESCE($3, role),
+         photo_url = $4,
+         bio = $5,
+         active = COALESCE($6, active),
+         updated_at = NOW()
+       WHERE id = $1
+       RETURNING id`,
+      [
+        req.params.id,
+        name?.trim() || null,
+        role === 'golf_pro' || role === 'trainer' ? role : null,
+        photoUrl?.trim() || null,
+        bio?.trim() || null,
+        typeof active === 'boolean' ? active : null,
+      ]
+    )
+    if (!t) return res.status(404).json({ error: 'Trainer not found' })
+    res.json({ id: t.id })
+  } catch (err) {
+    if (err.code === '23505') return res.status(400).json({ error: 'Тренер с таким именем уже есть' })
+    next(err)
+  }
 })
 
 async function loadTrainer(trainerId) {

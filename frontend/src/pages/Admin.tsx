@@ -32,7 +32,7 @@ type RegistrationSummary = {
 
 type LiveEntry = { tournament: CustomTournament; round: Round | null; isActive: boolean };
 
-type Trainer = { id: number; name: string; role: "trainer" | "golf_pro"; photoUrl: string | null; bio: string | null };
+type Trainer = { id: number; name: string; role: "trainer" | "golf_pro"; photoUrl: string | null; bio: string | null; active?: boolean };
 
 type ScheduleSlotType = "tee_time" | "training";
 type ScheduleSlot = {
@@ -305,8 +305,10 @@ const todayISO = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
+type ScheduleView = ScheduleSlotType | "trainers";
+
 const ScheduleTab = () => {
-  const [subTab, setSubTab] = useState<ScheduleSlotType>("tee_time");
+  const [subTab, setSubTab] = useState<ScheduleView>("tee_time");
   const [date, setDate] = useState(todayISO());
   const [slots, setSlots] = useState<ScheduleSlot[] | null>(null);
 
@@ -335,6 +337,7 @@ const ScheduleTab = () => {
   const [generatingTraining, setGeneratingTraining] = useState(false);
 
   const loadSlots = () => {
+    if (subTab === "trainers") return;
     setSlots(null);
     api
       .get<ScheduleSlot[]>(`/api/admin/schedule/slots?type=${subTab}&date=${date}`)
@@ -344,12 +347,14 @@ const ScheduleTab = () => {
 
   useEffect(loadSlots, [subTab, date]);
 
-  useEffect(() => {
-    api.get<Trainer[]>("/api/admin/trainers").then((list) => {
+  const loadTrainers = () => {
+    api.get<Trainer[]>("/api/admin/trainers?all=1").then((list) => {
       setTrainers(list);
-      setTrainerId((id) => id || (list[0]?.id ? String(list[0].id) : ""));
+      setTrainerId((id) => id || (list.find((t) => t.active !== false)?.id ? String(list.find((t) => t.active !== false)!.id) : ""));
     }).catch(() => setTrainers([]));
-  }, []);
+  };
+
+  useEffect(loadTrainers, []);
 
   // Golf pros charge more, and an on-course playthrough runs longer than a
   // range lesson — keep the duration/price fields in sync with the picker
@@ -442,8 +447,18 @@ const ScheduleTab = () => {
         >
           Тренировки
         </button>
+        <button
+          onClick={() => setSubTab("trainers")}
+          className="flex-1 h-9 rounded-full text-xs font-bold tracking-wide transition-all"
+          style={subTab === "trainers" ? { background: "#c9a24b", color: "#15361f" } : { color: "hsl(var(--muted-foreground))" }}
+        >
+          Тренеры
+        </button>
       </div>
 
+      {subTab === "trainers" && <TrainersPanel trainers={trainers} reload={loadTrainers} />}
+
+      {subTab !== "trainers" && <>
       <input
         type="date"
         value={date}
@@ -501,15 +516,18 @@ const ScheduleTab = () => {
           <label className="text-xs text-muted-foreground block">
             Тренер
             <select value={trainerId} onChange={(e) => setTrainerId(e.target.value)} className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm">
-              {trainers === null ? (
-                <option>Загрузка…</option>
-              ) : trainers.length === 0 ? (
-                <option>Нет тренеров</option>
-              ) : (
-                trainers.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name} · {t.role === "golf_pro" ? "Golf Pro" : "Тренер"}</option>
-                ))
-              )}
+              {(() => {
+                const active = trainers?.filter((t) => t.active !== false) ?? null;
+                return active === null ? (
+                  <option>Загрузка…</option>
+                ) : active.length === 0 ? (
+                  <option>Нет тренеров</option>
+                ) : (
+                  active.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name} · {t.role === "golf_pro" ? "Golf Pro" : "Тренер"}</option>
+                  ))
+                );
+              })()}
             </select>
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -622,6 +640,147 @@ const ScheduleTab = () => {
           </div>
         )}
       </div>
+      </>}
+    </div>
+  );
+};
+
+/* ── Trainer roster: add/edit/retire the coaches the booking page and
+   training-slot generation draw from ── */
+const emptyTrainerForm = { name: "", role: "trainer" as "trainer" | "golf_pro", photoUrl: "", bio: "" };
+
+const TrainersPanel = ({ trainers, reload }: { trainers: Trainer[] | null; reload: () => void }) => {
+  const [editingId, setEditingId] = useState<number | "new" | null>(null);
+  const [form, setForm] = useState(emptyTrainerForm);
+  const [saving, setSaving] = useState(false);
+
+  const startEdit = (t: Trainer) => {
+    setEditingId(t.id);
+    setForm({ name: t.name, role: t.role, photoUrl: t.photoUrl ?? "", bio: t.bio ?? "" });
+  };
+
+  const startAdd = () => {
+    setEditingId("new");
+    setForm(emptyTrainerForm);
+  };
+
+  const cancel = () => {
+    setEditingId(null);
+    setForm(emptyTrainerForm);
+  };
+
+  const save = async () => {
+    if (!form.name.trim()) { toast.error("Укажите имя"); return; }
+    setSaving(true);
+    try {
+      if (editingId === "new") {
+        await api.post("/api/admin/trainers", form);
+        toast.success("Тренер добавлен");
+      } else if (editingId != null) {
+        const current = trainers?.find((t) => t.id === editingId);
+        await api.put(`/api/admin/trainers/${editingId}`, { ...form, active: current?.active ?? true });
+        toast.success("Тренер обновлён");
+      }
+      cancel();
+      reload();
+    } catch {
+      toast.error("Ошибка сохранения");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleActive = async (t: Trainer) => {
+    try {
+      await api.put(`/api/admin/trainers/${t.id}`, {
+        name: t.name, role: t.role, photoUrl: t.photoUrl ?? "", bio: t.bio ?? "", active: !(t.active ?? true),
+      });
+      reload();
+    } catch {
+      toast.error("Ошибка сохранения");
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {trainers === null ? (
+        <div className="flex justify-center py-6">
+          <div className="h-6 w-6 rounded-full border-2 border-action border-t-transparent animate-spin" />
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {trainers.map((t) => {
+            const active = t.active ?? true;
+            return (
+              <Card key={t.id} className="p-3 flex items-center gap-3" style={!active ? { opacity: 0.5 } : undefined}>
+                {t.photoUrl ? (
+                  <img src={t.photoUrl} alt={t.name} className="h-10 w-10 rounded-full object-cover shrink-0" />
+                ) : (
+                  <div className="h-10 w-10 rounded-full bg-muted grid place-items-center text-xs font-bold shrink-0">
+                    {t.name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-sm truncate">{t.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {t.role === "golf_pro" ? "Golf Pro" : "Тренер"}{!active ? " · неактивен" : ""}
+                  </div>
+                </div>
+                <button onClick={() => startEdit(t)} className="h-8 px-3 rounded-full text-xs font-bold border border-border shrink-0">
+                  Изменить
+                </button>
+                <button
+                  onClick={() => toggleActive(t)}
+                  className="h-8 px-3 rounded-full text-xs font-bold shrink-0"
+                  style={active ? { color: "hsl(var(--destructive))" } : { background: "#c9a24b", color: "#15361f" }}
+                >
+                  {active ? "Скрыть" : "Вернуть"}
+                </button>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {editingId === null ? (
+        <button onClick={startAdd} className="w-full h-11 rounded-xl font-bold text-sm border border-border">
+          + Добавить тренера
+        </button>
+      ) : (
+        <Card className="p-4 space-y-3">
+          <div className="font-bold text-sm">{editingId === "new" ? "Новый тренер" : "Изменить тренера"}</div>
+          <label className="text-xs text-muted-foreground block">
+            Имя
+            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Имя Фамилия" className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm" />
+          </label>
+          <label className="text-xs text-muted-foreground block">
+            Роль
+            <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as "trainer" | "golf_pro" })} className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm">
+              <option value="trainer">Тренер</option>
+              <option value="golf_pro">Golf Pro</option>
+            </select>
+          </label>
+          <label className="text-xs text-muted-foreground block">
+            Ссылка на фото (необязательно)
+            <input value={form.photoUrl} onChange={(e) => setForm({ ...form, photoUrl: e.target.value })} placeholder="https://…" className="w-full h-10 rounded-lg px-2 mt-1 bg-background border border-border text-sm" />
+          </label>
+          <label className="text-xs text-muted-foreground block">
+            Био (необязательно)
+            <textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows={4} className="w-full rounded-lg px-2 py-2 mt-1 bg-background border border-border text-sm" />
+          </label>
+          <div className="flex gap-2">
+            <button onClick={cancel} className="flex-1 h-11 rounded-xl font-bold text-sm border border-border">Отмена</button>
+            <button
+              onClick={save}
+              disabled={saving}
+              className="flex-1 h-11 rounded-xl font-bold text-sm disabled:opacity-40"
+              style={{ background: "#c9a24b", color: "#15361f" }}
+            >
+              {saving ? "Сохраняю…" : "Сохранить"}
+            </button>
+          </div>
+        </Card>
+      )}
     </div>
   );
 };
